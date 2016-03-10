@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Audio Recorder</string>
+
+    <string-array name="sample_rate">
+        <item>48 kHz</item>
+        <item>44.1 kHz (CD)</item>
+        <item>32 kHz</item>
+        <item>22 kHz</item>
+        <item>16 kHz (default)</item>
+        <item>11 kHz</item>
+        <item>8 kHz (telephone)</item>
+    </string-array>
+
+    <string-array name="sample_rate_values">
+        <item>48000</item>
+        <item>44100</item>
+        <item>32000</item>
+        <item>22050</item>
+        <item>16000</item>
+        <item>11025</item>
+        <item>8000</item>
+    </string-array>
+
+    <string name="title_activity_main">Audio Recorder</string>
+    <string name="action_settings">Settings</string>
+</resources>
