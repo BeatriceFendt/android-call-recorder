@@ -9,10 +9,9 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
-/**
- * Created by axet on 11/03/16.
- */
 public class FileEncoder {
     Context context;
     Handler handler;
@@ -40,8 +39,7 @@ public class FileEncoder {
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                samples = in.length();
-                samples = getSamples(samples);
+                samples = getSamples(in.length());
 
                 cur = 0;
 
@@ -50,7 +48,7 @@ public class FileEncoder {
                     is = new FileInputStream(in);
 
                     while (!Thread.currentThread().isInterrupted()) {
-                        byte[] buf = new byte[info.channels * (info.bps / 8) * 100];
+                        byte[] buf = new byte[info.channels * info.bps / 8 * 100];
 
                         int len = is.read(buf);
                         if (len <= 0) {
@@ -58,7 +56,9 @@ public class FileEncoder {
                             return;
                         }
                         if (len > 0) {
-                            encoder.encode(buf, 0, len);
+                            short[] shorts = new short[len / 2];
+                            ByteBuffer.wrap(buf, 0, len).order(ByteOrder.BIG_ENDIAN).asShortBuffer().get(shorts);
+                            encoder.encode(shorts);
                             handler.post(progress);
                             synchronized (thread) {
                                 cur += getSamples(len);
@@ -69,6 +69,7 @@ public class FileEncoder {
                     t = e;
                     handler.post(error);
                 } finally {
+                    encoder.close();
                     if (is != null) {
                         try {
                             is.close();

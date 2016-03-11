@@ -347,14 +347,26 @@ public class RecordingActivity extends AppCompatActivity {
                 AudioRecord recorder = null;
                 try {
                     File tmp = storage.getTempRecording();
-                    final long s = getSamples(tmp);
-                    handle.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            samples = 0;
-                            addSamples(s);
+
+                    {
+                        long ss = tmp.length();
+                        if (audioFormat == AudioFormat.ENCODING_PCM_16BIT) {
+                            ss = ss / 2;
                         }
-                    });
+                        if (channelConfig == AudioFormat.CHANNEL_IN_STEREO) {
+                            ss = ss / 2;
+                        }
+
+                        final long s = ss;
+                        handle.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                samples = 0;
+                                addSamples(s);
+                            }
+                        });
+                    }
+
                     os = new DataOutputStream(storage.open(tmp));
 
                     int min = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
@@ -522,18 +534,6 @@ public class RecordingActivity extends AppCompatActivity {
                 am.setStreamVolume(AudioManager.STREAM_RING, am.getStreamVolume(AudioManager.STREAM_RING), AudioManager.FLAG_SHOW_UI);
             }
         }
-    }
-
-    long getSamples(File in) {
-        long samples = in.length();
-        if (audioFormat == AudioFormat.ENCODING_PCM_16BIT) {
-            samples = samples / 2;
-        }
-        if (channelConfig == AudioFormat.CHANNEL_IN_STEREO) {
-            samples = samples / 2;
-        }
-
-        return samples;
     }
 
     EncoderInfo getInfo() {
