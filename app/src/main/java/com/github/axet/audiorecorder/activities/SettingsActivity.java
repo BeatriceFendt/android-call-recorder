@@ -3,6 +3,7 @@ package com.github.axet.audiorecorder.activities;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -25,6 +26,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
+import com.github.axet.audiorecorder.app.MainApplication;
 
 import java.util.List;
 
@@ -175,28 +177,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 1:
-                if (permitted(permissions))
+                if (permitted(this, permissions))
                     ;
                 else
                     Toast.makeText(this, "Not permitted", Toast.LENGTH_SHORT).show();
         }
     }
 
-    public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE};
+    public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
-    boolean permitted(String[] ss) {
+    public static boolean permitted(Context context, String[] ss) {
         for (String s : ss) {
-            if (ContextCompat.checkSelfPermission(this, s) != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    boolean permitted() {
-        for (String s : PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, s) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
+            if (ContextCompat.checkSelfPermission(context, s) != PackageManager.PERMISSION_GRANTED) {
                 return false;
             }
         }
@@ -209,14 +201,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
+        public GeneralPreferenceFragment() {
+        }
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
-            bindPreferenceSummaryToValue(findPreference("sample_rate"));
-            bindPreferenceSummaryToValue(findPreference("storage_path"));
+            if (!permitted(getActivity(), PERMISSIONS)) {
+                Preference p = findPreference(MainApplication.PREFERENCE_STORAGE);
+                getPreferenceScreen().removePreference(p);
+            } else {
+                bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_STORAGE));
+            }
+
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
         }
 
         @Override

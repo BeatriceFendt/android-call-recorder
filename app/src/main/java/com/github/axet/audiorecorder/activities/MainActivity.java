@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void registerDataSetObserver(DataSetObserver observer) {
-
         }
 
         @Override
@@ -158,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE};
+    public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     boolean permitted(String[] ss) {
         for (String s : ss) {

@@ -1,11 +1,14 @@
 package com.github.axet.audiorecorder.activities;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -33,13 +36,17 @@ import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.app.MainApplication;
+import com.github.axet.audiorecorder.app.Storage;
+import com.github.axet.audiorecorder.encoders.FileEncoder;
+import com.github.axet.audiorecorder.encoders.EncoderInfo;
+import com.github.axet.audiorecorder.encoders.Wav;
 import com.github.axet.audiorecorder.widgets.PitchView;
 
-import org.w3c.dom.Text;
-
+import java.io.DataOutputStream;
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RecordingActivity extends AppCompatActivity {
     public static final String TAG = RecordingActivity.class.getSimpleName();
@@ -54,10 +61,12 @@ public class RecordingActivity extends AppCompatActivity {
 
     PitchView pitch;
 
-    RecordingReceiver receiver = new RecordingReceiver();
+    RecordingReceiver receiver;
     PhoneStateChangeListener pscl = new PhoneStateChangeListener();
     Handler handle = new Handler();
     Thread thread;
+    short[] buffer;
+    FileEncoder encoder;
 
     TextView title;
     TextView time;
@@ -67,17 +76,23 @@ public class RecordingActivity extends AppCompatActivity {
     int sampleRate;
     int channelConfig;
     int audioFormat;
-    String fileName;
+    // how many samples count need to update view. 4410 for 100ms update.
+    int samplesUpdate;
+
     File file;
+
+    Runnable progress;
+
+    int soundMode;
 
     // how many samples passed
     long samples;
 
+    Storage storage;
+
     public class RecordingReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(RecordingReceiver.class.getSimpleName(), "RecordingReceiver " + intent.getAction());
-
             if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
                 showRecordingActivity();
             }
@@ -97,19 +112,17 @@ public class RecordingActivity extends AppCompatActivity {
         public void onCallStateChanged(int s, String incomingNumber) {
             switch (s) {
                 case TelephonyManager.CALL_STATE_RINGING:
-                    Log.i(TAG, "RINGING");
                     wasRinging = true;
                     break;
                 case TelephonyManager.CALL_STATE_OFFHOOK:
-                    Log.i(TAG, "OFFHOOK");
-                    state.setText("pause (hold by call)");
-                    pauseRecording();
+                    stopRecording("pause (hold by call)");
                     wasRinging = true;
                     break;
                 case TelephonyManager.CALL_STATE_IDLE:
-                    Log.i(TAG, "IDLE");
+                    if (wasRinging && permitted()) {
+                        resumeRecording();
+                    }
                     wasRinging = false;
-                    resumeRecording();
                     break;
             }
         }
@@ -120,15 +133,28 @@ public class RecordingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recording);
 
+        pitch = (PitchView) findViewById(R.id.recording_pitch);
+        time = (TextView) findViewById(R.id.recording_time);
+        state = (TextView) findViewById(R.id.recording_state);
         title = (TextView) findViewById(R.id.recording_title);
 
-        getNewFile();
+        storage = new Storage(this);
 
-        title.setText(fileName);
+        try {
+            file = storage.getNewFile();
+        } catch (RuntimeException e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
+        title.setText(file.getName());
+
+        receiver = new RecordingReceiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_ON);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(SHOW_ACTIVITY);
         registerReceiver(receiver, filter);
 
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
@@ -138,24 +164,23 @@ public class RecordingActivity extends AppCompatActivity {
             tm.listen(pscl, PhoneStateListener.LISTEN_CALL_STATE);
         }
 
-        if (shared.getBoolean(MainApplication.PREFERENCE_SILENT, false)) {
-            AudioManager am = (AudioManager) getBaseContext().getSystemService(Context.AUDIO_SERVICE);
-            am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-        }
-
-        maximumAltitude = 1000;
-        sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
-        channelConfig = AudioFormat.CHANNEL_IN_MONO;
-        audioFormat = AudioFormat.ENCODING_PCM_16BIT;
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
                 WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
-        pitch = (PitchView) findViewById(R.id.recording_pitch);
-        time = (TextView) findViewById(R.id.recording_time);
-        state = (TextView) findViewById(R.id.recording_state);
+        maximumAltitude = 1000;
+        sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
+
+        if (isEmulator() && Build.VERSION.SDK_INT < 23) {
+            Toast.makeText(this, "Emulator Detected. Reducing Sample Rate to 8000 Hz", Toast.LENGTH_SHORT).show();
+            sampleRate = 8000;
+        }
+
+        channelConfig = AudioFormat.CHANNEL_IN_MONO;
+        audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+
+        updateBufferSize(false);
 
         addSamples(0);
 
@@ -163,7 +188,13 @@ public class RecordingActivity extends AppCompatActivity {
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                cancelDialog(new Runnable() {
+                    @Override
+                    public void run() {
+                        storage.delete(storage.getTempRecording());
+                        finish();
+                    }
+                });
             }
         });
 
@@ -172,11 +203,11 @@ public class RecordingActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (thread != null) {
-                    state.setText("pause");
-                    pauseRecording();
+                    stopRecording("pause");
                 } else {
-                    if (permitted())
+                    if (permitted()) {
                         resumeRecording();
+                    }
                 }
             }
         });
@@ -185,21 +216,22 @@ public class RecordingActivity extends AppCompatActivity {
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                encoding(new Runnable() {
+                    @Override
+                    public void run() {
+                        finish();
+                    }
+                });
             }
         });
-
-        showNotificationAlarm(true);
 
         if (permitted()) {
             record();
         }
     }
 
-    void getNewFile() {
-        SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
-        fileName = String.format("%s.wav", s.format(new Date()));
-        file = new File(fileName);
+    boolean isEmulator() {
+        return Build.FINGERPRINT.contains("generic");
     }
 
     @Override
@@ -217,22 +249,59 @@ public class RecordingActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         pitch.onResume();
+        updateBufferSize(false);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         pitch.onPause();
+        updateBufferSize(true);
     }
 
-    void pauseRecording() {
+    void stopRecording(String status) {
+        state.setText(status);
+        pause.setImageResource(R.drawable.ic_mic_24dp);
+
+        stopRecording();
+    }
+
+    void stopRecording() {
         if (thread != null) {
             thread.interrupt();
             thread = null;
         }
         pitch.onPause();
+        unsilent();
+    }
 
-        pause.setImageResource(R.drawable.ic_mic_24dp);
+    @Override
+    public void onBackPressed() {
+        cancelDialog(new Runnable() {
+            @Override
+            public void run() {
+                RecordingActivity.super.onBackPressed();
+            }
+        });
+    }
+
+    void cancelDialog(final Runnable run) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Confirm cancel");
+        builder.setMessage("Are you sure you want to cancel?");
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                run.run();
+            }
+        });
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.show();
     }
 
     void resumeRecording() {
@@ -246,11 +315,7 @@ public class RecordingActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        if (thread != null) {
-            thread.interrupt();
-            Log.d(TAG, "INTERRUPT " + thread + " " + thread.isInterrupted());
-            thread = null;
-        }
+        stopRecording();
 
         if (receiver != null) {
             unregisterReceiver(receiver);
@@ -263,70 +328,95 @@ public class RecordingActivity extends AppCompatActivity {
             pscl = null;
         }
 
-        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-
-        if (shared.getBoolean(MainApplication.PREFERENCE_SILENT, false)) {
-            AudioManager am = (AudioManager) getBaseContext().getSystemService(Context.AUDIO_SERVICE);
-            am.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-        }
-
         showNotificationAlarm(false);
     }
 
     void record() {
         state.setText("recording");
 
+        showNotificationAlarm(true);
+
+        silent();
+
         pause.setImageResource(R.drawable.ic_pause_24dp);
 
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                // how many samples count need to update view. 4410 for 100ms update.
-                final int samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
-
-                // two channels buffer
-                short[] buffer = new short[channelConfig == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2];
-
-                int min = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
-
-                AudioRecord recorder;
-                recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, min);
-                if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
-                    thread = null;
+                DataOutputStream os = null;
+                AudioRecord recorder = null;
+                try {
+                    File tmp = storage.getTempRecording();
+                    final long s = getSamples(tmp);
                     handle.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(RecordingActivity.this, "Unable to initialize AudioRecord", Toast.LENGTH_SHORT).show();
+                            samples = 0;
+                            addSamples(s);
                         }
                     });
-                    return;
-                }
+                    os = new DataOutputStream(storage.open(tmp));
 
-                recorder.startRecording();
-
-                // AudioRecord eats thread Inetrrupted exception
-                while (!Thread.currentThread().isInterrupted()) {
-                    final int readSize = recorder.read(buffer, 0, buffer.length);
-                    if (readSize <= 0) {
-                        break;
+                    int min = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
+                    if (min <= 0) {
+                        throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
                     }
 
-                    double sum = 0;
-                    for (int i = 0; i < readSize; i++) {
-                        sum += buffer[i] * buffer[i];
+                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, min);
+                    if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
+                        throw new RuntimeException("Unable to initialize AudioRecord");
                     }
-                    final int amplitude = (int) (Math.sqrt(sum / readSize));
-                    pitch.add((int) (amplitude / (float) maximumAltitude * 100) + 1);
 
+                    recorder.startRecording();
+
+                    // AudioRecord eats thread Inetrrupted exception
+                    while (!Thread.currentThread().isInterrupted()) {
+                        synchronized (thread) {
+                            final int readSize = recorder.read(buffer, 0, buffer.length);
+                            if (readSize <= 0) {
+                                break;
+                            }
+
+                            double sum = 0;
+                            for (int i = 0; i < readSize; i++) {
+                                try {
+                                    os.writeShort(buffer[i]);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                sum += buffer[i] * buffer[i];
+                            }
+
+                            final int amplitude = (int) (Math.sqrt(sum / readSize));
+                            pitch.add((int) (amplitude / (float) maximumAltitude * 100) + 1);
+
+                            handle.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    addSamples(channelConfig == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2);
+                                }
+                            });
+                        }
+                    }
+                } catch (final RuntimeException e) {
                     handle.post(new Runnable() {
                         @Override
                         public void run() {
-                            addSamples(channelConfig == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2);
+                            Log.e(TAG, Log.getStackTraceString(e));
+                            Toast.makeText(RecordingActivity.this, "AudioRecord error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            finish();
                         }
                     });
+                } finally {
+                    if (os != null) {
+                        try {
+                            os.close();
+                        } catch (IOException ignore) {
+                        }
+                    }
+                    if (recorder != null)
+                        recorder.release();
                 }
-
-                recorder.release();
             }
         }, "RecordingThread");
         thread.start();
@@ -364,7 +454,7 @@ public class RecordingActivity extends AppCompatActivity {
             Notification.Builder builder = new Notification.Builder(this)
                     .setOngoing(true)
                     .setContentTitle("Recording")
-                    .setSmallIcon(R.drawable.ic_notifications_black_24dp)
+                    .setSmallIcon(R.drawable.ic_mic_24dp)
                     .setContent(view);
 
             if (Build.VERSION.SDK_INT >= 21)
@@ -389,7 +479,9 @@ public class RecordingActivity extends AppCompatActivity {
         }
     }
 
-    public static final String[] PERMISSIONS = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO};
+    public static final String[] PERMISSIONS = new String[]{
+            Manifest.permission.RECORD_AUDIO
+    };
 
     boolean permitted(String[] ss) {
         for (String s : ss) {
@@ -408,5 +500,105 @@ public class RecordingActivity extends AppCompatActivity {
             }
         }
         return true;
+    }
+
+    void silent() {
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        if (shared.getBoolean(MainApplication.PREFERENCE_SILENT, false)) {
+            AudioManager am = (AudioManager) getBaseContext().getSystemService(Context.AUDIO_SERVICE);
+            am.setStreamVolume(AudioManager.STREAM_RING, am.getStreamVolume(AudioManager.STREAM_RING), AudioManager.FLAG_SHOW_UI);
+            soundMode = am.getRingerMode();
+            am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+        }
+    }
+
+    void unsilent() {
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        if (shared.getBoolean(MainApplication.PREFERENCE_SILENT, false)) {
+            AudioManager am = (AudioManager) getBaseContext().getSystemService(Context.AUDIO_SERVICE);
+            int soundMode = am.getRingerMode();
+            if (soundMode == AudioManager.RINGER_MODE_SILENT) {
+                am.setRingerMode(this.soundMode);
+                am.setStreamVolume(AudioManager.STREAM_RING, am.getStreamVolume(AudioManager.STREAM_RING), AudioManager.FLAG_SHOW_UI);
+            }
+        }
+    }
+
+    long getSamples(File in) {
+        long samples = in.length();
+        if (audioFormat == AudioFormat.ENCODING_PCM_16BIT) {
+            samples = samples / 2;
+        }
+        if (channelConfig == AudioFormat.CHANNEL_IN_STEREO) {
+            samples = samples / 2;
+        }
+
+        return samples;
+    }
+
+    EncoderInfo getInfo() {
+        final int channels = channelConfig == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1;
+        final int bps = audioFormat == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
+
+        return new EncoderInfo(channels, sampleRate, bps);
+    }
+
+    void encoding(final Runnable run) {
+        stopRecording("encoding");
+
+        final File in = storage.getTempRecording();
+        final File out = file;
+
+        EncoderInfo info = getInfo();
+
+        encoder = new FileEncoder(this, in, new Wav(info, out));
+
+        final ProgressDialog d = new ProgressDialog(this);
+        d.setTitle("Encoding...");
+        d.setMessage(".../" + file.getName());
+        d.setMax(100);
+        d.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        d.setIndeterminate(false);
+        d.show();
+
+        encoder.run(new Runnable() {
+            @Override
+            public void run() {
+                int i = encoder.getProgress();
+                d.setProgress(i);
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                d.cancel();
+                storage.delete(in);
+                run.run();
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(RecordingActivity.this, encoder.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
+    }
+
+    // calcuale buffer length dynamically, this way we can reduce thread cycles when activity in background
+    // or phone screen is off.
+    void updateBufferSize(boolean pause) {
+        Thread t = thread;
+
+        if (t == null) {
+            t = new Thread();
+        }
+
+        synchronized (t) {
+            if (pause)
+                samplesUpdate = (int) (1000 * sampleRate / 1000.0);
+            else
+                samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
+
+            buffer = new short[channelConfig == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2];
+        }
     }
 }

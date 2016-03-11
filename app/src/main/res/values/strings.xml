@@ -21,6 +21,16 @@
         <item>8000</item>
     </string-array>
 
+    <string-array name="encodings" >
+        <item>.wav (default)</item>
+        <item>.aac</item>
+    </string-array>
+
+    <string-array name="encodings_values" >
+        <item>wav</item>
+        <item>aac</item>
+    </string-array>
+
     <string name="title_activity_main">Audio Recorder</string>
     <string name="action_settings">Settings</string>
 </resources>

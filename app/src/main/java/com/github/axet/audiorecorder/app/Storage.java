@@ -1,0 +1,118 @@
+package com.github.axet.audiorecorder.app;
+
+import android.Manifest;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
+import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class Storage {
+    public static final String TMP_REC = "recorind.data";
+    public static final String RECORDINGS = "recordings";
+
+    Context context;
+
+    public Storage(Context context) {
+        this.context = context;
+    }
+
+    public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
+    public boolean permitted(String[] ss) {
+        for (String s : ss) {
+            if (ContextCompat.checkSelfPermission(context, s) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public File getLocalStorage() {
+        return new File(context.getApplicationInfo().dataDir, RECORDINGS);
+    }
+
+    public boolean isLocalStorageEmpty() {
+        return getLocalStorage().listFiles().length == 0;
+    }
+
+    public boolean isExternalStoragePermitted() {
+        return permitted(PERMISSIONS);
+    }
+
+    public File getStoragePath() {
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
+        String path = shared.getString(MainApplication.PREFERENCE_STORAGE, "");
+        if (permitted(PERMISSIONS)) {
+            return new File(path);
+        } else {
+            return getLocalStorage();
+        }
+    }
+
+    public File getNewFile() {
+        SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
+
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
+        String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
+
+        File parent = getStoragePath();
+        if (!parent.exists()) {
+            if (!parent.mkdirs())
+                throw new RuntimeException("Unable to create: " + parent);
+        }
+
+        return getNextFile(parent, s.format(new Date()), ext);
+    }
+
+    File getNextFile(File parent, String name, String ext) {
+        String fileName = String.format("%s.%s", name, ext);
+
+        File file = new File(parent, fileName);
+
+        int i = 1;
+        while (file.exists()) {
+            fileName = String.format("%s (%d).%s", name, i, ext);
+            file = new File(parent, fileName);
+            i++;
+        }
+
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to create: " + file, e);
+        }
+
+        return file;
+    }
+
+    public File getTempRecording() {
+        return new File(context.getApplicationInfo().dataDir, TMP_REC);
+    }
+
+    public FileOutputStream open(File f) {
+        File tmp = f;
+        File parent = tmp.getParentFile();
+        if (!parent.exists() && !parent.mkdirs()) {
+            throw new RuntimeException("unable to create: " + parent);
+        }
+        if (!parent.isDirectory())
+            throw new RuntimeException("target is not a dir: " + parent);
+        try {
+            return new FileOutputStream(tmp, true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void delete(File f) {
+        f.delete();
+    }
+}

@@ -7,9 +7,11 @@ import android.preference.PreferenceManager;
 import com.github.axet.audiorecorder.R;
 
 public class MainApplication extends Application {
+    public static final String PREFERENCE_STORAGE = "storage_path";
     public static final String PREFERENCE_RATE = "sample_rate";
     public static final String PREFERENCE_CALL = "call";
-    public static final String PREFERENCE_SILENT = "silent";
+    public static final String PREFERENCE_SILENT = "silence";
+    public static final String PREFERENCE_ENCODING = "encoding";
 
     @Override
     public void onCreate() {

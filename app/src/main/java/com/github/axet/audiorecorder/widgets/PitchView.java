@@ -85,7 +85,6 @@ public class PitchView extends ViewGroup {
                 @Override
                 public void run() {
                     time = System.currentTimeMillis();
-
                     while (!Thread.currentThread().isInterrupted()) {
                         long time = System.currentTimeMillis();
                         Canvas canvas = holder.lockCanvas(null);
@@ -96,6 +95,7 @@ public class PitchView extends ViewGroup {
                         long cur = System.currentTimeMillis();
 
                         long delay = UPDATE_SPEED - (cur - time);
+
                         if (delay > 0) {
                             try {
                                 Thread.sleep(delay);
@@ -128,15 +128,23 @@ public class PitchView extends ViewGroup {
                     if (time == 0)
                         time = System.currentTimeMillis();
 
+
                     long cur = System.currentTimeMillis();
 
                     float tick = (cur - time) / (float) pitchTime;
+
+                    // force clear queue
+                    if (data.size() > pitchMemCount + 1) {
+                        tick = 0;
+                        time = cur;
+                        data.subList(0, data.size() - pitchMemCount).clear();
+                        m = Math.min(pitchMemCount, data.size());
+                    }
 
                     if (tick > 1) {
                         if (data.size() > pitchMemCount) {
                             tick -= 1;
                             time += pitchTime;
-                            //data.subList(0, data.size() - pitchMemCount).clear();
                         } else if (data.size() == pitchMemCount) {
                             tick = 0;
                             time = cur;

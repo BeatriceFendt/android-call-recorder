@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
+import com.github.axet.audiorecorder.activities.SettingsActivity;
 
 import java.io.File;
 

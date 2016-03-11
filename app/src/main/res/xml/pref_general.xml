@@ -16,11 +16,13 @@
         android:title="Sample Rate" />
 
     <ListPreference
-        android:defaultValue="-1"
+        android:defaultValue="wav"
+        android:entries="@array/encodings"
+        android:entryValues="@array/encodings_values"
         android:key="encoding"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary=".wav, .mp3"
+        android:summary="Output file formats (.wav, .aac, ...)"
         android:title="Encoding" />
 
     <SwitchPreference
