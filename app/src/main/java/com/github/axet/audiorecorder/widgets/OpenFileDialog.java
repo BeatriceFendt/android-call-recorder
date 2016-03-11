@@ -8,6 +8,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Environment;
+import android.preference.EditTextPreference;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Display;
@@ -263,6 +264,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
             @Override
             public void onClick(View view) {
+                EditTextPreference edit = new EditTextPreference(getContext());
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                 final EditText input = new EditText(getContext());
                 builder.setView(input);
@@ -321,19 +323,12 @@ public class OpenFileDialog extends AlertDialog.Builder {
     }
 
     private void RebuildFiles() {
-        try {
-            selectedIndex = -1;
-            adapter.clear();
-            adapter.addAll(getFiles(currentPath));
-            adapter.sort(new SortFiles());
-            adapter.notifyDataSetChanged();
-            changeTitle();
-        } catch (NullPointerException e) {
-            String message = getContext().getResources().getString(android.R.string.unknownName);
-            if (!accessDeniedMessage.equals(""))
-                message = accessDeniedMessage;
-            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-        }
+        selectedIndex = -1;
+        adapter.clear();
+        adapter.addAll(getFiles(currentPath));
+        adapter.sort(new SortFiles());
+        adapter.notifyDataSetChanged();
+        changeTitle();
     }
 
     private ListView createListView(Context context) {
