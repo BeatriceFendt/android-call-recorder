@@ -217,7 +217,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_STORAGE));
             }
 
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
+            Preference rate = findPreference(MainApplication.PREFERENCE_RATE);
+
+            if (Build.VERSION.SDK_INT < 21) {
+                getPreferenceScreen().removePreference(rate);
+            } else {
+                bindPreferenceSummaryToValue(rate);
+            }
+
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_ENCODING));
         }
 
         @Override

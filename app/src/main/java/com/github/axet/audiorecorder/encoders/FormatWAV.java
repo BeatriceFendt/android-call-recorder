@@ -8,7 +8,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class Wav implements Encoder {
+public class FormatWAV implements Encoder {
     int NumSamples;
     EncoderInfo info;
     int BytesPerSample;
@@ -16,10 +16,10 @@ public class Wav implements Encoder {
 
     ByteOrder order = ByteOrder.LITTLE_ENDIAN;
 
-    public Wav() {
+    public FormatWAV() {
     }
 
-    public Wav(EncoderInfo info, File out) {
+    public FormatWAV(EncoderInfo info, File out) {
         this.info = info;
         NumSamples = 0;
 

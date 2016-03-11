@@ -37,16 +37,16 @@ import android.widget.Toast;
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.Storage;
-import com.github.axet.audiorecorder.encoders.FileEncoder;
+import com.github.axet.audiorecorder.encoders.Encoder;
 import com.github.axet.audiorecorder.encoders.EncoderInfo;
-import com.github.axet.audiorecorder.encoders.Wav;
+import com.github.axet.audiorecorder.encoders.FileEncoder;
+import com.github.axet.audiorecorder.encoders.FormatM4A;
+import com.github.axet.audiorecorder.encoders.FormatWAV;
 import com.github.axet.audiorecorder.widgets.PitchView;
 
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class RecordingActivity extends AppCompatActivity {
     public static final String TAG = RecordingActivity.class.getSimpleName();
@@ -551,7 +551,19 @@ public class RecordingActivity extends AppCompatActivity {
 
         EncoderInfo info = getInfo();
 
-        encoder = new FileEncoder(this, in, new Wav(info, out));
+        Encoder e = null;
+
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
+
+        if (ext.equals("wav")) {
+            e = new FormatWAV(info, out);
+        }
+        if (ext.equals("m4a")) {
+            e = new FormatM4A(info, out);
+        }
+
+        encoder = new FileEncoder(this, in, e);
 
         final ProgressDialog d = new ProgressDialog(this);
         d.setTitle("Encoding...");
@@ -564,8 +576,7 @@ public class RecordingActivity extends AppCompatActivity {
         encoder.run(new Runnable() {
             @Override
             public void run() {
-                int i = encoder.getProgress();
-                d.setProgress(i);
+                d.setProgress(encoder.getProgress());
             }
         }, new Runnable() {
             @Override

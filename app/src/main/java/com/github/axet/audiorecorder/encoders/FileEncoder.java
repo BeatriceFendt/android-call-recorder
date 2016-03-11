@@ -52,10 +52,10 @@ public class FileEncoder {
 
                         int len = is.read(buf);
                         if (len <= 0) {
+                            Log.d("23", "end");
                             handler.post(done);
                             return;
-                        }
-                        if (len > 0) {
+                        } else {
                             short[] shorts = new short[len / 2];
                             ByteBuffer.wrap(buf, 0, len).order(ByteOrder.BIG_ENDIAN).asShortBuffer().get(shorts);
                             encoder.encode(shorts);
@@ -65,10 +65,13 @@ public class FileEncoder {
                             }
                         }
                     }
+                    Log.d("23", "interrupted " + Thread.currentThread().isInterrupted());
                 } catch (IOException e) {
+                    Log.d("23", "error " + e.getMessage());
                     t = e;
                     handler.post(error);
                 } finally {
+                    Log.d("23", "close");
                     encoder.close();
                     if (is != null) {
                         try {
