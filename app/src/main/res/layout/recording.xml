@@ -67,6 +67,7 @@
                 android:id="@+id/recording_player"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
                 android:background="#dedede"
@@ -112,21 +113,24 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/play"
-                        android:backgroundTint="@color/colorAccent" />
+                        android:backgroundTint="@color/colorAccent"
+                        android:padding="20dp" />
 
                     <ImageView
                         android:id="@+id/recording_player_share"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/share"
-                        android:backgroundTint="@color/colorAccent" />
+                        android:backgroundTint="@color/colorAccent"
+                        android:padding="20dp" />
 
                     <ImageView
                         android:id="@+id/recording_player_trash"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/trash"
-                        android:backgroundTint="@color/colorAccent" />
+                        android:backgroundTint="@color/colorAccent"
+                        android:padding="20dp" />
                 </com.github.axet.audiorecorder.widgets.EqualLinearLayout>
             </LinearLayout>
         </FrameLayout>
