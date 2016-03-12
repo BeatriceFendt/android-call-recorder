@@ -52,6 +52,9 @@ public class StoragePathPreference extends EditTextPreference {
         f.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
             @Override
             public void onFileSelected(String fileName) {
+                File f = new File(fileName);
+                if (!f.isDirectory())
+                    fileName = f.getParent();
                 if (callChangeListener(fileName)) {
                     setText(fileName);
                 }
@@ -67,5 +70,10 @@ public class StoragePathPreference extends EditTextPreference {
             s = new File(Environment.getExternalStorageDirectory(), "Audio Recorder").getAbsolutePath();
         }
         return s;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        super.onRestoreInstanceState(state);
     }
 }

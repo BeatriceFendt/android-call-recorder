@@ -1,6 +1,7 @@
 package com.github.axet.audiorecorder.activities;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -11,80 +12,101 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
+import com.github.axet.audiorecorder.animations.RecordingAnimation;
+import com.github.axet.audiorecorder.app.Storage;
 
-public class MainActivity extends AppCompatActivity {
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 
-    Recordings recordings = new Recordings();
+public class MainActivity extends AppCompatActivity implements  AbsListView.OnScrollListener{
+    static final int TYPE_COLLAPSED = 0;
+    static final int TYPE_EXPANDED = 1;
+    static final int TYPE_DELETED = 2;
 
-    public class Recordings implements ListAdapter {
+    final int[] ALL = {TYPE_COLLAPSED, TYPE_EXPANDED};
 
-        @Override
-        public boolean areAllItemsEnabled() {
-            return true;
+    int selected;
+
+    int scrollState;
+
+    Recordings recordings;
+    Storage storage;
+    ListView list;
+
+    public class Recordings extends ArrayAdapter<File> {
+
+        public Recordings(Context context) {
+            super(context, 0);
         }
 
         @Override
-        public boolean isEnabled(int position) {
-            return true;
-        }
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            LayoutInflater inflater = LayoutInflater.from(getContext());
 
-        @Override
-        public void registerDataSetObserver(DataSetObserver observer) {
-        }
+            if (convertView == null) {
+                convertView = inflater.inflate(R.layout.recording, parent, false);
+                convertView.setTag(-1);
+            }
 
-        @Override
-        public void unregisterDataSetObserver(DataSetObserver observer) {
-        }
+            File f = getItem(position);
 
-        @Override
-        public int getCount() {
-            return 0;
-        }
+            TextView title = (TextView) convertView.findViewById(R.id.recording_title);
+            title.setText(f.getName());
 
-        @Override
-        public Object getItem(int position) {
-            return null;
-        }
+            SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            TextView time = (TextView) convertView.findViewById(R.id.recording_time);
+            time.setText(s.format(new Date(f.lastModified())));
 
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
+            View player = convertView.findViewById(R.id.recording_player);
+            player.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                }
+            });
 
-        @Override
-        public boolean hasStableIds() {
-            return false;
-        }
+            if(selected == position) {
+                RecordingAnimation.apply(list, convertView, true, scrollState == SCROLL_STATE_IDLE && (int) convertView.getTag() == TYPE_COLLAPSED);
+                convertView.setTag(TYPE_EXPANDED);
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            return null;
-        }
+                convertView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        selected = -1;
+                        notifyDataSetChanged();
+                    }
+                });
+            }else {
+                RecordingAnimation.apply(list, convertView, false, scrollState == SCROLL_STATE_IDLE && (int) convertView.getTag() == TYPE_EXPANDED);
+                convertView.setTag(TYPE_COLLAPSED);
 
-        @Override
-        public int getItemViewType(int position) {
-            return 0;
-        }
+                convertView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        selected = position;
+                        notifyDataSetChanged();
+                    }
+                });
+            }
 
-        @Override
-        public int getViewTypeCount() {
-            return 1;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return getCount() == 0;
+            return convertView;
         }
     }
 
@@ -106,8 +128,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ListView list = (ListView) findViewById(R.id.list);
-        list.setAdapter(recordings);
+        list = (ListView) findViewById(R.id.list);
+        list.setOnScrollListener(this);
         list.setEmptyView(findViewById(R.id.empty_list));
 
         if (permitted())
@@ -116,7 +138,22 @@ public class MainActivity extends AppCompatActivity {
 
     // load recordings
     void load() {
+        storage = new Storage(this);
 
+        File f = storage.getStoragePath();
+        File[] ff = f.listFiles();
+
+        ArrayList<File> a = null;
+
+        if (ff != null) {
+            a = new ArrayList<File>(Arrays.asList(ff));
+        } else {
+            a = new ArrayList<File>();
+        }
+
+        recordings = new Recordings(this);
+        recordings.addAll(a);
+        list.setAdapter(recordings);
     }
 
     @Override
@@ -143,6 +180,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (permitted(PERMISSIONS))
+            load();
     }
 
     @Override
@@ -176,5 +221,14 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return true;
+    }
+
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+        this.scrollState = scrollState;
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
     }
 }

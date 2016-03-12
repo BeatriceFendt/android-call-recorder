@@ -10,9 +10,13 @@ import android.graphics.drawable.Drawable;
 import android.os.Environment;
 import android.preference.EditTextPreference;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -22,8 +26,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.github.axet.audiorecorder.R;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -42,7 +49,6 @@ public class OpenFileDialog extends AlertDialog.Builder {
     private Drawable folderIcon;
     private Drawable fileIcon;
     private Drawable upIcon;
-    private String accessDeniedMessage;
     FileAdapter adapter;
 
     public interface OpenDialogListener {
@@ -110,20 +116,20 @@ public class OpenFileDialog extends AlertDialog.Builder {
         linearLayout.addView(createBackItem(context));
         listView = createListView(context);
         linearLayout.addView(listView);
-        setCustomTitle(title)
-                .setView(linearLayout)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (listener != null) {
-                            if (selectedIndex > -1)
-                                listener.onFileSelected(listView.getItemAtPosition(selectedIndex).toString());
-                            else
-                                listener.onFileSelected(currentPath.toString());
-                        }
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null);
+        setCustomTitle(title);
+        setView(linearLayout);
+        setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (listener != null) {
+                    if (selectedIndex > -1)
+                        listener.onFileSelected(listView.getItemAtPosition(selectedIndex).toString());
+                    else
+                        listener.onFileSelected(currentPath.toString());
+                }
+            }
+        });
+        setNegativeButton(android.R.string.cancel, null);
     }
 
     @Override
@@ -169,11 +175,6 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
     public OpenFileDialog setFileIcon(Drawable drawable) {
         this.fileIcon = drawable;
-        return this;
-    }
-
-    public OpenFileDialog setAccessDeniedMessage(String message) {
-        this.accessDeniedMessage = message;
         return this;
     }
 
@@ -255,32 +256,50 @@ public class OpenFileDialog extends AlertDialog.Builder {
         return ll;
     }
 
+    public interface EditClick {
+        public void click(String text);
+    }
+
+    AlertDialog.Builder createEditDialog(Context context, String title, String value, final EditClick ok) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        LinearLayout ll = new LinearLayout(context);
+        ll.setOrientation(LinearLayout.VERTICAL);
+        TextView text = createTitle(context);
+        text.setText(title);
+        ll.addView(text);
+        final EditText input = new EditText(context);
+        input.setText(value);
+        ll.addView(input);
+        builder.setView(ll);
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                ok.click(input.getText().toString().trim());
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                dialog.cancel();
+            }
+        });
+        return builder;
+    }
+
     private TextView createNewFolder(final Context context) {
         Button textView = new Button(context);
         textView.setPadding(15, 0, 15, 0);
         textView.setText("New Folder");
         textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         textView.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View view) {
-                EditTextPreference edit = new EditTextPreference(getContext());
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                final EditText input = new EditText(getContext());
-                builder.setView(input);
-                builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        String value = input.getText().toString().trim();
+                AlertDialog.Builder builder = createEditDialog(context, "Folder Name", "", new EditClick() {
+                    @Override
+                    public void click(String value) {
                         File f = new File(currentPath, value);
                         if (!f.mkdir()) {
                             Toast.makeText(context, "Unable create folder: '" + value + "'", Toast.LENGTH_SHORT).show();
                         }
                         RebuildFiles();
-                    }
-                });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        dialog.cancel();
                     }
                 });
                 builder.show();
@@ -331,8 +350,46 @@ public class OpenFileDialog extends AlertDialog.Builder {
         changeTitle();
     }
 
-    private ListView createListView(Context context) {
+    public static final String RENAME = "Rename";
+    public static final String DELETE = "Delete";
+
+    private ListView createListView(final Context context) {
         ListView listView = new ListView(context);
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+                PopupMenu p = new PopupMenu(context, view);
+                p.getMenu().add(RENAME);
+                p.getMenu().add(DELETE);
+                p.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        if (item.getTitle().equals(RENAME)) {
+                            final File ff = (File) adapter.getItem(position);
+                            AlertDialog.Builder b = createEditDialog(context, "Folder Name", ff.getName(), new EditClick() {
+                                @Override
+                                public void click(String text) {
+                                    File f = new File(ff.getParent(), text);
+                                    ff.renameTo(f);
+                                    RebuildFiles();
+                                }
+                            });
+                            b.show();
+                            return true;
+                        }
+                        if (item.getTitle().equals(DELETE)) {
+                            File ff = (File) adapter.getItem(position);
+                            ff.delete();
+                            RebuildFiles();
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+                p.show();
+                return true;
+            }
+        });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override

@@ -33,7 +33,7 @@ public class RecordingAnimation extends MarginAnimation {
     }
 
     public RecordingAnimation(ListView list, View v, boolean expand) {
-        super(v.findViewById(R.id.recording_detail), expand);
+        super(v.findViewById(R.id.recording_player), expand);
 
         handler = new Handler();
 
