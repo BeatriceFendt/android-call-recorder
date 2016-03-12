@@ -1,129 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     tools:context=".activities.RecordingActivity">
 
-    <com.github.axet.audiorecorder.widgets.EqualLinearLayout
+    <LinearLayout
+        android:id="@+id/recording_base"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="left"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/recording_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:text="2016-02-01.wav"
-                android:textSize="20dp" />
-
-            <TextView
-                android:id="@+id/recording_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:text="2016 02 01" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="right"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/recording_duration"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:text="00:05" />
-
-            <TextView
-                android:id="@+id/recording_size"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:text="0.1 MB" />
-        </LinearLayout>
-    </com.github.axet.audiorecorder.widgets.EqualLinearLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <LinearLayout
-            android:id="@+id/recording_player"
+        <com.github.axet.audiorecorder.widgets.EqualLinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
-            android:background="#dedede"
-            android:orientation="vertical"
-            android:padding="5dp">
+            android:layout_height="wrap_content">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:gravity="left"
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/recording_player_start"
+                    android:id="@+id/recording_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="01:01" />
-
-                <SeekBar
-                    android:id="@+id/recording_player_seek"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:padding="5dp"
-                    android:progress="60" />
+                    android:text="2016-02-01.wav"
+                    android:textSize="20dp" />
 
                 <TextView
-                    android:id="@+id/recording_player_end"
+                    android:id="@+id/recording_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="01:01" />
-
+                    android:padding="5dp"
+                    android:text="2016 02 01" />
             </LinearLayout>
 
-            <com.github.axet.audiorecorder.widgets.EqualLinearLayout
-                android:id="@+id/recording_detail"
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/recording_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:text="00:05" />
+
+                <TextView
+                    android:id="@+id/recording_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:text="0.1 MB" />
+            </LinearLayout>
+        </com.github.axet.audiorecorder.widgets.EqualLinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/recording_player"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="#dedede"
+                android:orientation="vertical"
+                android:padding="5dp">
 
-                <ImageView
-                    android:id="@+id/recording_player_play"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/play"
-                    android:backgroundTint="@color/colorAccent" />
+                    android:gravity="center"
+                    android:orientation="horizontal">
 
-                <ImageView
-                    android:id="@+id/recording_player_share"
-                    android:layout_width="wrap_content"
+                    <TextView
+                        android:id="@+id/recording_player_start"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="01:01" />
+
+                    <SeekBar
+                        android:id="@+id/recording_player_seek"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:padding="5dp"
+                        android:progress="60" />
+
+                    <TextView
+                        android:id="@+id/recording_player_end"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="01:01" />
+
+                </LinearLayout>
+
+                <com.github.axet.audiorecorder.widgets.EqualLinearLayout
+                    android:id="@+id/recording_detail"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/share"
-                    android:backgroundTint="@color/colorAccent" />
+                    android:orientation="horizontal">
 
-                <ImageView
-                    android:id="@+id/recording_player_trash"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/trash"
-                    android:backgroundTint="@color/colorAccent" />
-            </com.github.axet.audiorecorder.widgets.EqualLinearLayout>
-        </LinearLayout>
-    </FrameLayout>
+                    <ImageView
+                        android:id="@+id/recording_player_play"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/play"
+                        android:backgroundTint="@color/colorAccent" />
 
-</LinearLayout>
+                    <ImageView
+                        android:id="@+id/recording_player_share"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/share"
+                        android:backgroundTint="@color/colorAccent" />
+
+                    <ImageView
+                        android:id="@+id/recording_player_trash"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/trash"
+                        android:backgroundTint="@color/colorAccent" />
+                </com.github.axet.audiorecorder.widgets.EqualLinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

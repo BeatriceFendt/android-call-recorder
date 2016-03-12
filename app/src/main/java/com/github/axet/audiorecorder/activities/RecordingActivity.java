@@ -169,7 +169,7 @@ public class RecordingActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
-        maximumAltitude = 1000;
+        maximumAltitude = 20000;
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
 
         if (isEmulator() && Build.VERSION.SDK_INT < 23) {
@@ -553,7 +553,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         Encoder e = null;
 
-        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
 
         if (ext.equals("wav")) {
@@ -583,6 +583,11 @@ public class RecordingActivity extends AppCompatActivity {
             public void run() {
                 d.cancel();
                 storage.delete(in);
+
+                SharedPreferences.Editor edit = shared.edit();
+                edit.putString(MainApplication.PREFERENCE_LAST, out.getName());
+                edit.commit();
+
                 run.run();
             }
         }, new Runnable() {

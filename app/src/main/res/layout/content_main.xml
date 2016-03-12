@@ -15,14 +15,16 @@
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></ListView>
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="61dp"></ListView>
 
     <TextView
-        android:visibility="gone"
         android:id="@+id/empty_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:text="Recording List is Empty\n\nClick Record to Start Recording"
         android:textAlignment="center"
-        android:text="Recording List is Empty\n\nClick Record to Start Recording"></TextView>
+        android:visibility="gone"></TextView>
 
 </FrameLayout>

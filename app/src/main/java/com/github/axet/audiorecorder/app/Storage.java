@@ -1,6 +1,7 @@
 package com.github.axet.audiorecorder.app;
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -9,8 +10,11 @@ import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -57,6 +61,24 @@ public class Storage {
         }
     }
 
+    public void migrateLocalStorage() {
+        if (!permitted(PERMISSIONS)) {
+            return;
+        }
+
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
+        String path = shared.getString(MainApplication.PREFERENCE_STORAGE, "");
+
+        File l = getLocalStorage();
+        File t = new File(path);
+        File[] ff = l.listFiles();
+
+        for (File f : ff) {
+            File tt = getNextFile(t, f);
+            move(f, tt);
+        }
+    }
+
     public File getNewFile() {
         SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
 
@@ -70,6 +92,20 @@ public class Storage {
         }
 
         return getNextFile(parent, s.format(new Date()), ext);
+    }
+
+    File getNextFile(File parent, File f) {
+        String fileName = f.getName();
+
+        String extension = "";
+
+        int i = fileName.lastIndexOf('.');
+        if (i > 0) {
+            extension = fileName.substring(i + 1);
+        }
+        fileName = fileName.substring(0, i);
+
+        return getNextFile(parent, fileName, extension);
     }
 
     File getNextFile(File parent, String name, String ext) {
@@ -115,4 +151,23 @@ public class Storage {
     public void delete(File f) {
         f.delete();
     }
+
+    public void move(File f, File to) {
+        try {
+            InputStream in = new FileInputStream(f);
+            OutputStream out = new FileOutputStream(to);
+
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+            in.close();
+            out.close();
+            f.delete();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

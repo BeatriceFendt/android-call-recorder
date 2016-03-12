@@ -1,12 +1,18 @@
 package com.github.axet.audiorecorder.activities;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.DataSetObserver;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -19,42 +25,144 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupMenu;
+import android.widget.SeekBar;
+import android.widget.ShareActionProvider;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.animations.RecordingAnimation;
+import com.github.axet.audiorecorder.animations.RemoveItemAnimation;
+import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.Storage;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.Map;
+import java.util.TreeMap;
 
-public class MainActivity extends AppCompatActivity implements  AbsListView.OnScrollListener{
+public class MainActivity extends AppCompatActivity implements AbsListView.OnScrollListener {
     static final int TYPE_COLLAPSED = 0;
     static final int TYPE_EXPANDED = 1;
     static final int TYPE_DELETED = 2;
 
     final int[] ALL = {TYPE_COLLAPSED, TYPE_EXPANDED};
 
-    int selected;
+    int selected = -1;
 
     int scrollState;
 
     Recordings recordings;
     Storage storage;
     ListView list;
+    Handler handler;
+
+    static class SortFiles implements Comparator<File> {
+        @Override
+        public int compare(File file, File file2) {
+            if (file.isDirectory() && file2.isFile())
+                return -1;
+            else if (file.isFile() && file2.isDirectory())
+                return 1;
+            else
+                return file.getPath().compareTo(file2.getPath());
+        }
+    }
 
     public class Recordings extends ArrayAdapter<File> {
+        MediaPlayer player;
+        Runnable updatePlayer;
+
+        Map<File, Integer> duration = new TreeMap<>();
 
         public Recordings(Context context) {
             super(context, 0);
+        }
+
+        public void scan(File dir) {
+            clear();
+            duration.clear();
+
+            File[] ff = dir.listFiles();
+
+            if (ff == null)
+                return;
+
+            for (File f : ff) {
+                if (f.isFile()) {
+                    MediaPlayer mp = MediaPlayer.create(getContext(), Uri.fromFile(f));
+                    if (mp != null) {
+                        int d = mp.getDuration();
+                        mp.release();
+                        duration.put(f, d);
+                        add(f);
+                    }
+                }
+            }
+
+            sort(new SortFiles());
+        }
+
+        public void setForceShowIcon(PopupMenu popupMenu) {
+            try {
+                Field[] fields = popupMenu.getClass().getDeclaredFields();
+                for (Field field : fields) {
+                    if ("mPopup".equals(field.getName())) {
+                        field.setAccessible(true);
+                        Object menuPopupHelper = field.get(popupMenu);
+                        Class<?> classPopupHelper = Class.forName(menuPopupHelper
+                                .getClass().getName());
+                        Method setForceIcons = classPopupHelper.getMethod(
+                                "setForceShowIcon", boolean.class);
+                        setForceIcons.invoke(menuPopupHelper, true);
+                        break;
+                    }
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+
+        String formatSize(long s) {
+            if (s > 0.1 * 1024 * 1024) {
+                float f = s / 1024f / 1024f;
+                return String.format("%.1f MB", f);
+            } else {
+                float f = s / 1024f;
+                return String.format("%.1f kb", f);
+            }
+        }
+
+        String formatTime(int tt) {
+            return String.format("%02d", tt);
+        }
+
+        String formatDuration(long diff) {
+            int diffMilliseconds = (int) (diff % 1000);
+            int diffSeconds = (int) (diff / 1000 % 60);
+            int diffMinutes = (int) (diff / (60 * 1000) % 60);
+            int diffHours = (int) (diff / (60 * 60 * 1000) % 24);
+            int diffDays = (int) (diff / (24 * 60 * 60 * 1000));
+
+            String str = "";
+
+            if (diffDays > 0)
+                str = diffDays + "d " + formatTime(diffHours) + ":" + formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
+            else if (diffHours > 0)
+                str = formatTime(diffHours) + ":" + formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
+            else
+                str = formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
+
+            return str;
         }
 
         @Override
@@ -66,7 +174,15 @@ public class MainActivity extends AppCompatActivity implements  AbsListView.OnSc
                 convertView.setTag(-1);
             }
 
-            File f = getItem(position);
+            if ((int) convertView.getTag() == TYPE_DELETED) {
+                RemoveItemAnimation.restore(convertView);
+                convertView.setTag(-1);
+            }
+
+            final View view = convertView;
+            final View base = convertView.findViewById(R.id.recording_base);
+
+            final File f = getItem(position);
 
             TextView title = (TextView) convertView.findViewById(R.id.recording_title);
             title.setText(f.getName());
@@ -75,25 +191,112 @@ public class MainActivity extends AppCompatActivity implements  AbsListView.OnSc
             TextView time = (TextView) convertView.findViewById(R.id.recording_time);
             time.setText(s.format(new Date(f.lastModified())));
 
-            View player = convertView.findViewById(R.id.recording_player);
-            player.setOnClickListener(new View.OnClickListener() {
+            TextView dur = (TextView) convertView.findViewById(R.id.recording_duration);
+            dur.setText(formatDuration(duration.get(f)));
+
+            TextView size = (TextView) convertView.findViewById(R.id.recording_size);
+            size.setText(formatSize(f.length()));
+
+            View trash = convertView.findViewById(R.id.recording_player_trash);
+            trash.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                    builder.setTitle("Delete Recording");
+                    builder.setMessage("...\\" + f.getName() + "\n\n" + "Are you sure ? ");
+                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                            RemoveItemAnimation.apply(list, base, new Runnable() {
+                                @Override
+                                public void run() {
+                                    f.delete();
+                                    view.setTag(TYPE_DELETED);
+                                    selected = -1;
+                                    load();
+                                }
+                            });
+                        }
+                    });
+                    builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+                    builder.show();
+                }
+            });
+
+            final View playerBase = convertView.findViewById(R.id.recording_player);
+            playerBase.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                 }
             });
 
-            if(selected == position) {
+            if (selected == position) {
                 RecordingAnimation.apply(list, convertView, true, scrollState == SCROLL_STATE_IDLE && (int) convertView.getTag() == TYPE_COLLAPSED);
                 convertView.setTag(TYPE_EXPANDED);
+
+                updatePlayerText(convertView, f);
+
+                final View play = convertView.findViewById(R.id.recording_player_play);
+                play.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (player == null) {
+                            playerPlay(playerBase, f);
+                        } else if (player.isPlaying()) {
+                            pause();
+                        } else {
+                            player.start();
+                            updatePlayer(playerBase, f);
+                        }
+                        updatePlayerText(view, f);
+                    }
+                });
+
+                final View share = convertView.findViewById(R.id.recording_player_share);
+                share.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        PopupMenu p = new PopupMenu(getContext(), share);
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+                        ShareActionProvider a = new ShareActionProvider(getContext());
+                        a.setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
+
+                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                        shareIntent.setType("text/plain");
+                        shareIntent.putExtra(Intent.EXTRA_TEXT, "http://android-er.blogspot.com/");
+
+                        a.setShareIntent(shareIntent);
+
+                        View action = a.onCreateActionView();
+                        LinearLayout ll = new LinearLayout(getContext());
+                        ll.setOrientation(LinearLayout.VERTICAL);
+                        ll.addView(action);
+                        builder.setView(ll);
+                        builder.show();
+
+//                        MenuItem share = p.getMenu().add("Share");
+//                        share.setActionProvider(a).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+//                        p.show();
+                    }
+                });
 
                 convertView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        playerStop();
                         selected = -1;
                         notifyDataSetChanged();
                     }
                 });
-            }else {
+            } else {
                 RecordingAnimation.apply(list, convertView, false, scrollState == SCROLL_STATE_IDLE && (int) convertView.getTag() == TYPE_EXPANDED);
                 convertView.setTag(TYPE_COLLAPSED);
 
@@ -102,11 +305,91 @@ public class MainActivity extends AppCompatActivity implements  AbsListView.OnSc
                     public void onClick(View v) {
                         selected = position;
                         notifyDataSetChanged();
+
+                        playerStop();
+                        //playerPlay(playerBase, f);
                     }
                 });
             }
 
             return convertView;
+        }
+
+        void playerPlay(View v, File f) {
+            player = MediaPlayer.create(getContext(), Uri.fromFile(f));
+            player.start();
+
+            updatePlayer(v, f);
+        }
+
+        void pause() {
+            if (player != null) {
+                player.pause();
+            }
+            if (updatePlayer != null) {
+                handler.removeCallbacks(updatePlayer);
+                updatePlayer = null;
+            }
+        }
+
+        void playerStop() {
+            if (updatePlayer != null) {
+                handler.removeCallbacks(updatePlayer);
+                updatePlayer = null;
+            }
+            if (player != null) {
+                player.stop();
+                player.release();
+                player = null;
+            }
+        }
+
+        void updatePlayer(final View v, final File f) {
+            updatePlayerText(v, f);
+
+            if (updatePlayer != null) {
+                handler.removeCallbacks(updatePlayer);
+                updatePlayer = null;
+            }
+
+            if (player == null || !player.isPlaying()) {
+                return;
+            }
+
+            updatePlayer = new Runnable() {
+                @Override
+                public void run() {
+                    updatePlayer(v, f);
+                }
+            };
+            handler.postDelayed(updatePlayer, 200);
+        }
+
+        void updatePlayerText(View v, File f) {
+            ImageView i = (ImageView) v.findViewById(R.id.recording_player_play);
+
+            boolean playing = player != null && player.isPlaying();
+
+            if (Build.VERSION.SDK_INT < 21)
+                i.setBackground(getResources().getDrawable(playing ? R.drawable.pause : R.drawable.play));
+            else
+                i.setBackground(getResources().getDrawable(playing ? R.drawable.pause : R.drawable.play, getTheme()));
+
+            TextView start = (TextView) v.findViewById(R.id.recording_player_start);
+            SeekBar bar = (SeekBar) v.findViewById(R.id.recording_player_seek);
+            TextView end = (TextView) v.findViewById(R.id.recording_player_end);
+
+            int c = 0;
+            int d = duration.get(f);
+
+            if (player != null) {
+                c = player.getCurrentPosition();
+                d = player.getDuration();
+            }
+
+            start.setText(formatDuration(c));
+            bar.setProgress(c * 100 / d);
+            end.setText("-" + formatDuration(d - c));
         }
     }
 
@@ -114,6 +397,10 @@ public class MainActivity extends AppCompatActivity implements  AbsListView.OnSc
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        storage = new Storage(this);
+        handler = new Handler();
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -130,30 +417,18 @@ public class MainActivity extends AppCompatActivity implements  AbsListView.OnSc
 
         list = (ListView) findViewById(R.id.list);
         list.setOnScrollListener(this);
+        recordings = new Recordings(this);
+        list.setAdapter(recordings);
         list.setEmptyView(findViewById(R.id.empty_list));
 
-        if (permitted())
-            load();
+        if (permitted()) {
+            storage.migrateLocalStorage();
+        }
     }
 
     // load recordings
     void load() {
-        storage = new Storage(this);
-
-        File f = storage.getStoragePath();
-        File[] ff = f.listFiles();
-
-        ArrayList<File> a = null;
-
-        if (ff != null) {
-            a = new ArrayList<File>(Arrays.asList(ff));
-        } else {
-            a = new ArrayList<File>();
-        }
-
-        recordings = new Recordings(this);
-        recordings.addAll(a);
-        list.setAdapter(recordings);
+        recordings.scan(storage.getStoragePath());
     }
 
     @Override
@@ -179,6 +454,17 @@ public class MainActivity extends AppCompatActivity implements  AbsListView.OnSc
             return true;
         }
 
+        if (id == R.id.action_show_folder) {
+            Uri selectedUri = Uri.fromFile(storage.getStoragePath());
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(selectedUri, "resource/folder");
+            if (intent.resolveActivityInfo(getPackageManager(), 0) != null) {
+                startActivity(intent);
+            } else {
+                Toast.makeText(this, "No folder view application installed", Toast.LENGTH_SHORT).show();
+            }
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -188,6 +474,38 @@ public class MainActivity extends AppCompatActivity implements  AbsListView.OnSc
 
         if (permitted(PERMISSIONS))
             load();
+        else
+            load();
+
+        final int selected = getLastPosition();
+        list.setSelection(selected);
+        if (selected != -1) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity.this.selected = selected;
+                    recordings.notifyDataSetChanged();
+                }
+            });
+        }
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        SharedPreferences.Editor edit = shared.edit();
+        edit.putString(MainApplication.PREFERENCE_LAST, "");
+        edit.commit();
+    }
+
+    int getLastPosition() {
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        String last = shared.getString(MainApplication.PREFERENCE_LAST, "");
+        last = last.toLowerCase();
+
+        for (int i = 0; i < recordings.getCount(); i++) {
+            File f = recordings.getItem(i);
+            String n = f.getName().toLowerCase();
+            if (n.equals(last))
+                return i;
+        }
+        return -1;
     }
 
     @Override
@@ -195,10 +513,12 @@ public class MainActivity extends AppCompatActivity implements  AbsListView.OnSc
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 1:
-                if (permitted(permissions))
+                if (permitted(permissions)) {
+                    storage.migrateLocalStorage();
                     load();
-                else
+                } else {
                     Toast.makeText(this, "Not permitted", Toast.LENGTH_SHORT).show();
+                }
         }
     }
 
