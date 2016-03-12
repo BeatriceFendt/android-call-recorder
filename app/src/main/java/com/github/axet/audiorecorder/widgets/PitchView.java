@@ -1,9 +1,13 @@
 package com.github.axet.audiorecorder.widgets;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -50,6 +54,7 @@ public class PitchView extends ViewGroup {
     public class PitchGraphView extends SurfaceView implements SurfaceHolder.Callback {
         Thread thread;
         Runnable draw;
+        int bg;
 
         public PitchGraphView(Context context) {
             this(context, null);
@@ -63,6 +68,8 @@ public class PitchView extends ViewGroup {
             super(context, attrs, defStyleAttr);
 
             getHolder().addCallback(this);
+
+            bg = getThemeColor(android.R.attr.windowBackground);
         }
 
         @Override
@@ -118,7 +125,7 @@ public class PitchView extends ViewGroup {
 
         void drawHolder(Canvas canvas) {
             synchronized (data) {
-                canvas.drawColor(Color.WHITE);
+                canvas.drawColor(bg);
 
                 int m = Math.min(pitchMemCount, data.size());
 
@@ -221,20 +228,22 @@ public class PitchView extends ViewGroup {
 
         @Override
         protected void onDraw(Canvas canvas) {
-            if (data.size() == 0)
-                return;
+            synchronized (data) {
+                if (data.size() == 0)
+                    return;
 
-            int end = data.size() - 1;
+                int end = data.size() - 1;
 
-            float left = data.get(end);
-            float right = data.get(end);
+                float left = data.get(end);
+                float right = data.get(end);
 
-            float mid = getWidth() / 2f;
+                float mid = getWidth() / 2f;
 
-            float y = getHeight() / 2f;
+                float y = getHeight() / 2f;
 
-            canvas.drawLine(mid, y, mid - mid * left, y, paint);
-            canvas.drawLine(mid, y, mid + mid * right, y, paint);
+                canvas.drawLine(mid, y, mid - mid * left, y, paint);
+                canvas.drawLine(mid, y, mid + mid * right, y, paint);
+            }
         }
     }
 
@@ -287,6 +296,20 @@ public class PitchView extends ViewGroup {
 
     public int getPitchTime() {
         return pitchTime;
+    }
+
+    int getThemeColor(int id) {
+        TypedValue typedValue = new TypedValue();
+        Context context = getContext();
+        Resources.Theme theme = context.getTheme();
+        if (theme.resolveAttribute(id, typedValue, true)) {
+            if (Build.VERSION.SDK_INT >= 23)
+                return context.getResources().getColor(typedValue.resourceId, theme);
+            else
+                return context.getResources().getColor(typedValue.resourceId);
+        } else {
+            return Color.TRANSPARENT;
+        }
     }
 
     @Override
