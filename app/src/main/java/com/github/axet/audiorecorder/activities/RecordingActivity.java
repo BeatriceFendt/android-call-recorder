@@ -191,6 +191,7 @@ public class RecordingActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         storage.delete(storage.getTempRecording());
+                        storage.delete(file);
                         finish();
                     }
                 });
