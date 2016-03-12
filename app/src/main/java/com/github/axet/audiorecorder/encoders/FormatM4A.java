@@ -29,7 +29,7 @@ public class FormatM4A implements Encoder {
         format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectHE);
         format.setInteger(MediaFormat.KEY_SAMPLE_RATE, info.sampleRate);
         format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, info.channels);
-        format.setInteger(MediaFormat.KEY_BIT_RATE, 128 * 1024);
+        format.setInteger(MediaFormat.KEY_BIT_RATE, 64 * 1024);
 
         try {
             encoder = MediaCodec.createEncoderByType("audio/mp4a-latm");

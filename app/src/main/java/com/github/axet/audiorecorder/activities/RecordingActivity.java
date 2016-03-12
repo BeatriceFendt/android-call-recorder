@@ -17,9 +17,7 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
+import android.os.*;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -44,6 +42,7 @@ import com.github.axet.audiorecorder.encoders.FormatM4A;
 import com.github.axet.audiorecorder.encoders.FormatWAV;
 import com.github.axet.audiorecorder.widgets.PitchView;
 
+import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -169,7 +168,7 @@ public class RecordingActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
-        maximumAltitude = 20000;
+        maximumAltitude = 5000;
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
 
         if (isEmulator() && Build.VERSION.SDK_INT < 23) {
@@ -343,6 +342,13 @@ public class RecordingActivity extends AppCompatActivity {
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+                int p = android.os.Process.getThreadPriority(android.os.Process.myTid());
+
+                if (p != android.os.Process.THREAD_PRIORITY_URGENT_AUDIO) {
+                    Log.e(TAG, "Unable to set Thread Priority " + android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+                }
+
                 DataOutputStream os = null;
                 AudioRecord recorder = null;
                 try {
@@ -367,21 +373,25 @@ public class RecordingActivity extends AppCompatActivity {
                         });
                     }
 
-                    os = new DataOutputStream(storage.open(tmp));
+                    os = new DataOutputStream(new BufferedOutputStream(storage.open(tmp)));
 
                     int min = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
                     if (min <= 0) {
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
                     }
 
-                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, min);
+                    // make it 5 seconds buffer
+                    int min2 = 5 * sampleRate
+                            * (audioFormat == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1)
+                            * (channelConfig == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1);
+
+                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, Math.min(min2, min));
                     if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
                         throw new RuntimeException("Unable to initialize AudioRecord");
                     }
 
                     recorder.startRecording();
 
-                    // AudioRecord eats thread Inetrrupted exception
                     while (!Thread.currentThread().isInterrupted()) {
                         synchronized (thread) {
                             final int readSize = recorder.read(buffer, 0, buffer.length);
@@ -432,6 +442,25 @@ public class RecordingActivity extends AppCompatActivity {
             }
         }, "RecordingThread");
         thread.start();
+    }
+
+    // calcuale buffer length dynamically, this way we can reduce thread cycles when activity in background
+    // or phone screen is off.
+    void updateBufferSize(boolean pause) {
+        Thread t = thread;
+
+        if (t == null) {
+            t = new Thread();
+        }
+
+        synchronized (t) {
+            if (pause)
+                samplesUpdate = (int) (1000 * sampleRate / 1000.0);
+            else
+                samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
+
+            buffer = new short[channelConfig == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2];
+        }
     }
 
     void addSamples(long s) {
@@ -518,13 +547,24 @@ public class RecordingActivity extends AppCompatActivity {
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         if (shared.getBoolean(MainApplication.PREFERENCE_SILENT, false)) {
             AudioManager am = (AudioManager) getBaseContext().getSystemService(Context.AUDIO_SERVICE);
-            am.setStreamVolume(AudioManager.STREAM_RING, am.getStreamVolume(AudioManager.STREAM_RING), AudioManager.FLAG_SHOW_UI);
             soundMode = am.getRingerMode();
+
+            if (soundMode == AudioManager.RINGER_MODE_SILENT) {
+                // keep unchanged
+                soundMode = -1;
+                return;
+            }
+
+            am.setStreamVolume(AudioManager.STREAM_RING, am.getStreamVolume(AudioManager.STREAM_RING), AudioManager.FLAG_SHOW_UI);
             am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
         }
     }
 
     void unsilent() {
+        // keep unchanged
+        if (soundMode == -1)
+            return;
+
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         if (shared.getBoolean(MainApplication.PREFERENCE_SILENT, false)) {
             AudioManager am = (AudioManager) getBaseContext().getSystemService(Context.AUDIO_SERVICE);
@@ -599,22 +639,4 @@ public class RecordingActivity extends AppCompatActivity {
         });
     }
 
-    // calcuale buffer length dynamically, this way we can reduce thread cycles when activity in background
-    // or phone screen is off.
-    void updateBufferSize(boolean pause) {
-        Thread t = thread;
-
-        if (t == null) {
-            t = new Thread();
-        }
-
-        synchronized (t) {
-            if (pause)
-                samplesUpdate = (int) (1000 * sampleRate / 1000.0);
-            else
-                samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
-
-            buffer = new short[channelConfig == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2];
-        }
-    }
 }
