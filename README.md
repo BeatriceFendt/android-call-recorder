@@ -2,7 +2,7 @@
 
 Android friendly!
 
-Audio Recorder with custom recording folder, nice recording volume indicator.
+Audio Recorder with custom recording folder, nice recording volume indicator, recording notification, recording lock screen activity.
 
 # Install
 
