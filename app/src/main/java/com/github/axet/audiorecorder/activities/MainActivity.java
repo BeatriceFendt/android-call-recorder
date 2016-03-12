@@ -17,6 +17,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,11 +28,8 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.PopupMenu;
 import android.widget.SeekBar;
-import android.widget.ShareActionProvider;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +38,7 @@ import com.github.axet.audiorecorder.animations.RecordingAnimation;
 import com.github.axet.audiorecorder.animations.RemoveItemAnimation;
 import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.Storage;
+import com.github.axet.audiorecorder.widgets.PopupShareActionProvider;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -81,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     public class Recordings extends ArrayAdapter<File> {
         MediaPlayer player;
         Runnable updatePlayer;
+        PopupShareActionProvider shareProvider;
 
         Map<File, Integer> duration = new TreeMap<>();
 
@@ -110,26 +110,6 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             }
 
             sort(new SortFiles());
-        }
-
-        public void setForceShowIcon(PopupMenu popupMenu) {
-            try {
-                Field[] fields = popupMenu.getClass().getDeclaredFields();
-                for (Field field : fields) {
-                    if ("mPopup".equals(field.getName())) {
-                        field.setAccessible(true);
-                        Object menuPopupHelper = field.get(popupMenu);
-                        Class<?> classPopupHelper = Class.forName(menuPopupHelper
-                                .getClass().getName());
-                        Method setForceIcons = classPopupHelper.getMethod(
-                                "setForceShowIcon", boolean.class);
-                        setForceIcons.invoke(menuPopupHelper, true);
-                        break;
-                    }
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
         }
 
         String formatSize(long s) {
@@ -262,29 +242,20 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 share.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        PopupMenu p = new PopupMenu(getContext(), share);
+                        shareProvider = new PopupShareActionProvider(getContext(), share);
 
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                        emailIntent.setType("audio/mp4a-latm");
+                        emailIntent.putExtra(Intent.EXTRA_EMAIL, "");
+                        emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(f));
+                        emailIntent.putExtra(Intent.EXTRA_SUBJECT, f.getName());
+                        emailIntent.putExtra(Intent.EXTRA_TEXT, "Shared via App Recorder");
 
-                        ShareActionProvider a = new ShareActionProvider(getContext());
-                        a.setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
+                        shareProvider.setShareIntent(emailIntent);
 
-                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                        shareIntent.setType("text/plain");
-                        shareIntent.putExtra(Intent.EXTRA_TEXT, "http://android-er.blogspot.com/");
+                        shareProvider.show();
 
-                        a.setShareIntent(shareIntent);
-
-                        View action = a.onCreateActionView();
-                        LinearLayout ll = new LinearLayout(getContext());
-                        ll.setOrientation(LinearLayout.VERTICAL);
-                        ll.addView(action);
-                        builder.setView(ll);
-                        builder.show();
-
-//                        MenuItem share = p.getMenu().add("Share");
-//                        share.setActionProvider(a).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-//                        p.show();
+                        Log.d("123","show");
                     }
                 });
 

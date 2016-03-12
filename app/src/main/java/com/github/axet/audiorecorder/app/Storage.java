@@ -73,6 +73,9 @@ public class Storage {
         File t = new File(path);
         File[] ff = l.listFiles();
 
+        if (ff == null)
+            return;
+
         for (File f : ff) {
             File tt = getNextFile(t, f);
             move(f, tt);
