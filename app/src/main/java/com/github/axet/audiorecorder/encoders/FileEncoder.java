@@ -15,6 +15,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class FileEncoder {
+    public static final String TAG = FileEncoder.class.getSimpleName();
+
     Context context;
     Handler handler;
 
@@ -23,8 +25,6 @@ public class FileEncoder {
     Thread thread;
     long samples;
     long cur;
-    Runnable progress;
-    Runnable done;
     Throwable t;
 
     public FileEncoder(Context context, File in, Encoder encoder) {
@@ -53,6 +53,7 @@ public class FileEncoder {
                         byte[] buf = new byte[(RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1) * 1000];
 
                         int len = is.read(buf);
+                        Log.d("123", "len " + len);
                         if (len <= 0) {
                             handler.post(done);
                             return;
@@ -66,7 +67,12 @@ public class FileEncoder {
                             }
                         }
                     }
+                } catch (RuntimeException e) {
+                    Log.e(TAG, "Exception", e);
+                    t = e;
+                    handler.post(error);
                 } catch (IOException e) {
+                    Log.e(TAG, "Exception", e);
                     t = e;
                     handler.post(error);
                 } finally {

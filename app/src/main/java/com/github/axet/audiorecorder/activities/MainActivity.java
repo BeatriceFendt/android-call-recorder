@@ -52,6 +52,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class MainActivity extends AppCompatActivity implements AbsListView.OnScrollListener {
+    public final static String TAG = MainActivity.class.getSimpleName();
+
     static final int TYPE_COLLAPSED = 0;
     static final int TYPE_EXPANDED = 1;
     static final int TYPE_DELETED = 2;
@@ -104,6 +106,8 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                         mp.release();
                         duration.put(f, d);
                         add(f);
+                    } else {
+                        Log.e(TAG, f.toString());
                     }
                 }
             }
@@ -170,6 +174,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                     builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            playerStop();
                             dialog.cancel();
                             RemoveItemAnimation.apply(list, base, new Runnable() {
                                 @Override
@@ -271,6 +276,10 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
         void playerPlay(View v, File f) {
             player = MediaPlayer.create(getContext(), Uri.fromFile(f));
+            if (player == null) {
+                Toast.makeText(MainActivity.this, "File not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
             player.start();
 
             updatePlayer(v, f);

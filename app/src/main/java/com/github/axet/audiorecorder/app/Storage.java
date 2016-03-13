@@ -144,11 +144,13 @@ public class Storage {
             return list;
 
         for (File f : ff) {
-            String[] ee = context.getResources().getStringArray(R.array.encodings_values);
-            String n = f.getName().toLowerCase();
-            for (String e : ee) {
-                if (n.endsWith("." + e))
-                    list.add(f);
+            if (f.length() > 0) {
+                String[] ee = context.getResources().getStringArray(R.array.encodings_values);
+                String n = f.getName().toLowerCase();
+                for (String e : ee) {
+                    if (n.endsWith("." + e))
+                        list.add(f);
+                }
             }
         }
 

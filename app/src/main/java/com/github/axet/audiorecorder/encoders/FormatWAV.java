@@ -16,9 +16,6 @@ public class FormatWAV implements Encoder {
 
     ByteOrder order = ByteOrder.LITTLE_ENDIAN;
 
-    public FormatWAV() {
-    }
-
     public FormatWAV(EncoderInfo info, File out) {
         this.info = info;
         NumSamples = 0;
