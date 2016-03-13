@@ -122,29 +122,6 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             }
         }
 
-        String formatTime(int tt) {
-            return String.format("%02d", tt);
-        }
-
-        String formatDuration(long diff) {
-            int diffMilliseconds = (int) (diff % 1000);
-            int diffSeconds = (int) (diff / 1000 % 60);
-            int diffMinutes = (int) (diff / (60 * 1000) % 60);
-            int diffHours = (int) (diff / (60 * 60 * 1000) % 24);
-            int diffDays = (int) (diff / (24 * 60 * 60 * 1000));
-
-            String str = "";
-
-            if (diffDays > 0)
-                str = diffDays + "d " + formatTime(diffHours) + ":" + formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
-            else if (diffHours > 0)
-                str = formatTime(diffHours) + ":" + formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
-            else
-                str = formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
-
-            return str;
-        }
-
         @Override
         public View getView(final int position, View convertView, ViewGroup parent) {
             LayoutInflater inflater = LayoutInflater.from(getContext());
@@ -172,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             time.setText(s.format(new Date(f.lastModified())));
 
             TextView dur = (TextView) convertView.findViewById(R.id.recording_duration);
-            dur.setText(formatDuration(duration.get(f)));
+            dur.setText(MainApplication.formatDuration(duration.get(f)));
 
             TextView size = (TextView) convertView.findViewById(R.id.recording_size);
             size.setText(formatSize(f.length()));
@@ -358,9 +335,9 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 d = player.getDuration();
             }
 
-            start.setText(formatDuration(c));
+            start.setText(MainApplication.formatDuration(c));
             bar.setProgress(c * 100 / d);
-            end.setText("-" + formatDuration(d - c));
+            end.setText("-" + MainApplication.formatDuration(d - c));
         }
     }
 
