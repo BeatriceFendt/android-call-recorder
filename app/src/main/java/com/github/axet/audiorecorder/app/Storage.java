@@ -9,6 +9,8 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
+import com.github.axet.audiorecorder.R;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -16,7 +18,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Storage {
     public static final String TMP_REC = "recorind.data";
@@ -123,13 +127,32 @@ public class Storage {
             i++;
         }
 
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to create: " + file, e);
-        }
+//        try {
+//            file.createNewFile();
+//        } catch (IOException e) {
+//            throw new RuntimeException("Unable to create: " + file, e);
+//        }
 
         return file;
+    }
+
+    public List<File> scan(File dir) {
+        ArrayList<File> list = new ArrayList<>();
+
+        File[] ff = dir.listFiles();
+        if (ff == null)
+            return list;
+
+        for (File f : ff) {
+            String[] ee = context.getResources().getStringArray(R.array.encodings_values);
+            String n = f.getName().toLowerCase();
+            for (String e : ee) {
+                if (n.endsWith("." + e))
+                    list.add(f);
+            }
+        }
+
+        return list;
     }
 
     public File getTempRecording() {

@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -46,6 +47,7 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -92,10 +94,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             clear();
             duration.clear();
 
-            File[] ff = dir.listFiles();
-
-            if (ff == null)
-                return;
+            List<File> ff = storage.scan(dir);
 
             for (File f : ff) {
                 if (f.isFile()) {
@@ -122,27 +121,11 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             }
         }
 
-        String formatTime(int tt) {
-            return String.format("%02d", tt);
-        }
-
-        String formatDuration(long diff) {
-            int diffMilliseconds = (int) (diff % 1000);
-            int diffSeconds = (int) (diff / 1000 % 60);
-            int diffMinutes = (int) (diff / (60 * 1000) % 60);
-            int diffHours = (int) (diff / (60 * 60 * 1000) % 24);
-            int diffDays = (int) (diff / (24 * 60 * 60 * 1000));
-
-            String str = "";
-
-            if (diffDays > 0)
-                str = diffDays + "d " + formatTime(diffHours) + ":" + formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
-            else if (diffHours > 0)
-                str = formatTime(diffHours) + ":" + formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
-            else
-                str = formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
-
-            return str;
+        public void close() {
+            if (player != null) {
+                player.release();
+                player = null;
+            }
         }
 
         @Override
@@ -172,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             time.setText(s.format(new Date(f.lastModified())));
 
             TextView dur = (TextView) convertView.findViewById(R.id.recording_duration);
-            dur.setText(formatDuration(duration.get(f)));
+            dur.setText(MainApplication.formatDuration(duration.get(f)));
 
             TextView size = (TextView) convertView.findViewById(R.id.recording_size);
             size.setText(formatSize(f.length()));
@@ -255,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
                         shareProvider.show();
 
-                        Log.d("123","show");
+                        Log.d("123", "show");
                     }
                 });
 
@@ -358,9 +341,9 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 d = player.getDuration();
             }
 
-            start.setText(formatDuration(c));
+            start.setText(MainApplication.formatDuration(c));
             bar.setProgress(c * 100 / d);
-            end.setText("-" + formatDuration(d - c));
+            end.setText("-" + MainApplication.formatDuration(d - c));
         }
     }
 
@@ -521,5 +504,24 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                list.smoothScrollToPosition(selected);
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        recordings.close();
     }
 }

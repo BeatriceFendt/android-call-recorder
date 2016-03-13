@@ -63,29 +63,27 @@ public class RecordingActivity extends AppCompatActivity {
     RecordingReceiver receiver;
     PhoneStateChangeListener pscl = new PhoneStateChangeListener();
     Handler handle = new Handler();
-    Thread thread;
-    short[] buffer;
     FileEncoder encoder;
 
-    TextView title;
-    TextView time;
-    TextView state;
-    ImageButton pause;
-
+    Thread thread;
+    Integer bufferSize = 0;
     int sampleRate;
     int channelConfig;
     int audioFormat;
     // how many samples count need to update view. 4410 for 100ms update.
     int samplesUpdate;
 
-    File file;
+    TextView title;
+    TextView time;
+    TextView state;
+    ImageButton pause;
+
+    // output target file 2016-01-01 01.01.01.wav
+    File targetFile;
 
     Runnable progress;
 
     int soundMode;
-
-    // how many samples passed
-    long samples;
 
     Storage storage;
 
@@ -93,7 +91,7 @@ public class RecordingActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                showRecordingActivity();
+                // showRecordingActivity();
             }
             if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
                 // do nothing. do not annoy user. he will see alarm screen on next screen on event.
@@ -140,14 +138,14 @@ public class RecordingActivity extends AppCompatActivity {
         storage = new Storage(this);
 
         try {
-            file = storage.getNewFile();
+            targetFile = storage.getNewFile();
         } catch (RuntimeException e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        title.setText(file.getName());
+        title.setText(targetFile.getName());
 
         receiver = new RecordingReceiver();
         IntentFilter filter = new IntentFilter();
@@ -181,7 +179,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         updateBufferSize(false);
 
-        addSamples(0);
+        updateSamples(0);
 
         View cancel = findViewById(R.id.recording_cancel);
         cancel.setOnClickListener(new View.OnClickListener() {
@@ -190,8 +188,9 @@ public class RecordingActivity extends AppCompatActivity {
                 cancelDialog(new Runnable() {
                     @Override
                     public void run() {
+                        stopRecording();
                         storage.delete(storage.getTempRecording());
-                        storage.delete(file);
+                        //storage.delete(targetFile);
                         finish();
                     }
                 });
@@ -205,7 +204,7 @@ public class RecordingActivity extends AppCompatActivity {
                 if (thread != null) {
                     stopRecording("pause");
                 } else {
-                    if (permitted()) {
+                    if (permitted(PERMISSIONS)) {
                         resumeRecording();
                     }
                 }
@@ -216,6 +215,7 @@ public class RecordingActivity extends AppCompatActivity {
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                stopRecording("encoding");
                 encoding(new Runnable() {
                     @Override
                     public void run() {
@@ -248,15 +248,17 @@ public class RecordingActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        pitch.onResume();
+        Log.d(TAG, "onResume");
         updateBufferSize(false);
+        pitch.resume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        pitch.onPause();
+        Log.d(TAG, "onPause");
         updateBufferSize(true);
+        pitch.pause();
     }
 
     void stopRecording(String status) {
@@ -271,7 +273,7 @@ public class RecordingActivity extends AppCompatActivity {
             thread.interrupt();
             thread = null;
         }
-        pitch.onPause();
+        pitch.pause();
         unsilent();
     }
 
@@ -308,7 +310,6 @@ public class RecordingActivity extends AppCompatActivity {
         if (thread == null) {
             record();
         }
-        pitch.onResume();
     }
 
     @Override
@@ -350,6 +351,9 @@ public class RecordingActivity extends AppCompatActivity {
                     Log.e(TAG, "Unable to set Thread Priority " + android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                 }
 
+                // how many samples passed
+                long samplesTime;
+
                 DataOutputStream os = null;
                 AudioRecord recorder = null;
                 try {
@@ -364,14 +368,7 @@ public class RecordingActivity extends AppCompatActivity {
                             ss = ss / 2;
                         }
 
-                        final long s = ss;
-                        handle.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                samples = 0;
-                                addSamples(s);
-                            }
-                        });
+                        samplesTime = ss;
                     }
 
                     os = new DataOutputStream(new BufferedOutputStream(storage.open(tmp)));
@@ -393,32 +390,56 @@ public class RecordingActivity extends AppCompatActivity {
 
                     recorder.startRecording();
 
+                    int samplesUpdateCount = 0;
+                    int samplesTimeCount = 0;
+                    // how many samples we need to update 'samples'. time clock. every 1000ms.
+                    int samplesTimeUpdate = 1000 / 1000 * sampleRate * (channelConfig == AudioFormat.CHANNEL_IN_MONO ? 1 : 2);
+
+                    short[] buffer = null;
+
                     while (!Thread.currentThread().isInterrupted()) {
-                        synchronized (thread) {
-                            final int readSize = recorder.read(buffer, 0, buffer.length);
-                            if (readSize <= 0) {
-                                break;
-                            }
+                        synchronized (bufferSize) {
+                            if (buffer == null || buffer.length != bufferSize)
+                                buffer = new short[bufferSize];
+                        }
 
-                            double sum = 0;
-                            for (int i = 0; i < readSize; i++) {
-                                try {
-                                    os.writeShort(buffer[i]);
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                sum += buffer[i] * buffer[i];
-                            }
+                        final int readSize = recorder.read(buffer, 0, buffer.length);
+                        if (readSize <= 0) {
+                            break;
+                        }
 
-                            final int amplitude = (int) (Math.sqrt(sum / readSize));
+                        Log.d("123", "" + readSize);
+
+                        double sum = 0;
+                        for (int i = 0; i < readSize; i++) {
+                            try {
+                                os.writeShort(buffer[i]);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            sum += buffer[i] * buffer[i];
+                        }
+
+                        int amplitude = (int) (Math.sqrt(sum / readSize));
+                        int s = channelConfig == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
+
+                        samplesUpdateCount += s;
+                        if (samplesUpdateCount >= samplesUpdate) {
                             pitch.add((int) (amplitude / (float) maximumAltitude * 100) + 1);
+                            samplesUpdateCount -= samplesUpdate;
+                        }
 
+                        samplesTime += s;
+                        samplesTimeCount += s;
+                        if (samplesTimeCount > samplesTimeUpdate) {
+                            final long m = samplesTime;
                             handle.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    addSamples(channelConfig == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2);
+                                    updateSamples(m);
                                 }
                             });
+                            samplesTimeCount -= samplesTimeUpdate;
                         }
                     }
                 } catch (final RuntimeException e) {
@@ -448,35 +469,22 @@ public class RecordingActivity extends AppCompatActivity {
     // calcuale buffer length dynamically, this way we can reduce thread cycles when activity in background
     // or phone screen is off.
     void updateBufferSize(boolean pause) {
-        Thread t = thread;
-
-        if (t == null) {
-            t = new Thread();
-        }
-
-        synchronized (t) {
-            if (pause)
+        synchronized (bufferSize) {
+            if (pause) {
                 samplesUpdate = (int) (1000 * sampleRate / 1000.0);
-            else
+            } else {
                 samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
+            }
 
-            buffer = new short[channelConfig == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2];
+            bufferSize = channelConfig == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2;
+            Log.d(TAG, "BufferSize: " + bufferSize);
         }
     }
 
-    void addSamples(long s) {
-        samples += s;
+    void updateSamples(long samplesTime) {
+        long ms = samplesTime / sampleRate * 1000;
 
-        long ms = samples / sampleRate * 1000;
-
-        int diffSeconds = (int) (ms / 1000 % 60);
-        int diffMinutes = (int) (ms / (60 * 1000) % 60);
-        int diffHours = (int) (ms / (60 * 60 * 1000) % 24);
-        int diffDays = (int) (ms / (24 * 60 * 60 * 1000));
-
-        String t = String.format("%02d:%02d", diffMinutes, diffSeconds);
-
-        time.setText(t);
+        time.setText(MainApplication.formatDuration(ms));
     }
 
     // alarm dismiss button
@@ -585,10 +593,8 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     void encoding(final Runnable run) {
-        stopRecording("encoding");
-
         final File in = storage.getTempRecording();
-        final File out = file;
+        final File out = targetFile;
 
         EncoderInfo info = getInfo();
 
@@ -608,7 +614,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         final ProgressDialog d = new ProgressDialog(this);
         d.setTitle("Encoding...");
-        d.setMessage(".../" + file.getName());
+        d.setMessage(".../" + targetFile.getName());
         d.setMax(100);
         d.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         d.setIndeterminate(false);

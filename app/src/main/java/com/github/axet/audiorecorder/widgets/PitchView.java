@@ -21,6 +21,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class PitchView extends ViewGroup {
+    public static final String TAG = PitchView.class.getSimpleName();
+
     // pitch delimiter length in dp
     public static final float PITCH_DELIMITER = 1f;
     // pitch length in dp
@@ -51,10 +53,13 @@ public class PitchView extends ViewGroup {
 
     long time = 0;
 
+    Runnable draw;
+    Thread thread;
+
+    int bg;
+
     public class PitchGraphView extends SurfaceView implements SurfaceHolder.Callback {
-        Thread thread;
-        Runnable draw;
-        int bg;
+        SurfaceHolder holder;
 
         public PitchGraphView(Context context) {
             this(context, null);
@@ -68,8 +73,6 @@ public class PitchView extends ViewGroup {
             super(context, attrs, defStyleAttr);
 
             getHolder().addCallback(this);
-
-            bg = getThemeColor(android.R.attr.windowBackground);
         }
 
         @Override
@@ -82,116 +85,79 @@ public class PitchView extends ViewGroup {
             super.onLayout(changed, left, top, right, bottom);
         }
 
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        }
+        public void draw() {
+            Canvas canvas = holder.lockCanvas(null);
+            canvas.drawColor(bg);
 
-        @Override
-        public void surfaceCreated(final SurfaceHolder holder) {
-            draw = new Runnable() {
-                @Override
-                public void run() {
+            int m = Math.min(pitchMemCount, data.size());
+
+            float offset = 0;
+
+            if (data.size() >= pitchMemCount) {
+                if (time == 0)
                     time = System.currentTimeMillis();
-                    while (!Thread.currentThread().isInterrupted()) {
-                        long time = System.currentTimeMillis();
-                        Canvas canvas = holder.lockCanvas(null);
-                        if (canvas == null)
-                            return;
-                        drawHolder(canvas);
-                        holder.unlockCanvasAndPost(canvas);
-                        long cur = System.currentTimeMillis();
 
-                        long delay = UPDATE_SPEED - (cur - time);
+                long cur = System.currentTimeMillis();
 
-                        if (delay > 0) {
-                            try {
-                                Thread.sleep(delay);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                return;
-                            }
-                        }
-                    }
+                float tick = (cur - time) / (float) pitchTime;
+
+                // force clear queue
+                if (data.size() > pitchMemCount + 1) {
+                    tick = 0;
+                    time = cur;
+                    data.subList(0, data.size() - pitchMemCount).clear();
+                    m = Math.min(pitchMemCount, data.size());
                 }
-            };
 
-            start();
-        }
-
-        void start() {
-            thread = new Thread(draw, "PitchView");
-            thread.start();
-        }
-
-        void drawHolder(Canvas canvas) {
-            synchronized (data) {
-                canvas.drawColor(bg);
-
-                int m = Math.min(pitchMemCount, data.size());
-
-                float offset = 0;
-
-                if (data.size() >= pitchMemCount) {
-                    if (time == 0)
-                        time = System.currentTimeMillis();
-
-
-                    long cur = System.currentTimeMillis();
-
-                    float tick = (cur - time) / (float) pitchTime;
-
-                    // force clear queue
-                    if (data.size() > pitchMemCount + 1) {
+                if (tick > 1) {
+                    if (data.size() > pitchMemCount) {
+                        tick -= 1;
+                        time += pitchTime;
+                    } else if (data.size() == pitchMemCount) {
                         tick = 0;
                         time = cur;
-                        data.subList(0, data.size() - pitchMemCount).clear();
-                        m = Math.min(pitchMemCount, data.size());
                     }
-
-                    if (tick > 1) {
-                        if (data.size() > pitchMemCount) {
-                            tick -= 1;
-                            time += pitchTime;
-                        } else if (data.size() == pitchMemCount) {
-                            tick = 0;
-                            time = cur;
-                        }
-                        data.subList(0, 1).clear();
-                        m = Math.min(pitchMemCount, data.size());
-                    }
-
-                    offset = pitchSize * tick;
+                    data.subList(0, 1).clear();
+                    m = Math.min(pitchMemCount, data.size());
                 }
 
-                for (int i = 0; i < m; i++) {
-                    float left = data.get(i);
-                    float right = data.get(i);
-
-                    float mid = getHeight() / 2f;
-
-                    float x = -offset + i * pitchSize + pitchSize / 2f;
-
-                    canvas.drawLine(x, mid, x, mid - mid * left, paint);
-                    canvas.drawLine(x, mid, x, mid + mid * right, paint);
-                }
+                offset = pitchSize * tick;
             }
+
+            for (int i = 0; i < m; i++) {
+                float left = data.get(i);
+                float right = data.get(i);
+
+                float mid = getHeight() / 2f;
+
+                float x = -offset + i * pitchSize + pitchSize / 2f;
+
+                canvas.drawLine(x, mid, x, mid - mid * left, paint);
+                canvas.drawLine(x, mid, x, mid + mid * right, paint);
+            }
+
+            holder.unlockCanvasAndPost(canvas);
         }
 
         @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-            if (thread != null) {
-                thread.interrupt();
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
+        synchronized public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            this.holder = holder;
+        }
+
+        @Override
+        synchronized public void surfaceCreated(final SurfaceHolder holder) {
+            this.holder = holder;
+        }
+
+        @Override
+        synchronized public void surfaceDestroyed(SurfaceHolder holder) {
+            this.holder = null;
         }
     }
 
-    public class PitchCurrentView extends View {
+    public class PitchCurrentView extends SurfaceView implements SurfaceHolder.Callback {
         Paint paint;
+        SurfaceHolder holder;
 
         public PitchCurrentView(Context context) {
             this(context, null);
@@ -207,6 +173,8 @@ public class PitchView extends ViewGroup {
             paint = new Paint();
             paint.setColor(0xff0433AE);
             paint.setStrokeWidth(pitchDlimiter);
+
+            getHolder().addCallback(this);
         }
 
         @Override
@@ -226,24 +194,40 @@ public class PitchView extends ViewGroup {
             super.onLayout(changed, left, top, right, bottom);
         }
 
+        public void draw() {
+            if (data.size() == 0)
+                return;
+
+            Canvas canvas = holder.lockCanvas(null);
+            canvas.drawColor(bg);
+
+            int end = data.size() - 1;
+
+            float left = data.get(end);
+            float right = data.get(end);
+
+            float mid = getWidth() / 2f;
+
+            float y = getHeight() / 2f;
+
+            canvas.drawLine(mid, y, mid - mid * left, y, paint);
+            canvas.drawLine(mid, y, mid + mid * right, y, paint);
+            holder.unlockCanvasAndPost(canvas);
+        }
+
         @Override
-        protected void onDraw(Canvas canvas) {
-            synchronized (data) {
-                if (data.size() == 0)
-                    return;
+        synchronized public void surfaceCreated(SurfaceHolder holder) {
+            this.holder = holder;
+        }
 
-                int end = data.size() - 1;
+        @Override
+        synchronized public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            this.holder = holder;
+        }
 
-                float left = data.get(end);
-                float right = data.get(end);
-
-                float mid = getWidth() / 2f;
-
-                float y = getHeight() / 2f;
-
-                canvas.drawLine(mid, y, mid - mid * left, y, paint);
-                canvas.drawLine(mid, y, mid + mid * right, y, paint);
-            }
+        @Override
+        synchronized public void surfaceDestroyed(SurfaceHolder holder) {
+            this.holder = null;
         }
     }
 
@@ -268,6 +252,8 @@ public class PitchView extends ViewGroup {
 
         pitchTime = pitchSize * UPDATE_SPEED;
 
+        bg = getThemeColor(android.R.attr.windowBackground);
+
         graph = new PitchGraphView(getContext());
         addView(graph);
 
@@ -284,13 +270,22 @@ public class PitchView extends ViewGroup {
         paint = new Paint();
         paint.setColor(0xff0433AE);
         paint.setStrokeWidth(pitchWidth);
+
+        time = System.currentTimeMillis();
     }
 
     public void add(int a) {
-        synchronized (data) {
-            data.add(a / 100.0f);
+        data.add(a / 100.0f);
+    }
 
-            current.postInvalidate();
+    public void draw() {
+        synchronized (graph) {
+            if (graph.holder != null)
+                graph.draw();
+        }
+        synchronized (current) {
+            if (current.holder != null)
+                current.draw();
         }
     }
 
@@ -337,16 +332,39 @@ public class PitchView extends ViewGroup {
         current.draw(canvas);
     }
 
-    public void onPause() {
-        if (graph.thread != null) {
-            graph.thread.interrupt();
-            graph.thread = null;
+    public void pause() {
+        if (thread != null) {
+            thread.interrupt();
+            thread = null;
         }
     }
 
-    public void onResume() {
-        if (graph.thread == null && graph.draw != null) {
-            graph.start();
+    public void resume() {
+        if (thread == null) {
+            draw = new Runnable() {
+                @Override
+                public void run() {
+                    time = System.currentTimeMillis();
+                    while (!Thread.currentThread().isInterrupted()) {
+                        long time = System.currentTimeMillis();
+                        draw();
+                        long cur = System.currentTimeMillis();
+
+                        long delay = UPDATE_SPEED - (cur - time);
+
+                        if (delay > 0) {
+                            try {
+                                Thread.sleep(delay);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                return;
+                            }
+                        }
+                    }
+                }
+            };
+            thread = new Thread(draw, TAG);
+            thread.start();
         }
     }
 }
