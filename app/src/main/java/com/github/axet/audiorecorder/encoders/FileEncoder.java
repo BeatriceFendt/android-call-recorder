@@ -53,7 +53,6 @@ public class FileEncoder {
                         byte[] buf = new byte[(RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1) * 1000];
 
                         int len = is.read(buf);
-                        Log.d("123", "len " + len);
                         if (len <= 0) {
                             handler.post(done);
                             return;

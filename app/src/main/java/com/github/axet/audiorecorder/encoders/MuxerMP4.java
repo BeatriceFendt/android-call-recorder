@@ -36,7 +36,6 @@ public class MuxerMP4 implements Encoder {
     }
 
     public void encode(short[] buf) {
-        Log.d("123", "encode " + buf.length);
         for (int offset = 0; offset < buf.length; ) {
             int len = buf.length - offset;
 
@@ -55,7 +54,6 @@ public class MuxerMP4 implements Encoder {
             int bytes = len * 2;
 
             encoder.queueInputBuffer(inputIndex, 0, bytes, getCurrentTimeStamp(), 0);
-            Log.d("123", "put " + bytes);
             NumSamples += len / info.channels;
             offset += len;
 
@@ -71,7 +69,6 @@ public class MuxerMP4 implements Encoder {
             return false;
 
         if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-            Log.d("123", "output set " + encoder.getOutputFormat());
             audioTrackIndex = muxer.addTrack(encoder.getOutputFormat());
             muxer.start();
         }
@@ -80,8 +77,6 @@ public class MuxerMP4 implements Encoder {
             ByteBuffer output = encoder.getOutputBuffer(outputIndex);
             output.position(outputInfo.offset);
             output.limit(outputInfo.offset + outputInfo.size);
-
-            Log.d("123", "get " + outputInfo.size);
 
             muxer.writeSampleData(audioTrackIndex, output, outputInfo);
 
@@ -112,7 +107,6 @@ public class MuxerMP4 implements Encoder {
             ByteBuffer input = encoder.getInputBuffer(inputIndex);
             input.clear();
             encoder.queueInputBuffer(inputIndex, 0, 0, getCurrentTimeStamp(), MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-            Log.d("123", "set end  ");
         }
     }
 
