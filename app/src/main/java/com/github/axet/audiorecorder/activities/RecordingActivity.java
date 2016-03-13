@@ -38,6 +38,7 @@ import com.github.axet.audiorecorder.app.Storage;
 import com.github.axet.audiorecorder.encoders.Encoder;
 import com.github.axet.audiorecorder.encoders.EncoderInfo;
 import com.github.axet.audiorecorder.encoders.FileEncoder;
+import com.github.axet.audiorecorder.encoders.Format3GP;
 import com.github.axet.audiorecorder.encoders.FormatM4A;
 import com.github.axet.audiorecorder.encoders.FormatWAV;
 import com.github.axet.audiorecorder.widgets.PitchView;
@@ -175,7 +176,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         updateBufferSize(false);
 
-        updateSamples(0);
+        updateSamples(getSamples(storage.getTempRecording().length()));
 
         View cancel = findViewById(R.id.recording_cancel);
         cancel.setOnClickListener(new View.OnClickListener() {
@@ -220,10 +221,6 @@ public class RecordingActivity extends AppCompatActivity {
                 });
             }
         });
-
-        if (permitted()) {
-            record();
-        }
     }
 
     boolean isEmulator() {
@@ -244,6 +241,14 @@ public class RecordingActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        // start once
+        if (thread == null) {
+            if (permitted()) {
+                record();
+            }
+        }
+
         Log.d(TAG, "onResume");
         updateBufferSize(false);
         pitch.resume();
@@ -355,18 +360,7 @@ public class RecordingActivity extends AppCompatActivity {
                 AudioRecord recorder = null;
                 try {
                     File tmp = storage.getTempRecording();
-
-                    {
-                        long ss = tmp.length();
-                        if (AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT) {
-                            ss = ss / 2;
-                        }
-                        if (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO) {
-                            ss = ss / 2;
-                        }
-
-                        samplesTime = ss;
-                    }
+                    samplesTime = getSamples(tmp.length());
 
                     os = new DataOutputStream(new BufferedOutputStream(storage.open(tmp)));
 
@@ -461,6 +455,16 @@ public class RecordingActivity extends AppCompatActivity {
         thread.start();
     }
 
+    long getSamples(long len) {
+        if (AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT) {
+            len = len / 2;
+        }
+        if (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO) {
+            len = len / 2;
+        }
+        return len;
+    }
+
     // calcuale buffer length dynamically, this way we can reduce thread cycles when activity in background
     // or phone screen is off.
     void updateBufferSize(boolean pause) {
@@ -472,7 +476,6 @@ public class RecordingActivity extends AppCompatActivity {
             }
 
             bufferSize = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2;
-            Log.d(TAG, "BufferSize: " + bufferSize);
         }
     }
 
@@ -603,6 +606,9 @@ public class RecordingActivity extends AppCompatActivity {
         }
         if (ext.equals("m4a")) {
             e = new FormatM4A(info, out);
+        }
+        if (ext.equals("3gp")) {
+            e = new Format3GP(info, out);
         }
 
         encoder = new FileEncoder(this, in, e);

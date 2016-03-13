@@ -5,6 +5,9 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.util.Log;
+
+import com.github.axet.audiorecorder.activities.SettingsActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,39 +36,59 @@ public class MuxerMP4 implements Encoder {
     }
 
     public void encode(short[] buf) {
-        int len = buf.length * 2;
-        int inputIndex = encoder.dequeueInputBuffer(-1);
-        if (inputIndex >= 0) {
+        Log.d("123", "encode " + buf.length);
+        for (int offset = 0; offset < buf.length; ) {
+            int len = buf.length - offset;
+
+            int inputIndex = encoder.dequeueInputBuffer(-1);
+            if (inputIndex < 0)
+                throw new RuntimeException("unable to open encoder input buffer");
+
             ByteBuffer input = encoder.getInputBuffer(inputIndex);
             input.clear();
-            for (int i = 0; i < buf.length; i++)
+
+            len = Math.min(len, input.limit() / 2);
+
+            for (int i = 0; i < len; i++)
                 input.putShort(buf[i]);
-            encoder.queueInputBuffer(inputIndex, 0, len, getCurrentTimeStamp(), 0);
+
+            int bytes = len * 2;
+
+            encoder.queueInputBuffer(inputIndex, 0, bytes, getCurrentTimeStamp(), 0);
+            Log.d("123", "put " + bytes);
+            NumSamples += len / info.channels;
+            offset += len;
+
+            while (encode())
+                ;// do encode()
         }
-
-        NumSamples += buf.length / info.channels;
-
-        encode();
     }
 
-    void encode() {
+    boolean encode() {
         MediaCodec.BufferInfo outputInfo = new MediaCodec.BufferInfo();
         int outputIndex = encoder.dequeueOutputBuffer(outputInfo, 0);
+        if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER)
+            return false;
+
         if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+            Log.d("123", "output set " + encoder.getOutputFormat());
             audioTrackIndex = muxer.addTrack(encoder.getOutputFormat());
             muxer.start();
         }
 
-        while (outputIndex >= 0) {
+        if (outputIndex >= 0) {
             ByteBuffer output = encoder.getOutputBuffer(outputIndex);
             output.position(outputInfo.offset);
             output.limit(outputInfo.offset + outputInfo.size);
 
+            Log.d("123", "get " + outputInfo.size);
+
             muxer.writeSampleData(audioTrackIndex, output, outputInfo);
 
             encoder.releaseOutputBuffer(outputIndex, false);
-            outputIndex = encoder.dequeueOutputBuffer(outputInfo, 0);
         }
+
+        return true;
     }
 
     public void close() {
@@ -89,6 +112,7 @@ public class MuxerMP4 implements Encoder {
             ByteBuffer input = encoder.getInputBuffer(inputIndex);
             input.clear();
             encoder.queueInputBuffer(inputIndex, 0, 0, getCurrentTimeStamp(), MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+            Log.d("123", "set end  ");
         }
     }
 

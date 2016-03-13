@@ -7,7 +7,7 @@ import android.media.MediaFormat;
 import java.io.File;
 
 @TargetApi(21)
-public class FormatM4A extends ContainerMP4 {
+public class FormatM4A extends MuxerMP4 {
 
     public FormatM4A(EncoderInfo info, File out) {
         MediaFormat format = new MediaFormat();
