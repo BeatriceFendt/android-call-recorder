@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -46,6 +47,7 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -92,10 +94,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             clear();
             duration.clear();
 
-            File[] ff = dir.listFiles();
-
-            if (ff == null)
-                return;
+            List<File> ff = storage.scan(dir);
 
             for (File f : ff) {
                 if (f.isFile()) {
@@ -119,6 +118,13 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             } else {
                 float f = s / 1024f;
                 return String.format("%.1f kb", f);
+            }
+        }
+
+        public void close() {
+            if (player != null) {
+                player.release();
+                player = null;
             }
         }
 
@@ -232,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
                         shareProvider.show();
 
-                        Log.d("123","show");
+                        Log.d("123", "show");
                     }
                 });
 
@@ -498,5 +504,24 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                list.smoothScrollToPosition(selected);
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        recordings.close();
     }
 }

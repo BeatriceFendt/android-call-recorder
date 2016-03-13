@@ -66,7 +66,7 @@ public class RecordingActivity extends AppCompatActivity {
     FileEncoder encoder;
 
     Thread thread;
-    short[] buffer;
+    Integer bufferSize = 0;
     int sampleRate;
     int channelConfig;
     int audioFormat;
@@ -85,16 +85,13 @@ public class RecordingActivity extends AppCompatActivity {
 
     int soundMode;
 
-    // how many samples passed
-    long samplesTime;
-
     Storage storage;
 
     public class RecordingReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                showRecordingActivity();
+                // showRecordingActivity();
             }
             if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
                 // do nothing. do not annoy user. he will see alarm screen on next screen on event.
@@ -182,7 +179,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         updateBufferSize(false);
 
-        updateSamples();
+        updateSamples(0);
 
         View cancel = findViewById(R.id.recording_cancel);
         cancel.setOnClickListener(new View.OnClickListener() {
@@ -207,7 +204,7 @@ public class RecordingActivity extends AppCompatActivity {
                 if (thread != null) {
                     stopRecording("pause");
                 } else {
-                    if (permitted()) {
+                    if (permitted(PERMISSIONS)) {
                         resumeRecording();
                     }
                 }
@@ -218,6 +215,7 @@ public class RecordingActivity extends AppCompatActivity {
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                stopRecording("encoding");
                 encoding(new Runnable() {
                     @Override
                     public void run() {
@@ -250,6 +248,7 @@ public class RecordingActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d(TAG, "onResume");
         updateBufferSize(false);
         pitch.resume();
     }
@@ -257,6 +256,7 @@ public class RecordingActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        Log.d(TAG, "onPause");
         updateBufferSize(true);
         pitch.pause();
     }
@@ -273,6 +273,7 @@ public class RecordingActivity extends AppCompatActivity {
             thread.interrupt();
             thread = null;
         }
+        pitch.pause();
         unsilent();
     }
 
@@ -350,6 +351,9 @@ public class RecordingActivity extends AppCompatActivity {
                     Log.e(TAG, "Unable to set Thread Priority " + android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                 }
 
+                // how many samples passed
+                long samplesTime;
+
                 DataOutputStream os = null;
                 AudioRecord recorder = null;
                 try {
@@ -364,9 +368,7 @@ public class RecordingActivity extends AppCompatActivity {
                             ss = ss / 2;
                         }
 
-                        synchronized (thread) {
-                            samplesTime = ss;
-                        }
+                        samplesTime = ss;
                     }
 
                     os = new DataOutputStream(new BufferedOutputStream(storage.open(tmp)));
@@ -393,43 +395,51 @@ public class RecordingActivity extends AppCompatActivity {
                     // how many samples we need to update 'samples'. time clock. every 1000ms.
                     int samplesTimeUpdate = 1000 / 1000 * sampleRate * (channelConfig == AudioFormat.CHANNEL_IN_MONO ? 1 : 2);
 
+                    short[] buffer = null;
+
                     while (!Thread.currentThread().isInterrupted()) {
-                        synchronized (thread) {
-                            final int readSize = recorder.read(buffer, 0, buffer.length);
-                            if (readSize <= 0) {
-                                break;
-                            }
+                        synchronized (bufferSize) {
+                            if (buffer == null || buffer.length != bufferSize)
+                                buffer = new short[bufferSize];
+                        }
 
-                            double sum = 0;
-                            for (int i = 0; i < readSize; i++) {
-                                try {
-                                    os.writeShort(buffer[i]);
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
+                        final int readSize = recorder.read(buffer, 0, buffer.length);
+                        if (readSize <= 0) {
+                            break;
+                        }
+
+                        Log.d("123", "" + readSize);
+
+                        double sum = 0;
+                        for (int i = 0; i < readSize; i++) {
+                            try {
+                                os.writeShort(buffer[i]);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            sum += buffer[i] * buffer[i];
+                        }
+
+                        int amplitude = (int) (Math.sqrt(sum / readSize));
+                        int s = channelConfig == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
+
+                        samplesUpdateCount += s;
+                        if (samplesUpdateCount >= samplesUpdate) {
+                            pitch.add((int) (amplitude / (float) maximumAltitude * 100) + 1);
+                            samplesUpdateCount -= samplesUpdate;
+                        }
+
+                        samplesTime += s;
+                        samplesTimeCount += s;
+                        if (samplesTimeCount > samplesTimeUpdate) {
+                            final long m = samplesTime;
+                            handle.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateSamples(m);
                                 }
-                                sum += buffer[i] * buffer[i];
-                            }
-
-                            int amplitude = (int) (Math.sqrt(sum / readSize));
-                            int s = channelConfig == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
-
-                            samplesUpdateCount += s;
-                            if (samplesUpdateCount >= samplesUpdate) {
-                                pitch.add((int) (amplitude / (float) maximumAltitude * 100) + 1);
-                                samplesUpdateCount -= samplesUpdate;
-                            }
-
-                            samplesTime += s;
-                            samplesTimeCount += s;
-                            if (samplesTimeCount > samplesTimeUpdate) {
-                                handle.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        updateSamples();
-                                    }
-                                });
-                                samplesTimeCount -= samplesTimeUpdate;
-                            }
+                            });
+                            samplesTimeCount -= samplesTimeUpdate;
                         }
                     }
                 } catch (final RuntimeException e) {
@@ -459,24 +469,19 @@ public class RecordingActivity extends AppCompatActivity {
     // calcuale buffer length dynamically, this way we can reduce thread cycles when activity in background
     // or phone screen is off.
     void updateBufferSize(boolean pause) {
-        Thread t = thread;
-
-        if (t == null) {
-            t = new Thread();
-        }
-
-        synchronized (t) {
+        synchronized (bufferSize) {
             if (pause) {
                 samplesUpdate = (int) (1000 * sampleRate / 1000.0);
             } else {
                 samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
             }
 
-            buffer = new short[channelConfig == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2];
+            bufferSize = channelConfig == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2;
+            Log.d(TAG, "BufferSize: " + bufferSize);
         }
     }
 
-    void updateSamples() {
+    void updateSamples(long samplesTime) {
         long ms = samplesTime / sampleRate * 1000;
 
         time.setText(MainApplication.formatDuration(ms));
@@ -588,8 +593,6 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     void encoding(final Runnable run) {
-        stopRecording("encoding");
-
         final File in = storage.getTempRecording();
         final File out = targetFile;
 
