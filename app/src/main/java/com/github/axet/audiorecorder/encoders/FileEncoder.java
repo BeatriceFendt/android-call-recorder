@@ -6,6 +6,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.github.axet.audiorecorder.activities.RecordingActivity;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -17,7 +19,6 @@ public class FileEncoder {
     Handler handler;
 
     File in;
-    EncoderInfo info;
     Encoder encoder;
     Thread thread;
     long samples;
@@ -30,7 +31,6 @@ public class FileEncoder {
         this.context = context;
         this.in = in;
         this.encoder = encoder;
-        this.info = encoder.getInfo();
 
         handler = new Handler();
     }
@@ -48,11 +48,12 @@ public class FileEncoder {
                     is = new FileInputStream(in);
 
                     while (!Thread.currentThread().isInterrupted()) {
-                        byte[] buf = new byte[info.channels * info.bps / 8 * 100];
+                        // temporary recording use global settings for encoding format.
+                        // take 1000 samples at once.
+                        byte[] buf = new byte[(RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1) * 1000];
 
                         int len = is.read(buf);
                         if (len <= 0) {
-                            Log.d("23", "end");
                             handler.post(done);
                             return;
                         } else {
@@ -65,18 +66,15 @@ public class FileEncoder {
                             }
                         }
                     }
-                    Log.d("23", "interrupted " + Thread.currentThread().isInterrupted());
                 } catch (IOException e) {
-                    Log.d("23", "error " + e.getMessage());
                     t = e;
                     handler.post(error);
                 } finally {
-                    Log.d("23", "close");
                     encoder.close();
                     if (is != null) {
                         try {
                             is.close();
-                        } catch (IOException e) {
+                        } catch (IOException ignore) {
                         }
                     }
                 }
@@ -86,9 +84,7 @@ public class FileEncoder {
     }
 
     long getSamples(long samples) {
-        samples = samples / (info.bps / 8);
-        samples = samples / info.channels;
-        return samples;
+        return samples / (RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
     }
 
     public int getProgress() {
@@ -102,6 +98,9 @@ public class FileEncoder {
     }
 
     public void close() {
-        thread.interrupt();
+        if (thread != null) {
+            thread.interrupt();
+            thread = null;
+        }
     }
 }
