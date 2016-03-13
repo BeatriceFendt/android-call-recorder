@@ -48,6 +48,10 @@ import java.io.File;
 import java.io.IOException;
 
 public class RecordingActivity extends AppCompatActivity {
+    public static int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+    public static int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
+    public static int MAXIMUM_ALTITUDE = 5000;
+
     public static final String TAG = RecordingActivity.class.getSimpleName();
     public static final String START_RECORDING = RecordingActivity.class.getCanonicalName() + ".START_RECORDING";
     public static final String CLOSE_ACTIVITY = RecordingActivity.class.getCanonicalName() + ".CLOSE_ACTIVITY";
@@ -56,30 +60,26 @@ public class RecordingActivity extends AppCompatActivity {
 
     public static final String PHONE_STATE = "android.intent.action.PHONE_STATE";
 
-    int maximumAltitude;
-
-    PitchView pitch;
-
     RecordingReceiver receiver;
     PhoneStateChangeListener pscl = new PhoneStateChangeListener();
     Handler handle = new Handler();
     FileEncoder encoder;
 
     Thread thread;
+    // dynamic buffer size. big for backgound recording. small for realtime view updates.
     Integer bufferSize = 0;
+    // variable from settings. how may samples per second.
     int sampleRate;
-    int channelConfig;
-    int audioFormat;
     // how many samples count need to update view. 4410 for 100ms update.
     int samplesUpdate;
+    // output target file 2016-01-01 01.01.01.wav
+    File targetFile;
 
     TextView title;
     TextView time;
     TextView state;
     ImageButton pause;
-
-    // output target file 2016-01-01 01.01.01.wav
-    File targetFile;
+    PitchView pitch;
 
     Runnable progress;
 
@@ -166,16 +166,12 @@ public class RecordingActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
-        maximumAltitude = 5000;
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
 
         if (isEmulator() && Build.VERSION.SDK_INT < 23) {
             Toast.makeText(this, "Emulator Detected. Reducing Sample Rate to 8000 Hz", Toast.LENGTH_SHORT).show();
             sampleRate = 8000;
         }
-
-        channelConfig = AudioFormat.CHANNEL_IN_MONO;
-        audioFormat = AudioFormat.ENCODING_PCM_16BIT;
 
         updateBufferSize(false);
 
@@ -310,6 +306,7 @@ public class RecordingActivity extends AppCompatActivity {
         if (thread == null) {
             record();
         }
+        pitch.resume();
     }
 
     @Override
@@ -361,10 +358,10 @@ public class RecordingActivity extends AppCompatActivity {
 
                     {
                         long ss = tmp.length();
-                        if (audioFormat == AudioFormat.ENCODING_PCM_16BIT) {
+                        if (AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT) {
                             ss = ss / 2;
                         }
-                        if (channelConfig == AudioFormat.CHANNEL_IN_STEREO) {
+                        if (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO) {
                             ss = ss / 2;
                         }
 
@@ -373,17 +370,17 @@ public class RecordingActivity extends AppCompatActivity {
 
                     os = new DataOutputStream(new BufferedOutputStream(storage.open(tmp)));
 
-                    int min = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
+                    int min = AudioRecord.getMinBufferSize(sampleRate, CHANNEL_CONFIG, AUDIO_FORMAT);
                     if (min <= 0) {
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
                     }
 
                     // make it 5 seconds buffer
                     int min2 = 5 * sampleRate
-                            * (audioFormat == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1)
-                            * (channelConfig == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1);
+                            * (AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1)
+                            * (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1);
 
-                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, Math.min(min2, min));
+                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, CHANNEL_CONFIG, AUDIO_FORMAT, Math.min(min2, min));
                     if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
                         throw new RuntimeException("Unable to initialize AudioRecord");
                     }
@@ -393,7 +390,7 @@ public class RecordingActivity extends AppCompatActivity {
                     int samplesUpdateCount = 0;
                     int samplesTimeCount = 0;
                     // how many samples we need to update 'samples'. time clock. every 1000ms.
-                    int samplesTimeUpdate = 1000 / 1000 * sampleRate * (channelConfig == AudioFormat.CHANNEL_IN_MONO ? 1 : 2);
+                    int samplesTimeUpdate = 1000 / 1000 * sampleRate * (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2);
 
                     short[] buffer = null;
 
@@ -408,8 +405,6 @@ public class RecordingActivity extends AppCompatActivity {
                             break;
                         }
 
-                        Log.d("123", "" + readSize);
-
                         double sum = 0;
                         for (int i = 0; i < readSize; i++) {
                             try {
@@ -421,11 +416,11 @@ public class RecordingActivity extends AppCompatActivity {
                         }
 
                         int amplitude = (int) (Math.sqrt(sum / readSize));
-                        int s = channelConfig == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
+                        int s = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
 
                         samplesUpdateCount += s;
                         if (samplesUpdateCount >= samplesUpdate) {
-                            pitch.add((int) (amplitude / (float) maximumAltitude * 100) + 1);
+                            pitch.add((int) (amplitude / (float) MAXIMUM_ALTITUDE * 100) + 1);
                             samplesUpdateCount -= samplesUpdate;
                         }
 
@@ -476,7 +471,7 @@ public class RecordingActivity extends AppCompatActivity {
                 samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
             }
 
-            bufferSize = channelConfig == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2;
+            bufferSize = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2;
             Log.d(TAG, "BufferSize: " + bufferSize);
         }
     }
@@ -559,7 +554,7 @@ public class RecordingActivity extends AppCompatActivity {
             soundMode = am.getRingerMode();
 
             if (soundMode == AudioManager.RINGER_MODE_SILENT) {
-                // keep unchanged
+                // we already in SILENT mode. keep all unchanged.
                 soundMode = -1;
                 return;
             }
@@ -586,8 +581,8 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     EncoderInfo getInfo() {
-        final int channels = channelConfig == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1;
-        final int bps = audioFormat == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
+        final int channels = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1;
+        final int bps = AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
 
         return new EncoderInfo(channels, sampleRate, bps);
     }
