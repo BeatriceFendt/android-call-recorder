@@ -58,6 +58,7 @@ public class RecordingActivity extends AppCompatActivity {
     public static final String CLOSE_ACTIVITY = RecordingActivity.class.getCanonicalName() + ".CLOSE_ACTIVITY";
     public static final int NOTIFICATION_RECORDING_ICON = 0;
     public static String SHOW_ACTIVITY = RecordingActivity.class.getCanonicalName() + ".SHOW_ACTIVITY";
+    public static String PAUSE = RecordingActivity.class.getCanonicalName() + ".PAUSE";
 
     public static final String PHONE_STATE = "android.intent.action.PHONE_STATE";
 
@@ -66,6 +67,7 @@ public class RecordingActivity extends AppCompatActivity {
     Handler handle = new Handler();
     FileEncoder encoder;
 
+    boolean start = false;
     Thread thread;
     // dynamic buffer size. big for backgound recording. small for realtime view updates.
     Integer bufferSize = 0;
@@ -99,6 +101,9 @@ public class RecordingActivity extends AppCompatActivity {
             }
             if (intent.getAction().equals(SHOW_ACTIVITY)) {
                 showRecordingActivity();
+            }
+            if (intent.getAction().equals(PAUSE)) {
+                pauseButton();
             }
         }
     }
@@ -153,6 +158,7 @@ public class RecordingActivity extends AppCompatActivity {
         filter.addAction(Intent.ACTION_SCREEN_ON);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(SHOW_ACTIVITY);
+        filter.addAction(PAUSE);
         registerReceiver(receiver, filter);
 
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
@@ -198,13 +204,7 @@ public class RecordingActivity extends AppCompatActivity {
         pause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (thread != null) {
-                    stopRecording("pause");
-                } else {
-                    if (permitted(PERMISSIONS)) {
-                        resumeRecording();
-                    }
-                }
+                pauseButton();
             }
         });
 
@@ -238,20 +238,33 @@ public class RecordingActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    void pauseButton() {
+        if (thread != null) {
+            stopRecording("pause");
+        } else {
+            if (permitted(PERMISSIONS)) {
+                resumeRecording();
+            }
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d(TAG, "onResume");
 
         // start once
-        if (thread == null) {
+        if (start == false) {
+            start = true;
             if (permitted()) {
                 record();
             }
         }
 
-        Log.d(TAG, "onResume");
         updateBufferSize(false);
-        pitch.resume();
+
+        if (thread != null)
+            pitch.resume();
     }
 
     @Override
@@ -267,6 +280,8 @@ public class RecordingActivity extends AppCompatActivity {
         pause.setImageResource(R.drawable.ic_mic_24dp);
 
         stopRecording();
+
+        showNotificationAlarm(true);
     }
 
     void stopRecording() {
@@ -337,8 +352,6 @@ public class RecordingActivity extends AppCompatActivity {
 
     void record() {
         state.setText("recording");
-
-        showNotificationAlarm(true);
 
         silent();
 
@@ -454,6 +467,8 @@ public class RecordingActivity extends AppCompatActivity {
             }
         }, "RecordingThread");
         thread.start();
+
+        showNotificationAlarm(true);
     }
 
     long getSamples(long len) {
@@ -497,8 +512,15 @@ public class RecordingActivity extends AppCompatActivity {
                     new Intent(SHOW_ACTIVITY),
                     PendingIntent.FLAG_UPDATE_CURRENT);
 
+            PendingIntent pe = PendingIntent.getBroadcast(this, 0,
+                    new Intent(PAUSE),
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+
             RemoteViews view = new RemoteViews(getPackageName(), R.layout.notifictaion_recording);
-            view.setOnClickPendingIntent(R.id.notification_base, main);
+            view.setOnClickPendingIntent(R.id.status_bar_latest_event_content, main);
+            view.setTextViewText(R.id.notification_text, ".../" + targetFile.getName());
+            view.setOnClickPendingIntent(R.id.notification_pause, pe);
+            view.setImageViewResource(R.id.notification_pause, thread == null ? R.drawable.play : R.drawable.pause);
 
             Notification.Builder builder = new Notification.Builder(this)
                     .setOngoing(true)
