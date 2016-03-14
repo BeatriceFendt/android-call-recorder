@@ -261,6 +261,15 @@ public class OpenFileDialog extends AlertDialog.Builder {
             imm.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
         }
 
+        @Override
+        public AlertDialog create() {
+            AlertDialog d =  super.create();
+
+            d.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+            return d;
+        }
+
         public void setText(String s) {
             input.setText(s);
             input.setSelection(s.length());
