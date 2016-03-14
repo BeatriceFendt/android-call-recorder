@@ -2,6 +2,7 @@ package com.github.axet.audiorecorder.widgets;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.net.Uri;
@@ -44,17 +45,16 @@ public class StoragePathPreference extends EditTextPreference {
     @Override
     protected void showDialog(Bundle state) {
         f = new OpenFileDialog(getContext());
-        f.setCurrentPath(getText());
-        f.setFolderIcon(getContext().getResources().getDrawable(R.drawable.ic_folder_24dp));
-        f.setFileIcon(getContext().getResources().getDrawable(R.drawable.ic_file));
-        f.setUpIcon(getContext().getResources().getDrawable(R.drawable.ic_up));
-        f.init();
-        f.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
+        f.setCurrentPath(new File(getText()));
+        f.setFolderIcon(R.drawable.ic_folder_24dp);
+        f.setFileIcon(R.drawable.ic_file);
+        f.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
-            public void onFileSelected(String fileName) {
-                File f = new File(fileName);
-                if (!f.isDirectory())
-                    fileName = f.getParent();
+            public void onClick(DialogInterface dialog, int which) {
+                File ff = f.getCurrentPath();
+                String fileName = ff.getPath();
+                if (!ff.isDirectory())
+                    fileName = ff.getParent();
                 if (callChangeListener(fileName)) {
                     setText(fileName);
                 }
