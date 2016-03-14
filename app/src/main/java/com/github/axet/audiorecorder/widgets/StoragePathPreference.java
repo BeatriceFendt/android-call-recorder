@@ -52,7 +52,7 @@ public class StoragePathPreference extends EditTextPreference {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 File ff = f.getCurrentPath();
-                String fileName = ff.getName();
+                String fileName = ff.getPath();
                 if (!ff.isDirectory())
                     fileName = ff.getParent();
                 if (callChangeListener(fileName)) {

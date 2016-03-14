@@ -1,6 +1,5 @@
 package com.github.axet.audiorecorder.widgets;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Paint;
@@ -9,6 +8,8 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Environment;
+import android.support.v7.app.AlertDialog;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -36,6 +37,8 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
+import java.util.regex.Pattern;
 
 public class OpenFileDialog extends AlertDialog.Builder {
     public static String RENAME = "Rename";
@@ -49,7 +52,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
     public static String EMPTY_LIST = "Empty List";
 
     File currentPath;
-    TextView title;
+    TextMax textMax;
     ListView listView;
     FilenameFilter filenameFilter;
     int folderIcon;
@@ -146,6 +149,69 @@ public class OpenFileDialog extends AlertDialog.Builder {
         }
     }
 
+    public class TextMax extends ViewGroup {
+        TextView text;
+
+        public TextMax(Context context, TextView text) {
+            super(context);
+            this.text = text;
+
+            addView(text);
+        }
+
+        public int getTextWidth(String text, Paint paint) {
+            Rect bounds = new Rect();
+            paint.getTextBounds(text, 0, text.length(), bounds);
+            return bounds.left + bounds.width();
+        }
+
+        public String makePath(List<String> ss) {
+            return TextUtils.join(File.separator, ss);
+        }
+
+        public List<String> splitPath(String s) {
+            return new ArrayList<String>(Arrays.asList(s.split(Pattern.quote(File.separator))));
+        }
+
+        int getMaxWidth() {
+            return text.getWidth() - text.getPaddingLeft() - text.getPaddingRight();
+        }
+
+        public void updateText() {
+            String s = currentPath.getPath();
+
+            List<String> ss = splitPath(s);
+            List<String> ssdots = ss;
+
+            String sdots = makePath(ssdots);
+
+            while (getTextWidth(sdots, text.getPaint()) > getMaxWidth()) {
+                int mid = (ss.size() - 1) / 2;
+                ssdots = new ArrayList<>(ss);
+                ssdots.set(mid, "...");
+                ss.remove(mid);
+                sdots = makePath(ssdots);
+            }
+
+            text.setText(sdots);
+        }
+
+        @Override
+        protected void onLayout(boolean changed, int l, int t, int r, int b) {
+            text.layout(l, t, r, b);
+
+            updateText();
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+            int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+
+            text.measure(MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY), heightMeasureSpec);
+            setMeasuredDimension(text.getMeasuredWidth(), text.getMeasuredHeight());
+        }
+    }
 
     public static class EditTextDialog extends AlertDialog.Builder {
         EditText input;
@@ -157,16 +223,42 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
             setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    dialog.cancel();
                 }
             });
             setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    dialog.cancel();
+                    hide();
                 }
             });
 
             setView(input);
+        }
+
+        @Override
+        public AlertDialog.Builder setPositiveButton(int textId, final DialogInterface.OnClickListener listener) {
+            return super.setPositiveButton(textId, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    listener.onClick(dialog, which);
+                    hide();
+                }
+            });
+        }
+
+        @Override
+        public AlertDialog.Builder setPositiveButton(CharSequence text, final DialogInterface.OnClickListener listener) {
+            return super.setPositiveButton(text, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    listener.onClick(dialog, which);
+                    hide();
+                }
+            });
+        }
+
+        void hide() {
+            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
         }
 
         public void setText(String s) {
@@ -176,12 +268,6 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
         public String getText() {
             return input.getText().toString();
-        }
-
-        public AlertDialog show() {
-            final AlertDialog d = super.show();
-
-            return d;
         }
     }
 
@@ -206,11 +292,11 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
     @Override
     public AlertDialog show() {
-        title = (TextView) LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_1, null);
+        TextView title = (TextView) LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_1, null);
         title.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         title.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom);
-        changeTitle();
-        setCustomTitle(title);
+        textMax = new TextMax(getContext(), title);
+        setCustomTitle(textMax);
 
         // main view, linearlayout
         final LinearLayout main = new LinearLayout(getContext());
@@ -267,7 +353,6 @@ public class OpenFileDialog extends AlertDialog.Builder {
                                     toast(String.format(FOLDER_CREATED, builder.getText()));
                                 }
                                 adapter.scan(currentPath);
-                                dialog.cancel();
                             }
                         });
                         builder.show();
@@ -303,7 +388,6 @@ public class OpenFileDialog extends AlertDialog.Builder {
                                         ff.renameTo(f);
                                         toast(String.format(RENAMED, f.getName()));
                                         adapter.scan(currentPath);
-                                        dialog.cancel();
                                     }
                                 });
                                 b.show();
@@ -344,10 +428,8 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
         {
             TextView text = (TextView) LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_1, null);
-            text.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             text.setText(EMPTY_LIST);
             text.setVisibility(View.GONE);
-
             listView.setEmptyView(text);
             main.addView(text);
         }
@@ -414,40 +496,9 @@ public class OpenFileDialog extends AlertDialog.Builder {
         return getScreenSize(context).y;
     }
 
-    public int getTextWidth(String text, Paint paint) {
-        Rect bounds = new Rect();
-        paint.getTextBounds(text, 0, text.length(), bounds);
-        return bounds.left + bounds.width() + 80;
-    }
-
-    private void changeTitle() {
-        if (listView != null) {
-            if (listView.getBackground() != null)
-                Log.d("123", "" + listView.getBackground().getMinimumWidth() + " " + listView.getWidth() + " " + listView.getMinimumHeight());
-            else
-                Log.d("123", "" + listView.getWidth() + " " + listView.getMinimumHeight());
-        }
-
-        String titleText = currentPath.getAbsolutePath();
-        int screenWidth = getScreenSize(getContext()).x;
-        int maxWidth = (int) (screenWidth * 0.99);
-        if (getTextWidth(titleText, title.getPaint()) > maxWidth) {
-            while (getTextWidth("..." + titleText, title.getPaint()) > maxWidth) {
-                int start = titleText.indexOf("/", 2);
-                if (start > 0)
-                    titleText = titleText.substring(start);
-                else
-                    titleText = titleText.substring(2);
-            }
-            title.setText("..." + titleText);
-        } else {
-            title.setText(titleText);
-        }
-    }
-
     private void RebuildFiles() {
         adapter.scan(currentPath);
         listView.setSelection(0);
-        changeTitle();
+        textMax.updateText();
     }
 }
