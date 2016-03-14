@@ -328,10 +328,10 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             handler.postDelayed(updatePlayer, 200);
         }
 
-        void updatePlayerText(View v, File f) {
+        void updatePlayerText(final View v, final File f) {
             ImageView i = (ImageView) v.findViewById(R.id.recording_player_play);
 
-            boolean playing = player != null && player.isPlaying();
+            final boolean playing = player != null && player.isPlaying();
 
             if (Build.VERSION.SDK_INT < 21)
                 i.setBackground(getResources().getDrawable(playing ? R.drawable.pause : R.drawable.play));
@@ -350,8 +350,33 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 d = player.getDuration();
             }
 
+            bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    if (player == null && progress != 0)
+                        playerPlay(v, f);
+
+                    if (player != null) {
+                        player.seekTo(progress);
+                        if (!player.isPlaying())
+                            player.start();
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+
+                }
+            });
+
             start.setText(MainApplication.formatDuration(c));
-            bar.setProgress(c * 100 / d);
+            bar.setProgress(c);
+            bar.setMax(d);
             end.setText("-" + MainApplication.formatDuration(d - c));
         }
     }
