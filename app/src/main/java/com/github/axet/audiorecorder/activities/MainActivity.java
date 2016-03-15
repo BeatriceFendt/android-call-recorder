@@ -276,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             }
             player.start();
 
-            updatePlayer(v, f);
+            updatePlayerRun(v, f);
         }
 
         void playerPause() {
@@ -301,28 +301,28 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             }
         }
 
-        void updatePlayer(final View v, final File f) {
-            updatePlayerText(v, f);
+        void updatePlayerRun(final View v, final File f) {
+            boolean playing = updatePlayerText(v, f);
 
             if (updatePlayer != null) {
                 handler.removeCallbacks(updatePlayer);
                 updatePlayer = null;
             }
 
-            if (player == null || !player.isPlaying()) {
+            if (!playing) {
                 return;
             }
 
             updatePlayer = new Runnable() {
                 @Override
                 public void run() {
-                    updatePlayer(v, f);
+                    updatePlayerRun(v, f);
                 }
             };
             handler.postDelayed(updatePlayer, 200);
         }
 
-        void updatePlayerText(final View v, final File f) {
+        boolean updatePlayerText(final View v, final File f) {
             ImageView i = (ImageView) v.findViewById(R.id.recording_player_play);
 
             final boolean playing = player != null && player.isPlaying();
@@ -344,7 +344,10 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    if (player == null && progress != 0)
+                    if (!fromUser)
+                        return;
+
+                    if (player == null)
                         playerPlay(v, f);
 
                     if (player != null) {
@@ -366,9 +369,12 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             });
 
             start.setText(MainApplication.formatDuration(c));
-            bar.setProgress(c);
             bar.setMax(d);
+            bar.setKeyProgressIncrement(1);
+            bar.setProgress(c);
             end.setText("-" + MainApplication.formatDuration(d - c));
+
+            return playing;
         }
     }
 

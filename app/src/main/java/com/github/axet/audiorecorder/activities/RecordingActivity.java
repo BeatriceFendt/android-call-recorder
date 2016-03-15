@@ -357,6 +357,10 @@ public class RecordingActivity extends AppCompatActivity {
 
         pause.setImageResource(R.drawable.ic_pause_24dp);
 
+        if (thread != null) {
+            thread.interrupt();
+        }
+
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
