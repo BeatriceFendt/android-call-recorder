@@ -118,7 +118,7 @@ public class RecordingActivity extends AppCompatActivity {
                     wasRinging = true;
                     break;
                 case TelephonyManager.CALL_STATE_OFFHOOK:
-                    stopRecording("pause (hold by call)");
+                    stopRecording("playerPause (hold by call)");
                     wasRinging = true;
                     break;
                 case TelephonyManager.CALL_STATE_IDLE:

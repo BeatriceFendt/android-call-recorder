@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -18,7 +17,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,8 +40,6 @@ import com.github.axet.audiorecorder.app.Storage;
 import com.github.axet.audiorecorder.widgets.PopupShareActionProvider;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
@@ -217,12 +213,10 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                         if (player == null) {
                             playerPlay(playerBase, f);
                         } else if (player.isPlaying()) {
-                            pause();
+                            playerPause();
                         } else {
-                            player.start();
-                            updatePlayer(playerBase, f);
+                            playerPlay(playerBase, f);
                         }
-                        updatePlayerText(view, f);
                     }
                 });
 
@@ -266,7 +260,6 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                         notifyDataSetChanged();
 
                         playerStop();
-                        //playerPlay(playerBase, f);
                     }
                 });
             }
@@ -275,7 +268,8 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         }
 
         void playerPlay(View v, File f) {
-            player = MediaPlayer.create(getContext(), Uri.fromFile(f));
+            if (player == null)
+                player = MediaPlayer.create(getContext(), Uri.fromFile(f));
             if (player == null) {
                 Toast.makeText(MainActivity.this, "File not found", Toast.LENGTH_SHORT).show();
                 return;
@@ -285,7 +279,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             updatePlayer(v, f);
         }
 
-        void pause() {
+        void playerPause() {
             if (player != null) {
                 player.pause();
             }
@@ -356,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                     if (player != null) {
                         player.seekTo(progress);
                         if (!player.isPlaying())
-                            player.start();
+                            playerPlay(v, f);
                     }
                 }
 
