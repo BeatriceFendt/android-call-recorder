@@ -2,7 +2,6 @@ package com.github.axet.audiorecorder.activities;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
@@ -20,6 +19,7 @@ import android.media.MediaRecorder;
 import android.os.*;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.PhoneStateListener;
@@ -175,7 +175,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
 
-        if (isEmulator() && Build.VERSION.SDK_INT < 23) {
+        if (Build.VERSION.SDK_INT < 23 && isEmulator()) {
             Toast.makeText(this, "Emulator Detected. Reducing Sample Rate to 8000 Hz", Toast.LENGTH_SHORT).show();
             sampleRate = 8000;
         }
@@ -224,7 +224,7 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     boolean isEmulator() {
-        return Build.FINGERPRINT.contains("generic");
+        return "goldfish".equals(Build.HARDWARE);
     }
 
     @Override
@@ -526,14 +526,14 @@ public class RecordingActivity extends AppCompatActivity {
             view.setOnClickPendingIntent(R.id.notification_pause, pe);
             view.setImageViewResource(R.id.notification_pause, thread == null ? R.drawable.play : R.drawable.pause);
 
-            Notification.Builder builder = new Notification.Builder(this)
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                     .setOngoing(true)
                     .setContentTitle("Recording")
                     .setSmallIcon(R.drawable.ic_mic_24dp)
                     .setContent(view);
 
             if (Build.VERSION.SDK_INT >= 21)
-                builder.setVisibility(Notification.VISIBILITY_PUBLIC);
+                builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
             notificationManager.notify(NOTIFICATION_RECORDING_ICON, builder.build());
         }
