@@ -53,7 +53,8 @@ public class MuxerMP4 implements Encoder {
 
             int bytes = len * 2;
 
-            encoder.queueInputBuffer(inputIndex, 0, bytes, getCurrentTimeStamp(), 0);
+            long ts = getCurrentTimeStamp();
+            encoder.queueInputBuffer(inputIndex, 0, bytes, ts, 0);
             NumSamples += len / info.channels;
             offset += len;
 

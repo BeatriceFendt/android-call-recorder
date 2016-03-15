@@ -56,8 +56,6 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
     final int[] ALL = {TYPE_COLLAPSED, TYPE_EXPANDED};
 
-    int selected = -1;
-
     int scrollState;
 
     Recordings recordings;
@@ -81,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         MediaPlayer player;
         Runnable updatePlayer;
         PopupShareActionProvider shareProvider;
+        int selected = -1;
 
         Map<File, Integer> duration = new TreeMap<>();
 
@@ -177,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                                 public void run() {
                                     f.delete();
                                     view.setTag(TYPE_DELETED);
-                                    selected = -1;
+                                    select(-1);
                                     load();
                                 }
                             });
@@ -245,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                     @Override
                     public void onClick(View v) {
                         playerStop();
-                        selected = -1;
+                        select(-1);
                         notifyDataSetChanged();
                     }
                 });
@@ -256,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 convertView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        selected = position;
+                        select(position);
                         notifyDataSetChanged();
 
                         playerStop();
@@ -376,6 +375,12 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
             return playing;
         }
+
+        public void select(int pos) {
+            selected = pos;
+            notifyDataSetChanged();
+            playerStop();
+        }
     }
 
     @Override
@@ -468,8 +473,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    MainActivity.this.selected = selected;
-                    recordings.notifyDataSetChanged();
+                    recordings.select(selected);
                 }
             });
         }
@@ -544,7 +548,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         handler.post(new Runnable() {
             @Override
             public void run() {
-                list.smoothScrollToPosition(selected);
+                list.smoothScrollToPosition(recordings.selected);
             }
         });
     }
