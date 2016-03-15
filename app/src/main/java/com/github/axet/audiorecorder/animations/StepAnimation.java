@@ -1,5 +1,6 @@
 package com.github.axet.audiorecorder.animations;
 
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -9,8 +10,10 @@ import android.view.animation.Transformation;
 
 public class StepAnimation extends Animation {
 
-    interface LateCreator {
-        public StepAnimation create();
+    View view;
+
+    public interface LateCreator {
+        StepAnimation create();
     }
 
     public static void apply(LateCreator c, View v, boolean expand, boolean animate) {
@@ -26,7 +29,7 @@ public class StepAnimation extends Animation {
             if (animate) {
                 if (m.hasEnded()) {
                     StepAnimation mm = c.create();
-                    v.startAnimation(c.create());
+                    mm.startAnimation(v);
                 } else {
                     if (m.expand != expand) {
                         m.expand = expand;
@@ -47,7 +50,7 @@ public class StepAnimation extends Animation {
         } else {
             StepAnimation mm = c.create();
             if (animate) {
-                v.startAnimation(mm);
+                mm.startAnimation(v);
             } else {
                 mm.restore();
                 mm.end();
@@ -55,31 +58,41 @@ public class StepAnimation extends Animation {
         }
     }
 
-    public StepAnimation() {
+    public StepAnimation(View view) {
+        this.view = view;
     }
 
-    @Override
-    public void initialize(int width, int height, int parentWidth, int parentHeight) {
-        super.initialize(width, height, parentWidth, parentHeight);
+    public void startAnimation(View v) {
+        init();
+        // do first step to hide view (we animation does it).
+        //
+        // but some androids API does not start animation on 0dp views.
+        calc(0.01f, new Transformation());
+        v.startAnimation(this);
     }
 
-    void calc(float i) {
+    public void init() {
+        // animation does not start on older API if inital state of view is hidden.
+        // show view here.
+        view.setVisibility(View.VISIBLE);
     }
 
-    void restore() {
+    public void calc(float i, Transformation t) {
     }
 
-    void end() {
+    public void restore() {
+    }
+
+    public void end() {
     }
 
     @Override
     protected void applyTransformation(float interpolatedTime, Transformation t) {
         super.applyTransformation(interpolatedTime, t);
 
-        if (interpolatedTime < 1) {
-            float i = interpolatedTime;
-            calc(i);
-        } else {
+        calc(interpolatedTime, t);
+
+        if (interpolatedTime >= 1) {
             restore();
             end();
         }

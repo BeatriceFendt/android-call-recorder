@@ -333,10 +333,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
             final boolean playing = player != null && player.isPlaying();
 
-            if (Build.VERSION.SDK_INT < 21)
-                i.setBackground(getResources().getDrawable(playing ? R.drawable.pause : R.drawable.play));
-            else
-                i.setBackground(getResources().getDrawable(playing ? R.drawable.pause : R.drawable.play, getTheme()));
+            i.setImageResource(playing ? R.drawable.pause : R.drawable.play);
 
             TextView start = (TextView) v.findViewById(R.id.recording_player_start);
             SeekBar bar = (SeekBar) v.findViewById(R.id.recording_player_seek);
