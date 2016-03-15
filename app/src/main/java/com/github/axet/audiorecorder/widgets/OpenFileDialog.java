@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -186,11 +187,19 @@ public class OpenFileDialog extends AlertDialog.Builder {
             String sdots = makePath(ssdots);
 
             while (getTextWidth(sdots, text.getPaint()) > getMaxWidth()) {
-                int mid = (ss.size() - 1) / 2;
-                ssdots = new ArrayList<>(ss);
-                ssdots.set(mid, "...");
-                ss.remove(mid);
-                sdots = makePath(ssdots);
+                if (ss.size() == 1) {
+                    String sdot = ss.get(0);
+                    sdot = sdot.substring(1, sdot.length());
+                    ss.set(0, sdot);
+                    sdot = "..." + sdot;
+                    sdots = sdot;
+                } else {
+                    int mid = (ss.size() - 1) / 2;
+                    ssdots = new ArrayList<>(ss);
+                    ssdots.set(mid, "...");
+                    ss.remove(mid);
+                    sdots = makePath(ssdots);
+                }
             }
 
             text.setText(sdots);
@@ -220,6 +229,8 @@ public class OpenFileDialog extends AlertDialog.Builder {
             super(context);
 
             input = new EditText(getContext());
+
+            input.setSingleLine(true);
 
             setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -263,7 +274,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
         @Override
         public AlertDialog create() {
-            AlertDialog d =  super.create();
+            AlertDialog d = super.create();
 
             d.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
