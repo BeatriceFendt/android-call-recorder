@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Handler;
 import android.view.View;
+import android.view.animation.Transformation;
 import android.widget.ListView;
 
 import com.github.axet.audiorecorder.R;
@@ -42,10 +43,8 @@ public class RecordingAnimation extends MarginAnimation {
     }
 
     @Override
-    public void initialize(int width, int height, int parentWidth, int parentHeight) {
-        super.initialize(width, height, parentWidth, parentHeight);
-
-        view.setVisibility(View.VISIBLE);
+    public void init() {
+        super.init();
 
         {
             final int paddedTop = list.getListPaddingTop();
@@ -59,8 +58,8 @@ public class RecordingAnimation extends MarginAnimation {
     }
 
     @Override
-    void calc(final float i) {
-        super.calc(i);
+    public void calc(final float i, Transformation t) {
+        super.calc(i, t);
 
         float ii = expand ? i : 1 - i;
 
@@ -102,12 +101,12 @@ public class RecordingAnimation extends MarginAnimation {
     }
 
     @Override
-    void restore() {
+    public void restore() {
         super.restore();
     }
 
     @Override
-    void end() {
+    public void end() {
         super.end();
     }
 }
