@@ -9,27 +9,22 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Environment;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -232,7 +227,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
             input.setSingleLine(true);
 
-            setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            setPositiveButton(new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                 }
             });
@@ -243,6 +238,10 @@ public class OpenFileDialog extends AlertDialog.Builder {
             });
 
             setView(input);
+        }
+
+        public AlertDialog.Builder setPositiveButton(final DialogInterface.OnClickListener listener) {
+            return super.setPositiveButton(android.R.string.ok, listener);
         }
 
         @Override
@@ -363,7 +362,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
                         final EditTextDialog builder = new EditTextDialog(getContext());
                         builder.setTitle(FOLDER_NAME);
                         builder.setText("");
-                        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        builder.setPositiveButton(new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 File f = new File(currentPath, builder.getText());
@@ -401,7 +400,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
                                 final EditTextDialog b = new EditTextDialog(getContext());
                                 b.setTitle(FOLDER_NAME);
                                 b.setText(ff.getName());
-                                b.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                b.setPositiveButton(new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         File f = new File(ff.getParent(), b.getText());

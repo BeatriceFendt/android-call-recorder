@@ -25,6 +25,16 @@ public class MainApplication extends Application {
         return String.format("%02d", tt);
     }
 
+    public static String formatSize(long s) {
+        if (s > 0.1 * 1024 * 1024) {
+            float f = s / 1024f / 1024f;
+            return String.format("%.1f MB", f);
+        } else {
+            float f = s / 1024f;
+            return String.format("%.1f kb", f);
+        }
+    }
+
     static public String formatDuration(long diff) {
         int diffMilliseconds = (int) (diff % 1000);
         int diffSeconds = (int) (diff / 1000 % 60);

@@ -101,6 +101,26 @@ public class Storage {
         return getNextFile(parent, s.format(new Date()), ext);
     }
 
+    public static String getNameNoExt(File f) {
+        String fileName = f.getName();
+
+        int i = fileName.lastIndexOf('.');
+        if (i > 0) {
+            fileName = fileName.substring(0, i);
+        }
+        return fileName;
+    }
+
+    public static String getExt(File f) {
+        String fileName = f.getName();
+
+        int i = fileName.lastIndexOf('.');
+        if (i > 0) {
+            return fileName.substring(i + 1);
+        }
+        return "";
+    }
+
     File getNextFile(File parent, File f) {
         String fileName = f.getName();
 
@@ -109,14 +129,18 @@ public class Storage {
         int i = fileName.lastIndexOf('.');
         if (i > 0) {
             extension = fileName.substring(i + 1);
+            fileName = fileName.substring(0, i);
         }
-        fileName = fileName.substring(0, i);
 
         return getNextFile(parent, fileName, extension);
     }
 
     File getNextFile(File parent, String name, String ext) {
-        String fileName = String.format("%s.%s", name, ext);
+        String fileName;
+        if (ext.isEmpty())
+            fileName = name;
+        else
+            fileName = String.format("%s.%s", name, ext);
 
         File file = new File(parent, fileName);
 
