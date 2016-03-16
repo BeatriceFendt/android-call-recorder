@@ -17,10 +17,12 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +39,7 @@ import com.github.axet.audiorecorder.animations.RecordingAnimation;
 import com.github.axet.audiorecorder.animations.RemoveItemAnimation;
 import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.Storage;
+import com.github.axet.audiorecorder.widgets.OpenFileDialog;
 import com.github.axet.audiorecorder.widgets.PopupShareActionProvider;
 
 import java.io.File;
@@ -78,10 +81,9 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     public class Recordings extends ArrayAdapter<File> {
         MediaPlayer player;
         Runnable updatePlayer;
-        PopupShareActionProvider shareProvider;
         int selected = -1;
 
-        Map<File, Integer> duration = new TreeMap<>();
+        Map<File, Integer> durations = new TreeMap<>();
 
         public Recordings(Context context) {
             super(context, 0);
@@ -89,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
         public void scan(File dir) {
             clear();
-            duration.clear();
+            durations.clear();
 
             List<File> ff = storage.scan(dir);
 
@@ -99,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                     if (mp != null) {
                         int d = mp.getDuration();
                         mp.release();
-                        duration.put(f, d);
+                        durations.put(f, d);
                         add(f);
                     } else {
                         Log.e(TAG, f.toString());
@@ -110,20 +112,14 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             sort(new SortFiles());
         }
 
-        String formatSize(long s) {
-            if (s > 0.1 * 1024 * 1024) {
-                float f = s / 1024f / 1024f;
-                return String.format("%.1f MB", f);
-            } else {
-                float f = s / 1024f;
-                return String.format("%.1f kb", f);
-            }
-        }
-
         public void close() {
             if (player != null) {
                 player.release();
                 player = null;
+            }
+            if (updatePlayer != null) {
+                handler.removeCallbacks(updatePlayer);
+                updatePlayer = null;
             }
         }
 
@@ -154,15 +150,21 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             time.setText(s.format(new Date(f.lastModified())));
 
             TextView dur = (TextView) convertView.findViewById(R.id.recording_duration);
-            dur.setText(MainApplication.formatDuration(duration.get(f)));
+            dur.setText(MainApplication.formatDuration(durations.get(f)));
 
             TextView size = (TextView) convertView.findViewById(R.id.recording_size);
-            size.setText(formatSize(f.length()));
+            size.setText(MainApplication.formatSize(f.length()));
 
-            View trash = convertView.findViewById(R.id.recording_player_trash);
-            trash.setOnClickListener(new View.OnClickListener() {
+            final View playerBase = convertView.findViewById(R.id.recording_player);
+            playerBase.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                }
+            });
+
+            final Runnable delete = new Runnable() {
+                @Override
+                public void run() {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                     builder.setTitle("Delete Recording");
                     builder.setMessage("...\\" + f.getName() + "\n\n" + "Are you sure ? ");
@@ -190,14 +192,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                     });
                     builder.show();
                 }
-            });
-
-            final View playerBase = convertView.findViewById(R.id.recording_player);
-            playerBase.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                }
-            });
+            };
 
             if (selected == position) {
                 RecordingAnimation.apply(list, convertView, true, scrollState == SCROLL_STATE_IDLE && (int) convertView.getTag() == TYPE_COLLAPSED);
@@ -212,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                         if (player == null) {
                             playerPlay(playerBase, f);
                         } else if (player.isPlaying()) {
-                            playerPause();
+                            playerPause(playerBase, f);
                         } else {
                             playerPlay(playerBase, f);
                         }
@@ -223,29 +218,33 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 share.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        shareProvider = new PopupShareActionProvider(getContext(), share);
+                        PopupShareActionProvider shareProvider = new PopupShareActionProvider(getContext(), share);
 
                         Intent emailIntent = new Intent(Intent.ACTION_SEND);
                         emailIntent.setType("audio/mp4a-latm");
                         emailIntent.putExtra(Intent.EXTRA_EMAIL, "");
                         emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(f));
                         emailIntent.putExtra(Intent.EXTRA_SUBJECT, f.getName());
-                        emailIntent.putExtra(Intent.EXTRA_TEXT, "Shared via App Recorder");
+                        emailIntent.putExtra(Intent.EXTRA_TEXT, "Shared via Audio Recorder");
 
                         shareProvider.setShareIntent(emailIntent);
 
                         shareProvider.show();
+                    }
+                });
 
-                        Log.d("123", "show");
+                View trash = convertView.findViewById(R.id.recording_player_trash);
+                trash.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        delete.run();
                     }
                 });
 
                 convertView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        playerStop();
                         select(-1);
-                        notifyDataSetChanged();
                     }
                 });
             } else {
@@ -256,12 +255,47 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                     @Override
                     public void onClick(View v) {
                         select(position);
-                        notifyDataSetChanged();
-
-                        playerStop();
                     }
                 });
             }
+
+            convertView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    PopupMenu popup = new PopupMenu(getContext(), v);
+                    MenuInflater inflater = popup.getMenuInflater();
+                    inflater.inflate(R.menu.menu_context, popup.getMenu());
+                    popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            if (item.getItemId() == R.id.action_delete) {
+                                delete.run();
+                                return true;
+                            }
+                            if (item.getItemId() == R.id.action_rename) {
+                                final OpenFileDialog.EditTextDialog e = new OpenFileDialog.EditTextDialog(getContext());
+                                e.setTitle("Rename Recording");
+                                e.setText(Storage.getNameNoExt(f));
+                                e.setPositiveButton(new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        String ext = Storage.getExt(f);
+                                        String s = String.format("%s.%s", e.getText(), ext);
+                                        File ff = new File(f.getParent(), s);
+                                        f.renameTo(ff);
+                                        load();
+                                    }
+                                });
+                                e.show();
+                                return true;
+                            }
+                            return false;
+                        }
+                    });
+                    popup.show();
+                    return true;
+                }
+            });
 
             return convertView;
         }
@@ -278,7 +312,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             updatePlayerRun(v, f);
         }
 
-        void playerPause() {
+        void playerPause(View v, File f) {
             if (player != null) {
                 player.pause();
             }
@@ -286,6 +320,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 handler.removeCallbacks(updatePlayer);
                 updatePlayer = null;
             }
+            updatePlayerText(v, f);
         }
 
         void playerStop() {
@@ -333,7 +368,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             TextView end = (TextView) v.findViewById(R.id.recording_player_end);
 
             int c = 0;
-            int d = duration.get(f);
+            int d = durations.get(f);
 
             if (player != null) {
                 c = player.getCurrentPosition();
@@ -358,12 +393,10 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
                 @Override
                 public void onStartTrackingTouch(SeekBar seekBar) {
-
                 }
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
-
                 }
             });
 
@@ -405,9 +438,10 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             }
         });
 
+        recordings = new Recordings(this);
+
         list = (ListView) findViewById(R.id.list);
         list.setOnScrollListener(this);
-        recordings = new Recordings(this);
         list.setAdapter(recordings);
         list.setEmptyView(findViewById(R.id.empty_list));
 
@@ -467,7 +501,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         else
             load();
 
-        final int selected = getLastPosition();
+        final int selected = getLastRecording();
         list.setSelection(selected);
         if (selected != -1) {
             handler.post(new Runnable() {
@@ -483,7 +517,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         edit.commit();
     }
 
-    int getLastPosition() {
+    int getLastRecording() {
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         String last = shared.getString(MainApplication.PREFERENCE_LAST, "");
         last = last.toLowerCase();
@@ -559,4 +593,5 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
         recordings.close();
     }
+
 }
