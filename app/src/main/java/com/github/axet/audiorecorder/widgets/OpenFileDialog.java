@@ -241,7 +241,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
         }
 
         public AlertDialog.Builder setPositiveButton(final DialogInterface.OnClickListener listener) {
-            return super.setPositiveButton(android.R.string.ok, listener);
+            return setPositiveButton(android.R.string.ok, listener);
         }
 
         @Override
