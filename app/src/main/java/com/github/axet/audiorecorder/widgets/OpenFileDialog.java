@@ -162,6 +162,8 @@ public class OpenFileDialog extends AlertDialog.Builder {
         }
 
         public String makePath(List<String> ss) {
+            if (ss.size() == 0)
+                return "/";
             return TextUtils.join(File.separator, ss);
         }
 
@@ -241,7 +243,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
         }
 
         public AlertDialog.Builder setPositiveButton(final DialogInterface.OnClickListener listener) {
-            return super.setPositiveButton(android.R.string.ok, listener);
+            return setPositiveButton(android.R.string.ok, listener);
         }
 
         @Override
