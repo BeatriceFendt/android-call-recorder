@@ -11,6 +11,7 @@ import android.os.Environment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -162,6 +163,8 @@ public class OpenFileDialog extends AlertDialog.Builder {
         }
 
         public String makePath(List<String> ss) {
+            if (ss.size() == 0)
+                return "/";
             return TextUtils.join(File.separator, ss);
         }
 
