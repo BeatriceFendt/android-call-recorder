@@ -525,6 +525,9 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     void record() {
+        pitch.setOnClickListener(null);
+        pitch.setClickable(false);
+
         state.setText("recording");
 
         silent();
@@ -546,8 +549,8 @@ public class RecordingActivity extends AppCompatActivity {
                 }
 
                 long startTime = System.currentTimeMillis();
-                // start recording after 0.5 sec
-                long goTime = startTime + 500;
+                // start recording after 1 sec or stableRefresh
+                long goTime = startTime + 1000;
 
                 RawSamples rs = null;
                 AudioRecord recorder = null;
@@ -593,7 +596,7 @@ public class RecordingActivity extends AppCompatActivity {
                             break;
                         }
 
-                        if (cur > goTime) {
+                        if (cur > goTime || pitch.stableRefresh()) {
                             rs.write(buffer);
 
                             int pa = getPa(buffer, 0, readSize);
