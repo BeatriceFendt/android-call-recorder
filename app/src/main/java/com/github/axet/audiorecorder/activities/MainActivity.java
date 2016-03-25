@@ -41,6 +41,9 @@ import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.Storage;
 import com.github.axet.audiorecorder.widgets.OpenFileDialog;
 import com.github.axet.audiorecorder.widgets.PopupShareActionProvider;
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -56,6 +59,12 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     static final int TYPE_COLLAPSED = 0;
     static final int TYPE_EXPANDED = 1;
     static final int TYPE_DELETED = 2;
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     final int[] ALL = {TYPE_COLLAPSED, TYPE_EXPANDED};
 
@@ -421,6 +430,10 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+
         storage = new Storage(this);
         handler = new Handler();
 
@@ -606,4 +619,44 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         recordings.close();
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app deep link URI is correct.
+                Uri.parse("android-app://com.github.axet.mover/http/host/path")
+        );
+        AppIndex.AppIndexApi.start(client, viewAction);
+    }
+
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app deep link URI is correct.
+                Uri.parse("android-app://com.github.axet.android-audio-recorder/http/host/path")
+        );
+        AppIndex.AppIndexApi.end(client, viewAction);
+        client.disconnect();
+    }
 }
