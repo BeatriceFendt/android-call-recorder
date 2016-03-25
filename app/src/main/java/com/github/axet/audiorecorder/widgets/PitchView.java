@@ -55,6 +55,8 @@ public class PitchView extends ViewGroup {
     // pitch length in pn + pitch delimiter length in px
     int pitchSize;
 
+    boolean stableRefresh;
+
     PitchGraphView graph;
     PitchCurrentView current;
 
@@ -544,10 +546,13 @@ public class PitchView extends ViewGroup {
             }
         }
         if (thread == null) {
+            stableRefresh = false;
+
             draw = new Runnable() {
                 @Override
                 public void run() {
                     time = System.currentTimeMillis();
+                    int count = 0;
                     while (!Thread.currentThread().isInterrupted()) {
                         long time = System.currentTimeMillis();
                         draw();
@@ -556,6 +561,10 @@ public class PitchView extends ViewGroup {
                         long delay = UPDATE_SPEED - (cur - time);
 
                         if (delay > 0) {
+                            count++;
+                            if (count > 5) {
+                                stableRefresh = true;
+                            }
                             try {
                                 Thread.sleep(delay);
                             } catch (InterruptedException e) {
@@ -625,6 +634,12 @@ public class PitchView extends ViewGroup {
             };
             thread = new Thread(play, TAG);
             thread.start();
+        }
+    }
+
+    public boolean stableRefresh() {
+        synchronized (this) {
+            return stableRefresh;
         }
     }
 }
