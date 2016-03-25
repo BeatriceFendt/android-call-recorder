@@ -11,6 +11,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -66,7 +67,9 @@ public class PitchView extends ViewGroup {
     // index
     int editPos = 0;
     int editCount = 0;
-    int playPos = -1;
+    // current playing position in samples
+    float playPos = -1;
+    Runnable play;
 
     Runnable draw;
     Thread thread;
@@ -191,7 +194,7 @@ public class PitchView extends ViewGroup {
                 canvas.drawLine(x, 0, x, getHeight(), editPaint);
             }
 
-            if (edit != null && playPos != -1) {
+            if (edit != null && playPos > 0) {
                 float x = playPos * pitchSize + pitchSize / 2f;
                 canvas.drawLine(x, 0, x, getHeight(), playPaint);
             }
@@ -378,6 +381,11 @@ public class PitchView extends ViewGroup {
 
     public void add(int a) {
         data.add(a / 100.0f);
+
+        // after pause, we still may get one last sample. force view redraw.
+        if (thread == null) {
+            draw();
+        }
     }
 
     public void draw() {
@@ -447,10 +455,13 @@ public class PitchView extends ViewGroup {
             thread.interrupt();
             thread = null;
         }
+
         if (edit != null)
             edit = null;
         if (draw != null)
             draw = null;
+        if (play != null)
+            play = null;
 
         drawEdit();
     }
@@ -478,6 +489,13 @@ public class PitchView extends ViewGroup {
                 thread = null;
             }
         }
+
+        edit();
+
+        return samples + editPos;
+    }
+
+    public void edit() {
         if (thread == null) {
             edit = new Runnable() {
                 @Override
@@ -508,13 +526,18 @@ public class PitchView extends ViewGroup {
             thread = new Thread(edit, TAG);
             thread.start();
         }
-
-        return samples + editPos;
     }
 
     public void resume() {
         if (edit != null) {
             edit = null;
+            if (thread != null) {
+                thread.interrupt();
+                thread = null;
+            }
+        }
+        if (play != null) {
+            play = null;
             if (thread != null) {
                 thread.interrupt();
                 thread = null;
@@ -548,14 +571,60 @@ public class PitchView extends ViewGroup {
         }
     }
 
-    public void play(long pos) {
+    // current paying pos in actual samples
+    public void play(float pos) {
         synchronized (this) {
-            playPos = (int) (pos - samples);
+            playPos = pos - samples;
+
+            editCount = 0;
 
             if (playPos < 0)
                 playPos = -1;
 
-            drawEdit();
+            if (playPos < 0) {
+                if (play != null) {
+                    play = null;
+                    if (thread != null) {
+                        thread.interrupt();
+                        thread = null;
+                    }
+                }
+                if (thread == null) {
+                    edit();
+                }
+                return;
+            }
+        }
+
+        if (play == null && thread != null) {
+            thread.interrupt();
+            thread = null;
+        }
+
+        if (thread == null) {
+            play = new Runnable() {
+                @Override
+                public void run() {
+                    time = System.currentTimeMillis();
+                    while (!Thread.currentThread().isInterrupted()) {
+                        long time = System.currentTimeMillis();
+                        drawEdit();
+                        long cur = System.currentTimeMillis();
+
+                        long delay = UPDATE_SPEED - (cur - time);
+
+                        if (delay > 0) {
+                            try {
+                                Thread.sleep(delay);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+                    }
+                }
+            };
+            thread = new Thread(play, TAG);
+            thread.start();
         }
     }
 }

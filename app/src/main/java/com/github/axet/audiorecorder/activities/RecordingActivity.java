@@ -335,6 +335,7 @@ public class RecordingActivity extends AppCompatActivity {
         super.onPause();
         Log.d(TAG, "onPause");
         updateBufferSize(true);
+        edit(false);
         pitch.pause();
     }
 
@@ -368,7 +369,6 @@ public class RecordingActivity extends AppCompatActivity {
     void edit(boolean b) {
         if (b) {
             state.setText("edit");
-
             editPlay(false);
 
             View box = findViewById(R.id.recording_edit_box);
@@ -391,9 +391,9 @@ public class RecordingActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     if (play != null) {
                         editPlay(false);
-                        return;
+                    } else {
+                        editPlay(true);
                     }
-                    editPlay(true);
                 }
             });
 
@@ -407,6 +407,7 @@ public class RecordingActivity extends AppCompatActivity {
         } else {
             editSample = -1;
             state.setText("pause");
+            editPlay(false);
             pitch.pause();
             View box = findViewById(R.id.recording_edit_box);
             box.setVisibility(View.GONE);
@@ -422,7 +423,30 @@ public class RecordingActivity extends AppCompatActivity {
 
             playIndex = editSample;
 
-            playUpdate = samplesUpdate;
+            playUpdate = PitchView.UPDATE_SPEED * sampleRate / 1000;
+
+            final Handler handler = new Handler();
+
+            AudioTrack.OnPlaybackPositionUpdateListener listener = new AudioTrack.OnPlaybackPositionUpdateListener() {
+                @Override
+                public void onMarkerReached(AudioTrack track) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            editPlay(false);
+                        }
+                    });
+                }
+
+                @Override
+                public void onPeriodicNotification(AudioTrack track) {
+                    if (play != null) {
+                        playIndex += playUpdate;
+                        float p = playIndex / (float) samplesUpdate;
+                        pitch.play(p);
+                    }
+                }
+            };
 
             RawSamples rs = new RawSamples(storage.getTempRecording());
             int len = (int) (rs.getSamples() - editSample);
@@ -432,25 +456,13 @@ public class RecordingActivity extends AppCompatActivity {
             play = generateTrack(buf, r);
             play.play();
             play.setPositionNotificationPeriod(playUpdate);
-            play.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
-                @Override
-                public void onMarkerReached(AudioTrack track) {
-                    editPlay(false);
-                    pitch.play(-1);
-                }
-
-                @Override
-                public void onPeriodicNotification(AudioTrack track) {
-                    playIndex += playUpdate;
-                    long p = playIndex / samplesUpdate;
-                    pitch.play(p);
-                }
-            });
+            play.setPlaybackPositionUpdateListener(listener, handler);
         } else {
             if (play != null) {
                 play.release();
                 play = null;
             }
+            pitch.play(-1);
             playButton.setImageResource(R.drawable.play);
         }
     }
@@ -533,6 +545,10 @@ public class RecordingActivity extends AppCompatActivity {
                     Log.e(TAG, "Unable to set Thread Priority " + android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                 }
 
+                long startTime = System.currentTimeMillis();
+                // start recording after 0.5 sec
+                long goTime = startTime + 500;
+
                 RawSamples rs = null;
                 AudioRecord recorder = null;
                 try {
@@ -565,6 +581,8 @@ public class RecordingActivity extends AppCompatActivity {
                     short[] buffer = null;
 
                     while (!Thread.currentThread().isInterrupted()) {
+                        long cur = System.currentTimeMillis();
+
                         synchronized (bufferSize) {
                             if (buffer == null || buffer.length != bufferSize)
                                 buffer = new short[bufferSize];
@@ -575,29 +593,31 @@ public class RecordingActivity extends AppCompatActivity {
                             break;
                         }
 
-                        rs.write(buffer);
+                        if (cur > goTime) {
+                            rs.write(buffer);
 
-                        int pa = getPa(buffer, 0, readSize);
+                            int pa = getPa(buffer, 0, readSize);
 
-                        int s = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
+                            int s = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
 
-                        samplesUpdateCount += s;
-                        if (samplesUpdateCount >= samplesUpdate) {
-                            pitch.add(pa);
-                            samplesUpdateCount -= samplesUpdate;
-                        }
+                            samplesUpdateCount += s;
+                            if (samplesUpdateCount >= samplesUpdate) {
+                                pitch.add(pa);
+                                samplesUpdateCount -= samplesUpdate;
+                            }
 
-                        samplesTime += s;
-                        samplesTimeCount += s;
-                        if (samplesTimeCount > samplesTimeUpdate) {
-                            final long m = samplesTime;
-                            handle.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    updateSamples(m);
-                                }
-                            });
-                            samplesTimeCount -= samplesTimeUpdate;
+                            samplesTime += s;
+                            samplesTimeCount += s;
+                            if (samplesTimeCount > samplesTimeUpdate) {
+                                final long m = samplesTime;
+                                handle.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        updateSamples(m);
+                                    }
+                                });
+                                samplesTimeCount -= samplesTimeUpdate;
+                            }
                         }
                     }
                 } catch (final RuntimeException e) {
