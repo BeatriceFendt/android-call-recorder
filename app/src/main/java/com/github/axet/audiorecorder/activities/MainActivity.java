@@ -450,6 +450,15 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         }
     }
 
+    void checkPending() {
+        if(storage.recordingPending()) {
+            Intent intent = new Intent(this, RecordingActivity.class);
+            intent.setAction(RecordingActivity.START_PAUSE);
+            startActivity(intent);
+            return;
+        }
+    }
+
     // load recordings
     void load() {
         recordings.scan(storage.getStoragePath());
@@ -501,6 +510,8 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         else
             load();
 
+        checkPending();
+
         final int selected = getLastRecording();
         list.setSelection(selected);
         if (selected != -1) {
@@ -539,6 +550,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 if (permitted(permissions)) {
                     storage.migrateLocalStorage();
                     load();
+                    checkPending();
                 } else {
                     Toast.makeText(this, "Not permitted", Toast.LENGTH_SHORT).show();
                 }
