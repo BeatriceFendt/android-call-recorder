@@ -55,6 +55,10 @@ public class Storage {
         return permitted(PERMISSIONS);
     }
 
+    public boolean recordingPending() {
+        return getTempRecording().exists();
+    }
+
     public File getStoragePath() {
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
         String path = shared.getString(MainApplication.PREFERENCE_STORAGE, "");

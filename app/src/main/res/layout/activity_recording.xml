@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.github.axet.audiorecorder.widgets.EqualLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,9 +11,10 @@
     tools:context=".activities.RecordingActivity">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/recording_title"
@@ -32,14 +33,50 @@
 
     </LinearLayout>
 
+
     <com.github.axet.audiorecorder.widgets.PitchView
         android:id="@+id/recording_pitch"
         android:layout_width="match_parent"
-        android:layout_height="120dp" />
+        android:layout_height="120dp"
+        android:layout_centerInParent="true" />
+
+    <com.github.axet.audiorecorder.widgets.EqualLinearLayout
+        android:id="@+id/recording_edit_box"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/recording_pitch"
+        android:paddingBottom="5dp">
+
+        <ImageButton
+            android:id="@+id/recording_cut"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/round"
+            android:gravity="center"
+            android:src="@drawable/ic_content_cut_24dp"
+            android:text="Cancel" />
+
+        <ImageButton
+            android:id="@+id/recording_play"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/round"
+            android:src="@drawable/play" />
+
+
+        <ImageButton
+            android:id="@+id/recording_edit_done"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/round"
+            android:src="@drawable/ic_close_24dp" />
+
+    </com.github.axet.audiorecorder.widgets.EqualLinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:orientation="vertical">
 
         <TextView
@@ -82,4 +119,4 @@
         </com.github.axet.audiorecorder.widgets.EqualLinearLayout>
     </LinearLayout>
 
-</com.github.axet.audiorecorder.widgets.EqualLinearLayout>
+</RelativeLayout>

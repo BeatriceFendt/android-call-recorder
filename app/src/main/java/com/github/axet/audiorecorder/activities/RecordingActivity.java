@@ -12,9 +12,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.*;
 import android.preference.PreferenceManager;
@@ -25,15 +27,19 @@ import android.support.v7.app.AppCompatActivity;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Display;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.app.MainApplication;
+import com.github.axet.audiorecorder.app.RawSamples;
 import com.github.axet.audiorecorder.app.Storage;
 import com.github.axet.audiorecorder.encoders.Encoder;
 import com.github.axet.audiorecorder.encoders.EncoderInfo;
@@ -59,6 +65,7 @@ public class RecordingActivity extends AppCompatActivity {
     public static final int NOTIFICATION_RECORDING_ICON = 0;
     public static String SHOW_ACTIVITY = RecordingActivity.class.getCanonicalName() + ".SHOW_ACTIVITY";
     public static String PAUSE = RecordingActivity.class.getCanonicalName() + ".PAUSE";
+    public static String START_PAUSE = RecordingActivity.class.getCanonicalName() + ".START_PAUSE";
 
     public static final String PHONE_STATE = "android.intent.action.PHONE_STATE";
 
@@ -67,7 +74,9 @@ public class RecordingActivity extends AppCompatActivity {
     Handler handle = new Handler();
     FileEncoder encoder;
 
-    boolean start = false;
+    // do we need to start recording immidiatly?
+    boolean start = true;
+
     Thread thread;
     // dynamic buffer size. big for backgound recording. small for realtime view updates.
     Integer bufferSize = 0;
@@ -77,14 +86,22 @@ public class RecordingActivity extends AppCompatActivity {
     int samplesUpdate;
     // output target file 2016-01-01 01.01.01.wav
     File targetFile;
+    // how many samples passed for current recording
+    long samplesTime;
+    // current cut position in samples from begining of file
+    long editSample = -1;
+    // current sample index in edit mode while playing;
+    long playIndex;
+    // send ui update every 'playUpdate' samples.
+    int playUpdate;
+
+    AudioTrack play;
 
     TextView title;
     TextView time;
     TextView state;
     ImageButton pause;
     PitchView pitch;
-
-    Runnable progress;
 
     int soundMode;
 
@@ -141,6 +158,8 @@ public class RecordingActivity extends AppCompatActivity {
         state = (TextView) findViewById(R.id.recording_state);
         title = (TextView) findViewById(R.id.recording_title);
 
+        edit(false);
+
         storage = new Storage(this);
 
         try {
@@ -176,13 +195,14 @@ public class RecordingActivity extends AppCompatActivity {
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
 
         if (Build.VERSION.SDK_INT < 23 && isEmulator()) {
+            // old emulators are not going to record on high sample rate.
             Toast.makeText(this, "Emulator Detected. Reducing Sample Rate to 8000 Hz", Toast.LENGTH_SHORT).show();
             sampleRate = 8000;
         }
 
         updateBufferSize(false);
 
-        updateSamples(getSamples(storage.getTempRecording().length()));
+        loadSamples();
 
         View cancel = findViewById(R.id.recording_cancel);
         cancel.setOnClickListener(new View.OnClickListener() {
@@ -221,6 +241,42 @@ public class RecordingActivity extends AppCompatActivity {
                 });
             }
         });
+
+        String a = getIntent().getAction();
+        if (a != null && a.equals(START_PAUSE)) {
+            // pretend we already start it
+            start = false;
+            stopRecording("pause");
+        }
+    }
+
+    void loadSamples() {
+        if (!storage.getTempRecording().exists())
+            return;
+
+        RawSamples rs = new RawSamples(storage.getTempRecording());
+        samplesTime = rs.getSamples();
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+
+        int count = pitch.getMaxPitchCount(size.x);
+
+        short[] buf = new short[count * samplesUpdate];
+        long cut = samplesTime - buf.length;
+
+        if (cut < 0)
+            cut = 0;
+
+        rs.open(cut, buf.length);
+        int len = rs.read(buf);
+        pitch.clear(cut / samplesUpdate);
+        for (int i = 0; i < len; i += samplesUpdate) {
+            pitch.add(getPa(buf, i, samplesUpdate));
+        }
+        rs.close();
+        updateSamples(samplesTime);
     }
 
     boolean isEmulator() {
@@ -242,6 +298,13 @@ public class RecordingActivity extends AppCompatActivity {
         if (thread != null) {
             stopRecording("pause");
         } else {
+            if (editSample != -1) {
+                RawSamples rs = new RawSamples(storage.getTempRecording());
+                rs.trunk(editSample);
+                loadSamples();
+                edit(false);
+            }
+
             if (permitted(PERMISSIONS)) {
                 resumeRecording();
             }
@@ -254,8 +317,8 @@ public class RecordingActivity extends AppCompatActivity {
         Log.d(TAG, "onResume");
 
         // start once
-        if (start == false) {
-            start = true;
+        if (start) {
+            start = false;
             if (permitted()) {
                 record();
             }
@@ -282,6 +345,15 @@ public class RecordingActivity extends AppCompatActivity {
         stopRecording();
 
         showNotificationAlarm(true);
+
+        pitch.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                edit(true);
+                editSample = pitch.edit(event.getX()) * samplesUpdate;
+                return true;
+            }
+        });
     }
 
     void stopRecording() {
@@ -291,6 +363,96 @@ public class RecordingActivity extends AppCompatActivity {
         }
         pitch.pause();
         unsilent();
+    }
+
+    void edit(boolean b) {
+        if (b) {
+            state.setText("edit");
+
+            editPlay(false);
+
+            View box = findViewById(R.id.recording_edit_box);
+            box.setVisibility(View.VISIBLE);
+
+            View cut = box.findViewById(R.id.recording_cut);
+            cut.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    RawSamples rs = new RawSamples(storage.getTempRecording());
+                    rs.trunk(editSample);
+                    loadSamples();
+                    edit(false);
+                }
+            });
+
+            final ImageView playButton = (ImageView) box.findViewById(R.id.recording_play);
+            playButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (play != null) {
+                        editPlay(false);
+                        return;
+                    }
+                    editPlay(true);
+                }
+            });
+
+            View done = box.findViewById(R.id.recording_edit_done);
+            done.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    edit(false);
+                }
+            });
+        } else {
+            editSample = -1;
+            state.setText("pause");
+            pitch.pause();
+            View box = findViewById(R.id.recording_edit_box);
+            box.setVisibility(View.GONE);
+        }
+    }
+
+    void editPlay(boolean b) {
+        View box = findViewById(R.id.recording_edit_box);
+        final ImageView playButton = (ImageView) box.findViewById(R.id.recording_play);
+
+        if (b) {
+            playButton.setImageResource(R.drawable.pause);
+
+            playIndex = editSample;
+
+            playUpdate = samplesUpdate;
+
+            RawSamples rs = new RawSamples(storage.getTempRecording());
+            int len = (int) (rs.getSamples() - editSample);
+            short[] buf = new short[len];
+            rs.open(editSample, buf.length);
+            int r = rs.read(buf);
+            play = generateTrack(buf, r);
+            play.play();
+            play.setPositionNotificationPeriod(playUpdate);
+            play.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
+                @Override
+                public void onMarkerReached(AudioTrack track) {
+                    editPlay(false);
+                    pitch.play(-1);
+                }
+
+                @Override
+                public void onPeriodicNotification(AudioTrack track) {
+                    playIndex += playUpdate;
+                    long p = playIndex / samplesUpdate;
+                    pitch.play(p);
+                }
+            });
+        } else {
+            if (play != null) {
+                play.release();
+                play = null;
+            }
+            playButton.setImageResource(R.drawable.play);
+        }
     }
 
     @Override
@@ -371,16 +533,12 @@ public class RecordingActivity extends AppCompatActivity {
                     Log.e(TAG, "Unable to set Thread Priority " + android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                 }
 
-                // how many samples passed
-                long samplesTime;
-
-                DataOutputStream os = null;
+                RawSamples rs = null;
                 AudioRecord recorder = null;
                 try {
-                    File tmp = storage.getTempRecording();
-                    samplesTime = getSamples(tmp.length());
+                    rs = new RawSamples(storage.getTempRecording());
 
-                    os = new DataOutputStream(new BufferedOutputStream(storage.open(tmp)));
+                    rs.open(samplesTime);
 
                     int min = AudioRecord.getMinBufferSize(sampleRate, CHANNEL_CONFIG, AUDIO_FORMAT);
                     if (min <= 0) {
@@ -417,22 +575,15 @@ public class RecordingActivity extends AppCompatActivity {
                             break;
                         }
 
-                        double sum = 0;
-                        for (int i = 0; i < readSize; i++) {
-                            try {
-                                os.writeShort(buffer[i]);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                            sum += buffer[i] * buffer[i];
-                        }
+                        rs.write(buffer);
 
-                        int amplitude = (int) (Math.sqrt(sum / readSize));
+                        int pa = getPa(buffer, 0, readSize);
+
                         int s = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
 
                         samplesUpdateCount += s;
                         if (samplesUpdateCount >= samplesUpdate) {
-                            pitch.add((int) (amplitude / (float) MAXIMUM_ALTITUDE * 100) + 1);
+                            pitch.add(pa);
                             samplesUpdateCount -= samplesUpdate;
                         }
 
@@ -459,11 +610,8 @@ public class RecordingActivity extends AppCompatActivity {
                         }
                     });
                 } finally {
-                    if (os != null) {
-                        try {
-                            os.close();
-                        } catch (IOException ignore) {
-                        }
+                    if (rs != null) {
+                        rs.close();
                     }
                     if (recorder != null)
                         recorder.release();
@@ -473,16 +621,6 @@ public class RecordingActivity extends AppCompatActivity {
         thread.start();
 
         showNotificationAlarm(true);
-    }
-
-    long getSamples(long len) {
-        if (AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT) {
-            len = len / 2;
-        }
-        if (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO) {
-            len = len / 2;
-        }
-        return len;
     }
 
     // calcuale buffer length dynamically, this way we can reduce thread cycles when activity in background
@@ -503,6 +641,18 @@ public class RecordingActivity extends AppCompatActivity {
         long ms = samplesTime / sampleRate * 1000;
 
         time.setText(MainApplication.formatDuration(ms));
+    }
+
+    int getPa(short[] buffer, int offset, int len) {
+        double sum = 0;
+        for (int i = offset; i < offset + len; i++) {
+            sum += buffer[i] * buffer[i];
+        }
+
+        int amplitude = (int) (Math.sqrt(sum / len));
+        int pa = (int) (amplitude / (float) MAXIMUM_ALTITUDE * 100) + 1;
+
+        return pa;
     }
 
     // alarm dismiss button
@@ -674,4 +824,27 @@ public class RecordingActivity extends AppCompatActivity {
         });
     }
 
+    private AudioTrack generateTrack(short[] buf, int len) {
+        int end = len;
+
+        int c = 0;
+
+        if (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO)
+            c = AudioFormat.CHANNEL_OUT_MONO;
+
+        if (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO)
+            c = AudioFormat.CHANNEL_OUT_STEREO;
+
+        // old phones bug.
+        // http://stackoverflow.com/questions/27602492
+        //
+        // with MODE_STATIC setNotificationMarkerPosition not called
+        AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
+                c, AUDIO_FORMAT,
+                len * (Short.SIZE / 8), AudioTrack.MODE_STREAM);
+        track.write(buf, 0, len);
+        if (track.setNotificationMarkerPosition(end) != AudioTrack.SUCCESS)
+            throw new RuntimeException("unable to set marker");
+        return track;
+    }
 }

@@ -1,18 +1,12 @@
 package com.github.axet.audiorecorder.encoders;
 
 import android.content.Context;
-import android.media.AudioFormat;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.github.axet.audiorecorder.activities.RecordingActivity;
+import com.github.axet.audiorecorder.app.RawSamples;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 public class FileEncoder {
     public static final String TAG = FileEncoder.class.getSimpleName();
@@ -39,30 +33,27 @@ public class FileEncoder {
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                samples = getSamples(in.length());
-
                 cur = 0;
 
-                FileInputStream is = null;
+                RawSamples rs = new RawSamples(in);
+
+                samples = rs.getSamples();
+
+                short[] buf = new short[1000];
+
+                rs.open(buf.length);
+
                 try {
-                    is = new FileInputStream(in);
-
                     while (!Thread.currentThread().isInterrupted()) {
-                        // temporary recording use global settings for encoding format.
-                        // take 1000 samples at once.
-                        byte[] buf = new byte[(RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1) * 1000];
-
-                        int len = is.read(buf);
+                        long len = rs.read(buf);
                         if (len <= 0) {
                             handler.post(done);
                             return;
                         } else {
-                            short[] shorts = new short[len / 2];
-                            ByteBuffer.wrap(buf, 0, len).order(ByteOrder.BIG_ENDIAN).asShortBuffer().get(shorts);
-                            encoder.encode(shorts);
+                            encoder.encode(buf);
                             handler.post(progress);
                             synchronized (thread) {
-                                cur += getSamples(len);
+                                cur += len;
                             }
                         }
                     }
@@ -70,26 +61,15 @@ public class FileEncoder {
                     Log.e(TAG, "Exception", e);
                     t = e;
                     handler.post(error);
-                } catch (IOException e) {
-                    Log.e(TAG, "Exception", e);
-                    t = e;
-                    handler.post(error);
                 } finally {
                     encoder.close();
-                    if (is != null) {
-                        try {
-                            is.close();
-                        } catch (IOException ignore) {
-                        }
+                    if (rs != null) {
+                        rs.close();
                     }
                 }
             }
         });
         thread.start();
-    }
-
-    long getSamples(long samples) {
-        return samples / (RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
     }
 
     public int getProgress() {
