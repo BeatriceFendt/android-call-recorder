@@ -525,6 +525,7 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     void record() {
+        edit(false);
         pitch.setOnTouchListener(null);
 
         state.setText("recording");
