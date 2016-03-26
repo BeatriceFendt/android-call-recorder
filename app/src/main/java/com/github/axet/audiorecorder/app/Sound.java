@@ -56,10 +56,10 @@ public class Sound {
 
         int c = 0;
 
-        if (RecordingActivity.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO)
+        if (RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO)
             c = AudioFormat.CHANNEL_OUT_MONO;
 
-        if (RecordingActivity.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO)
+        if (RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO)
             c = AudioFormat.CHANNEL_OUT_STEREO;
 
         // old phones bug.
@@ -67,7 +67,7 @@ public class Sound {
         //
         // with MODE_STATIC setNotificationMarkerPosition not called
         AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
-                c, RecordingActivity.AUDIO_FORMAT,
+                c, RawSamples.AUDIO_FORMAT,
                 len * (Short.SIZE / 8), AudioTrack.MODE_STREAM);
         track.write(buf, 0, len);
         if (track.setNotificationMarkerPosition(end) != AudioTrack.SUCCESS)

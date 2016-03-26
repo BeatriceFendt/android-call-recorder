@@ -16,6 +16,8 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
 public class RawSamples {
+    public static int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+    public static int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
 
     File in;
 
@@ -42,7 +44,7 @@ public class RawSamples {
     // bufReadSize - samples count
     public void open(int bufReadSize) {
         try {
-            readBuffer = new byte[getBufferLen(bufReadSize)];
+            readBuffer = new byte[(int) getBufferLen(bufReadSize)];
             is = new FileInputStream(in);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -55,9 +57,9 @@ public class RawSamples {
     // bufReadSize - samples size
     public void open(long offset, int bufReadSize) {
         try {
-            readBuffer = new byte[getBufferLen(bufReadSize)];
+            readBuffer = new byte[(int) getBufferLen(bufReadSize)];
             is = new FileInputStream(in);
-            is.skip(offset * (RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1));
+            is.skip(offset * (AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -96,18 +98,18 @@ public class RawSamples {
         return getSamples(in.length());
     }
 
-    public long getSamples(long len) {
-        return len / (RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
+    public static long getSamples(long len) {
+        return len / (AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
     }
 
-    public int getBufferLen(int samples) {
-        return samples * (RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
+    public static long getBufferLen(long samples) {
+        return samples * (AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
     }
 
     public void trunk(long pos) {
         try {
             FileChannel outChan = new FileOutputStream(in, true).getChannel();
-            outChan.truncate(pos * (RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1));
+            outChan.truncate(getBufferLen(pos));
             outChan.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
