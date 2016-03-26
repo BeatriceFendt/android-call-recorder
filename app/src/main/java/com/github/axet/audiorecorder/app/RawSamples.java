@@ -32,6 +32,7 @@ public class RawSamples {
 
     // open for writing with specified offset to truncate file
     public void open(long writeOffset) {
+        trunk(writeOffset);
         try {
             os = new BufferedOutputStream(new FileOutputStream(in, true));
         } catch (IOException e) {
@@ -109,7 +110,7 @@ public class RawSamples {
     public void trunk(long pos) {
         try {
             FileChannel outChan = new FileOutputStream(in, true).getChannel();
-            outChan.truncate(getBufferLen(pos));
+            outChan.truncate(getBufferLen(pos + 1));
             outChan.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
