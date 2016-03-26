@@ -28,14 +28,18 @@ public class StepAnimation extends Animation {
 
             if (animate) {
                 if (m.hasEnded()) {
-                    StepAnimation mm = c.create();
-                    mm.startAnimation(v);
+                    if ((expand && v.getVisibility() == View.GONE) || (!expand && v.getVisibility() == View.VISIBLE)) {
+                        StepAnimation mm = c.create();
+                        mm.startAnimation(v);
+                    } else {
+                        // do nothing, already visible view
+                    }
                 } else {
                     if (m.expand != expand) {
                         m.expand = expand;
                         m.setStartOffset(offset);
                     } else {
-                        // keep rolling do nothing
+                        // keep rolling. do nothing
                     }
                 }
             } else {
@@ -50,7 +54,11 @@ public class StepAnimation extends Animation {
         } else {
             StepAnimation mm = c.create();
             if (animate) {
-                mm.startAnimation(v);
+                if ((expand && v.getVisibility() == View.GONE) || (!expand && v.getVisibility() == View.VISIBLE)) {
+                    mm.startAnimation(v);
+                } else {
+                    // do nothing. already visible
+                }
             } else {
                 mm.restore();
                 mm.end();
@@ -67,7 +75,7 @@ public class StepAnimation extends Animation {
         init();
         // do first step to hide view (we animation does it).
         //
-        // but some androids API does not start animation on 0dp views.
+        // but some old androids API does not start animation on 0dp views.
         calc(0.01f, new Transformation());
         v.startAnimation(this);
     }

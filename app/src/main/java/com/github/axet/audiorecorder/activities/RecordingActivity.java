@@ -349,10 +349,7 @@ public class RecordingActivity extends AppCompatActivity {
         pitch.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                View box = findViewById(R.id.recording_edit_box);
-                Animation a = box.getAnimation();
-                boolean animate = box.getVisibility() == View.GONE || (a != null && !a.hasEnded());
-                edit(true, animate);
+                edit(true, true);
                 editSample = pitch.edit(event.getX()) * samplesUpdate;
                 return true;
             }

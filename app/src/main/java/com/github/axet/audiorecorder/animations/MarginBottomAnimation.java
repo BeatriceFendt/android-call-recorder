@@ -82,9 +82,8 @@ public class MarginBottomAnimation extends StepAnimation {
         w = View.MeasureSpec.makeMeasureSpec(Math.max(width, parentWidth), View.MeasureSpec.AT_MOST);
 
         view.measure(w, h);
-        vh = view.getMeasuredHeight();
 
-        view.measure(w, h);
+        vh = view.getMeasuredHeight();
     }
 
     @Override
