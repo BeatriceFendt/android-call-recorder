@@ -72,7 +72,6 @@ public class PitchView extends ViewGroup {
 
     int pitchColor = 0xff0433AE;
     Paint cutColor = new Paint();
-    int bg;
 
     public class PitchGraphView extends View {
         Paint editPaint;
@@ -150,7 +149,6 @@ public class PitchView extends ViewGroup {
         @Override
         public void onDraw(Canvas canvas) {
             int m = Math.min(pitchMemCount, data.size());
-            canvas.drawColor(bg);
 
 //            if (edit != null) {
 //                float x = editPos * pitchSize + pitchSize / 2f;
@@ -222,8 +220,6 @@ public class PitchView extends ViewGroup {
 
         @Override
         public void onDraw(Canvas canvas) {
-            canvas.drawColor(bg);
-
             if (data.size() > 0) {
                 int end = data.size() - 1;
 
@@ -270,8 +266,8 @@ public class PitchView extends ViewGroup {
 
         pitchTime = pitchSize * UPDATE_SPEED;
 
-        bg = getThemeColor(android.R.attr.windowBackground);
-        cutColor.setColor(0xff0443BE);//getThemeColor(android.R.attr.textColorPrimaryDisableOnly));
+        // bg = getThemeColor(android.R.attr.windowBackground);
+        cutColor.setColor(0xff0443BE); // getThemeColor(android.R.attr.textColorPrimaryDisableOnly));
 
         graph = new PitchGraphView(getContext());
         addView(graph);
