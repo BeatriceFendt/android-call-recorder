@@ -32,6 +32,7 @@ import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RemoteViews;
@@ -39,6 +40,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
+import com.github.axet.audiorecorder.animations.MarginBottomAnimation;
 import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.RawSamples;
 import com.github.axet.audiorecorder.app.Sound;
@@ -159,7 +161,7 @@ public class RecordingActivity extends AppCompatActivity {
         state = (TextView) findViewById(R.id.recording_state);
         title = (TextView) findViewById(R.id.recording_title);
 
-        edit(false);
+        edit(false, false);
 
         storage = new Storage(this);
         sound = new Sound(this);
@@ -332,7 +334,7 @@ public class RecordingActivity extends AppCompatActivity {
         super.onPause();
         Log.d(TAG, "onPause");
         updateBufferSize(true);
-        edit(false);
+        edit(false, true);
         pitch.stop();
     }
 
@@ -347,7 +349,10 @@ public class RecordingActivity extends AppCompatActivity {
         pitch.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                edit(true);
+                View box = findViewById(R.id.recording_edit_box);
+                Animation a = box.getAnimation();
+                boolean animate = box.getVisibility() == View.GONE || (a != null && !a.hasEnded());
+                edit(true, animate);
                 editSample = pitch.edit(event.getX()) * samplesUpdate;
                 return true;
             }
@@ -363,13 +368,13 @@ public class RecordingActivity extends AppCompatActivity {
         sound.unsilent();
     }
 
-    void edit(boolean b) {
+    void edit(boolean b, boolean animate) {
         if (b) {
             state.setText("edit");
             editPlay(false);
 
             View box = findViewById(R.id.recording_edit_box);
-            box.setVisibility(View.VISIBLE);
+            MarginBottomAnimation.apply(box, true, animate);
 
             View cut = box.findViewById(R.id.recording_cut);
             cut.setOnClickListener(new View.OnClickListener() {
@@ -395,7 +400,7 @@ public class RecordingActivity extends AppCompatActivity {
             done.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    edit(false);
+                    edit(false, true);
                 }
             });
         } else {
@@ -403,8 +408,9 @@ public class RecordingActivity extends AppCompatActivity {
             state.setText("pause");
             editPlay(false);
             pitch.stop();
+
             View box = findViewById(R.id.recording_edit_box);
-            box.setVisibility(View.GONE);
+            MarginBottomAnimation.apply(box, false, animate);
         }
     }
 
@@ -463,7 +469,7 @@ public class RecordingActivity extends AppCompatActivity {
         RawSamples rs = new RawSamples(storage.getTempRecording());
         rs.trunk(editSample + 1);
         rs.close();
-        edit(false);
+        edit(false, true);
         loadSamples();
         pitch.drawCalc();
     }
@@ -519,7 +525,7 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     void startRecording() {
-        edit(false);
+        edit(false, true);
         pitch.setOnTouchListener(null);
 
         state.setText("recording");

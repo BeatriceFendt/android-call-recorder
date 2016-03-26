@@ -9,8 +9,8 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
 
 public class StepAnimation extends Animation {
-
     View view;
+    boolean expand;
 
     public interface LateCreator {
         StepAnimation create();
@@ -18,8 +18,8 @@ public class StepAnimation extends Animation {
 
     public static void apply(LateCreator c, View v, boolean expand, boolean animate) {
         Animation old = v.getAnimation();
-        if (old != null && old instanceof MarginAnimation) {
-            MarginAnimation m = (MarginAnimation) old;
+        if (old != null && old instanceof StepAnimation) {
+            StepAnimation m = (StepAnimation) old;
 
             long cur = AnimationUtils.currentAnimationTimeMillis();
             long past = cur - m.getStartTime() - m.getStartOffset();
@@ -58,8 +58,9 @@ public class StepAnimation extends Animation {
         }
     }
 
-    public StepAnimation(View view) {
+    public StepAnimation(View view, boolean expand) {
         this.view = view;
+        this.expand = expand;
     }
 
     public void startAnimation(View v) {
