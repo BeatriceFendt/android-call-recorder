@@ -14,11 +14,12 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
-import android.os.*;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
@@ -40,6 +41,7 @@ import android.widget.Toast;
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.RawSamples;
+import com.github.axet.audiorecorder.app.Sound;
 import com.github.axet.audiorecorder.app.Storage;
 import com.github.axet.audiorecorder.encoders.Encoder;
 import com.github.axet.audiorecorder.encoders.EncoderInfo;
@@ -49,10 +51,7 @@ import com.github.axet.audiorecorder.encoders.FormatM4A;
 import com.github.axet.audiorecorder.encoders.FormatWAV;
 import com.github.axet.audiorecorder.widgets.PitchView;
 
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
 
 public class RecordingActivity extends AppCompatActivity {
     public static int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
@@ -103,9 +102,8 @@ public class RecordingActivity extends AppCompatActivity {
     ImageButton pause;
     PitchView pitch;
 
-    int soundMode;
-
     Storage storage;
+    Sound sound;
 
     public class RecordingReceiver extends BroadcastReceiver {
         @Override
@@ -161,6 +159,7 @@ public class RecordingActivity extends AppCompatActivity {
         edit(false);
 
         storage = new Storage(this);
+        sound = new Sound(this);
 
         try {
             targetFile = storage.getNewFile();
@@ -363,7 +362,7 @@ public class RecordingActivity extends AppCompatActivity {
             thread = null;
         }
         pitch.pause();
-        unsilent();
+        sound.unsilent();
     }
 
     void edit(boolean b) {
@@ -453,7 +452,7 @@ public class RecordingActivity extends AppCompatActivity {
             short[] buf = new short[len];
             rs.open(editSample, buf.length);
             int r = rs.read(buf);
-            play = generateTrack(buf, r);
+            play = sound.generateTrack(sampleRate, buf, r);
             play.play();
             play.setPositionNotificationPeriod(playUpdate);
             play.setPlaybackPositionUpdateListener(listener, handler);
@@ -530,7 +529,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         state.setText("recording");
 
-        silent();
+        sound.silent();
 
         pause.setImageResource(R.drawable.ic_pause_24dp);
 
@@ -750,39 +749,6 @@ public class RecordingActivity extends AppCompatActivity {
         return true;
     }
 
-    void silent() {
-        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-        if (shared.getBoolean(MainApplication.PREFERENCE_SILENT, false)) {
-            AudioManager am = (AudioManager) getBaseContext().getSystemService(Context.AUDIO_SERVICE);
-            soundMode = am.getRingerMode();
-
-            if (soundMode == AudioManager.RINGER_MODE_SILENT) {
-                // we already in SILENT mode. keep all unchanged.
-                soundMode = -1;
-                return;
-            }
-
-            am.setStreamVolume(AudioManager.STREAM_RING, am.getStreamVolume(AudioManager.STREAM_RING), AudioManager.FLAG_SHOW_UI);
-            am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-        }
-    }
-
-    void unsilent() {
-        // keep unchanged
-        if (soundMode == -1)
-            return;
-
-        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-        if (shared.getBoolean(MainApplication.PREFERENCE_SILENT, false)) {
-            AudioManager am = (AudioManager) getBaseContext().getSystemService(Context.AUDIO_SERVICE);
-            int soundMode = am.getRingerMode();
-            if (soundMode == AudioManager.RINGER_MODE_SILENT) {
-                am.setRingerMode(this.soundMode);
-                am.setStreamVolume(AudioManager.STREAM_RING, am.getStreamVolume(AudioManager.STREAM_RING), AudioManager.FLAG_SHOW_UI);
-            }
-        }
-    }
-
     EncoderInfo getInfo() {
         final int channels = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1;
         final int bps = AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
@@ -845,29 +811,5 @@ public class RecordingActivity extends AppCompatActivity {
                 finish();
             }
         });
-    }
-
-    private AudioTrack generateTrack(short[] buf, int len) {
-        int end = len;
-
-        int c = 0;
-
-        if (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO)
-            c = AudioFormat.CHANNEL_OUT_MONO;
-
-        if (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO)
-            c = AudioFormat.CHANNEL_OUT_STEREO;
-
-        // old phones bug.
-        // http://stackoverflow.com/questions/27602492
-        //
-        // with MODE_STATIC setNotificationMarkerPosition not called
-        AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
-                c, AUDIO_FORMAT,
-                len * (Short.SIZE / 8), AudioTrack.MODE_STREAM);
-        track.write(buf, 0, len);
-        if (track.setNotificationMarkerPosition(end) != AudioTrack.SUCCESS)
-            throw new RuntimeException("unable to set marker");
-        return track;
     }
 }
