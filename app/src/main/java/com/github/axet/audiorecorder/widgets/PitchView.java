@@ -4,20 +4,13 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.LinkedList;
@@ -68,12 +61,14 @@ public class PitchView extends ViewGroup {
     Runnable edit;
     // index
     int editPos = 0;
-    int editCount = 0;
+    boolean editFlash = false;
     // current playing position in samples
     float playPos = -1;
     Runnable play;
 
     Runnable draw;
+    float offset = 0;
+
     Thread thread;
 
     int pitchColor = 0xff0433AE;
@@ -123,13 +118,8 @@ public class PitchView extends ViewGroup {
             super.onLayout(changed, left, top, right, bottom);
         }
 
-        public void draw() {
-            float offset = 0;
-
+        public void calc() {
             if (data.size() >= pitchMemCount) {
-                if (time == 0)
-                    time = System.currentTimeMillis();
-
                 long cur = System.currentTimeMillis();
 
                 float tick = (cur - time) / (float) pitchTime;
@@ -157,11 +147,9 @@ public class PitchView extends ViewGroup {
 
                 offset = pitchSize * tick;
             }
-
-            draw(offset);
         }
 
-        void draw(float offset) {
+        void draw() {
             Canvas canvas = holder.lockCanvas(null);
 
             int m = Math.min(pitchMemCount, data.size());
@@ -186,12 +174,12 @@ public class PitchView extends ViewGroup {
                     p = cutColor;
 
                 // left channel pitch
-                canvas.drawLine(x, mid, x, mid - mid * left, p);
+                canvas.drawLine(x, mid, x, mid - mid * left - 1, p);
                 // right channel pitch
-                canvas.drawLine(x, mid, x, mid + mid * right, p);
+                canvas.drawLine(x, mid, x, mid + mid * right + 1, p);
             }
 
-            if (edit != null && editCount == 0) {
+            if (edit != null && editFlash) {
                 float x = editPos * pitchSize + pitchSize / 2f;
                 canvas.drawLine(x, 0, x, getHeight(), editPaint);
             }
@@ -208,8 +196,8 @@ public class PitchView extends ViewGroup {
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             synchronized (PitchView.this) {
                 this.holder = holder;
-                fit();
-                draw(0);
+                fit(pitchScreenCount);
+                draw();
             }
         }
 
@@ -217,8 +205,8 @@ public class PitchView extends ViewGroup {
         public void surfaceCreated(final SurfaceHolder holder) {
             synchronized (PitchView.this) {
                 this.holder = holder;
-                fit();
-                draw(0);
+                fit(pitchScreenCount);
+                draw();
             }
         }
 
@@ -274,6 +262,9 @@ public class PitchView extends ViewGroup {
 
                 if (edit != null) {
                     end = editPos;
+                }
+                if (play != null) {
+                    end = (int) playPos;
                 }
 
                 float left = data.get(end);
@@ -369,41 +360,50 @@ public class PitchView extends ViewGroup {
     public void clear(long s) {
         data.clear();
         samples = s;
+        offset = 0;
         edit = null;
         draw = null;
+        play = null;
     }
 
-    public void fit() {
-        if (data.size() > pitchMemCount) {
-            int cut = data.size() - pitchMemCount;
+    public void fit(int max) {
+        if (data.size() > max) {
+            int cut = data.size() - max;
             data.subList(0, cut).clear();
             samples += cut;
         }
     }
 
     public void add(float a) {
-        data.add(a);
-
-        // after pause, we still may get one last sample. force view redraw.
-        if (thread == null) {
-            draw();
+        synchronized (this) {
+            data.add(a);
         }
     }
 
-    public void draw() {
+    public void drawCalc() {
         synchronized (this) {
-            if (graph.holder != null)
+            if (graph.holder != null) {
+                graph.calc();
                 graph.draw();
+            }
             if (current.holder != null)
                 current.draw();
         }
     }
 
+    public void drawEnd() {
+        synchronized (this) {
+            fit(pitchMemCount);
+            offset = 0;
+            draw();
+        }
+    }
+
     // draw in edit mode
-    public void drawEdit() {
+    public void draw() {
         synchronized (this) {
             if (graph.holder != null)
-                graph.draw(0);
+                graph.draw();
             if (current.holder != null)
                 current.draw();
         }
@@ -452,20 +452,17 @@ public class PitchView extends ViewGroup {
         current.draw(canvas);
     }
 
-    public void pause() {
+    public void stop() {
         if (thread != null) {
             thread.interrupt();
             thread = null;
         }
 
-        if (edit != null)
-            edit = null;
-        if (draw != null)
-            draw = null;
-        if (play != null)
-            play = null;
+        edit = null;
+        draw = null;
+        play = null;
 
-        drawEdit();
+        draw();
     }
 
     public long edit(float offset) {
@@ -480,8 +477,8 @@ public class PitchView extends ViewGroup {
             if (editPos >= data.size())
                 editPos = data.size() - 1;
 
-            editCount = 0;
-            drawEdit();
+            editFlash = true;
+            draw();
         }
 
         if (draw != null) {
@@ -504,11 +501,9 @@ public class PitchView extends ViewGroup {
                 public void run() {
                     while (!Thread.currentThread().isInterrupted()) {
                         long time = System.currentTimeMillis();
-                        drawEdit();
+                        draw();
 
-                        editCount++;
-                        if (editCount > 1)
-                            editCount = 0;
+                        editFlash = !editFlash;
 
                         long cur = System.currentTimeMillis();
 
@@ -530,7 +525,7 @@ public class PitchView extends ViewGroup {
         }
     }
 
-    public void resume() {
+    public void record() {
         if (edit != null) {
             edit = null;
             if (thread != null) {
@@ -552,19 +547,15 @@ public class PitchView extends ViewGroup {
                 @Override
                 public void run() {
                     time = System.currentTimeMillis();
-                    int count = 0;
                     while (!Thread.currentThread().isInterrupted()) {
                         long time = System.currentTimeMillis();
-                        draw();
+                        drawCalc();
                         long cur = System.currentTimeMillis();
 
                         long delay = UPDATE_SPEED - (cur - time);
 
                         if (delay > 0) {
-                            count++;
-                            if (count > 5) {
-                                stableRefresh = true;
-                            }
+                            stableRefresh = true;
                             try {
                                 Thread.sleep(delay);
                             } catch (InterruptedException e) {
@@ -585,9 +576,9 @@ public class PitchView extends ViewGroup {
         synchronized (this) {
             playPos = pos - samples;
 
-            editCount = 0;
+            editFlash = true;
 
-            if (playPos < 0)
+            if (playPos < 0 || playPos > data.size())
                 playPos = -1;
 
             if (playPos < 0) {
@@ -617,7 +608,7 @@ public class PitchView extends ViewGroup {
                     time = System.currentTimeMillis();
                     while (!Thread.currentThread().isInterrupted()) {
                         long time = System.currentTimeMillis();
-                        drawEdit();
+                        draw();
                         long cur = System.currentTimeMillis();
 
                         long delay = UPDATE_SPEED - (cur - time);

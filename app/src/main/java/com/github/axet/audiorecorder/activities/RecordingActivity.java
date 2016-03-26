@@ -54,8 +54,6 @@ import com.github.axet.audiorecorder.widgets.PitchView;
 import java.io.File;
 
 public class RecordingActivity extends AppCompatActivity {
-    public static int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
-    public static int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
     public static int MAXIMUM_ALTITUDE = 5000;
 
     public static final String TAG = RecordingActivity.class.getSimpleName();
@@ -81,7 +79,7 @@ public class RecordingActivity extends AppCompatActivity {
     Integer bufferSize = 0;
     // variable from settings. how may samples per second.
     int sampleRate;
-    // how many samples count need to update view. 4410 for 100ms update.
+    // pitch size in samples. how many samples count need to update view. 4410 for 100ms update.
     int samplesUpdate;
     // output target file 2016-01-01 01.01.01.wav
     File targetFile;
@@ -125,6 +123,7 @@ public class RecordingActivity extends AppCompatActivity {
 
     class PhoneStateChangeListener extends PhoneStateListener {
         public boolean wasRinging;
+        public boolean pausedByCall;
 
         @Override
         public void onCallStateChanged(int s, String incomingNumber) {
@@ -133,14 +132,18 @@ public class RecordingActivity extends AppCompatActivity {
                     wasRinging = true;
                     break;
                 case TelephonyManager.CALL_STATE_OFFHOOK:
-                    stopRecording("playerPause (hold by call)");
                     wasRinging = true;
+                    if (thread != null) {
+                        stopRecording("playerPause (hold by call)");
+                        pausedByCall = true;
+                    }
                     break;
                 case TelephonyManager.CALL_STATE_IDLE:
-                    if (wasRinging && permitted()) {
-                        resumeRecording();
+                    if (pausedByCall) {
+                        startRecording();
                     }
                     wasRinging = false;
+                    pausedByCall = false;
                     break;
             }
         }
@@ -212,7 +215,6 @@ public class RecordingActivity extends AppCompatActivity {
                     public void run() {
                         stopRecording();
                         storage.delete(storage.getTempRecording());
-                        //storage.delete(targetFile);
                         finish();
                     }
                 });
@@ -250,8 +252,10 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     void loadSamples() {
-        if (!storage.getTempRecording().exists())
+        if (!storage.getTempRecording().exists()) {
+            updateSamples(0);
             return;
+        }
 
         RawSamples rs = new RawSamples(storage.getTempRecording());
         samplesTime = rs.getSamples();
@@ -270,11 +274,13 @@ public class RecordingActivity extends AppCompatActivity {
 
         rs.open(cut, buf.length);
         int len = rs.read(buf);
+        rs.close();
+
         pitch.clear(cut / samplesUpdate);
         for (int i = 0; i < len; i += samplesUpdate) {
             pitch.add(getPa(buf, i, samplesUpdate));
         }
-        rs.close();
+        pitch.drawCalc();
         updateSamples(samplesTime);
     }
 
@@ -297,16 +303,9 @@ public class RecordingActivity extends AppCompatActivity {
         if (thread != null) {
             stopRecording("pause");
         } else {
-            if (editSample != -1) {
-                RawSamples rs = new RawSamples(storage.getTempRecording());
-                rs.trunk(editSample);
-                loadSamples();
-                edit(false);
-            }
+            editCut();
 
-            if (permitted(PERMISSIONS)) {
-                resumeRecording();
-            }
+            startRecording();
         }
     }
 
@@ -315,18 +314,18 @@ public class RecordingActivity extends AppCompatActivity {
         super.onResume();
         Log.d(TAG, "onResume");
 
+        updateBufferSize(false);
+
         // start once
         if (start) {
             start = false;
             if (permitted()) {
-                record();
+                startRecording();
             }
         }
 
-        updateBufferSize(false);
-
         if (thread != null)
-            pitch.resume();
+            pitch.record();
     }
 
     @Override
@@ -335,7 +334,7 @@ public class RecordingActivity extends AppCompatActivity {
         Log.d(TAG, "onPause");
         updateBufferSize(true);
         edit(false);
-        pitch.pause();
+        pitch.stop();
     }
 
     void stopRecording(String status) {
@@ -361,7 +360,7 @@ public class RecordingActivity extends AppCompatActivity {
             thread.interrupt();
             thread = null;
         }
-        pitch.pause();
+        pitch.stop();
         sound.unsilent();
     }
 
@@ -377,10 +376,7 @@ public class RecordingActivity extends AppCompatActivity {
             cut.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    RawSamples rs = new RawSamples(storage.getTempRecording());
-                    rs.trunk(editSample);
-                    loadSamples();
-                    edit(false);
+                    editCut();
                 }
             });
 
@@ -407,7 +403,7 @@ public class RecordingActivity extends AppCompatActivity {
             editSample = -1;
             state.setText("pause");
             editPlay(false);
-            pitch.pause();
+            pitch.stop();
             View box = findViewById(R.id.recording_edit_box);
             box.setVisibility(View.GONE);
         }
@@ -429,12 +425,7 @@ public class RecordingActivity extends AppCompatActivity {
             AudioTrack.OnPlaybackPositionUpdateListener listener = new AudioTrack.OnPlaybackPositionUpdateListener() {
                 @Override
                 public void onMarkerReached(AudioTrack track) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            editPlay(false);
-                        }
-                    });
+                    editPlay(false);
                 }
 
                 @Override
@@ -466,6 +457,17 @@ public class RecordingActivity extends AppCompatActivity {
         }
     }
 
+    void editCut() {
+        if (editSample == -1)
+            return;
+
+        RawSamples rs = new RawSamples(storage.getTempRecording());
+        rs.trunk(editSample);
+        rs.close();
+        edit(false);
+        loadSamples();
+    }
+
     @Override
     public void onBackPressed() {
         cancelDialog(new Runnable() {
@@ -495,13 +497,6 @@ public class RecordingActivity extends AppCompatActivity {
         builder.show();
     }
 
-    void resumeRecording() {
-        if (thread == null) {
-            record();
-        }
-        pitch.resume();
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -523,7 +518,7 @@ public class RecordingActivity extends AppCompatActivity {
         showNotificationAlarm(false);
     }
 
-    void record() {
+    void startRecording() {
         edit(false);
         pitch.setOnTouchListener(null);
 
@@ -547,10 +542,7 @@ public class RecordingActivity extends AppCompatActivity {
                     Log.e(TAG, "Unable to set Thread Priority " + android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                 }
 
-                long startTime = System.currentTimeMillis();
-                // start recording after 1 sec or stableRefresh
-                long goTime = startTime + 1000;
-
+                long start = System.currentTimeMillis();
                 RawSamples rs = null;
                 AudioRecord recorder = null;
                 try {
@@ -558,17 +550,12 @@ public class RecordingActivity extends AppCompatActivity {
 
                     rs.open(samplesTime);
 
-                    int min = AudioRecord.getMinBufferSize(sampleRate, CHANNEL_CONFIG, AUDIO_FORMAT);
+                    int min = AudioRecord.getMinBufferSize(sampleRate, RawSamples.CHANNEL_CONFIG, RawSamples.AUDIO_FORMAT);
                     if (min <= 0) {
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
                     }
 
-                    // make it 5 seconds buffer
-                    int min2 = 5 * sampleRate
-                            * (AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1)
-                            * (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1);
-
-                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, CHANNEL_CONFIG, AUDIO_FORMAT, Math.min(min2, min));
+                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, RawSamples.CHANNEL_CONFIG, RawSamples.AUDIO_FORMAT, min);
                     if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
                         throw new RuntimeException("Unable to initialize AudioRecord");
                     }
@@ -578,13 +565,11 @@ public class RecordingActivity extends AppCompatActivity {
                     int samplesUpdateCount = 0;
                     int samplesTimeCount = 0;
                     // how many samples we need to update 'samples'. time clock. every 1000ms.
-                    int samplesTimeUpdate = 1000 / 1000 * sampleRate * (CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2);
+                    int samplesTimeUpdate = 1000 / 1000 * sampleRate * (RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2);
 
                     short[] buffer = null;
 
                     while (!Thread.currentThread().isInterrupted()) {
-                        long cur = System.currentTimeMillis();
-
                         synchronized (bufferSize) {
                             if (buffer == null || buffer.length != bufferSize)
                                 buffer = new short[bufferSize];
@@ -595,10 +580,10 @@ public class RecordingActivity extends AppCompatActivity {
                             break;
                         }
 
-                        if (cur > goTime || pitch.stableRefresh()) {
-                            rs.write(buffer);
+                        int s = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
 
-                            int s = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
+                        if (pitch.stableRefresh()) {
+                            rs.write(buffer);
 
                             samplesUpdateCount += s;
                             if (samplesUpdateCount >= samplesUpdate) {
@@ -630,15 +615,21 @@ public class RecordingActivity extends AppCompatActivity {
                         }
                     });
                 } finally {
-                    if (rs != null) {
+                    // redraw view, we may add one last pich which is not been drawen because draw tread already interrupted.
+                    // to prevent resume recording jump - draw last added pitch here.
+                    pitch.drawEnd();
+
+                    if (rs != null)
                         rs.close();
-                    }
+
                     if (recorder != null)
                         recorder.release();
                 }
             }
         }, "RecordingThread");
         thread.start();
+
+        pitch.record();
 
         showNotificationAlarm(true);
     }
@@ -653,7 +644,7 @@ public class RecordingActivity extends AppCompatActivity {
                 samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
             }
 
-            bufferSize = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2;
+            bufferSize = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2;
         }
     }
 
@@ -670,7 +661,7 @@ public class RecordingActivity extends AppCompatActivity {
         }
 
         int amplitude = (int) (Math.sqrt(sum / len));
-        float pa = amplitude / (float) MAXIMUM_ALTITUDE + 0.01f;
+        float pa = amplitude / (float) MAXIMUM_ALTITUDE;
 
         return pa;
     }
@@ -716,7 +707,7 @@ public class RecordingActivity extends AppCompatActivity {
         switch (requestCode) {
             case 1:
                 if (permitted(permissions)) {
-                    record();
+                    startRecording();
                 } else {
                     Toast.makeText(this, "Not permitted", Toast.LENGTH_SHORT).show();
                     finish();
@@ -748,8 +739,8 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     EncoderInfo getInfo() {
-        final int channels = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1;
-        final int bps = AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
+        final int channels = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1;
+        final int bps = RawSamples.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
 
         return new EncoderInfo(channels, sampleRate, bps);
     }
