@@ -1,6 +1,5 @@
 package com.github.axet.audiorecorder.animations;
 
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Transformation;
@@ -8,50 +7,51 @@ import android.view.animation.Transformation;
 /**
  * Animation Tranformation.getMatrix() has no issues. But animation properies does. Here are few
  * issues  about animations properties.
- * <p>
+ * <p/>
  * First:
- * <p>
+ * <p/>
  * If your animation touches some elements, then hide them (GONE), some properties may not be
  * recalculated because element is hidden.
- * <p>
+ * <p/>
  * Here is no solution. You have to restore all properties of evey view which may be affected by
  * running animation to its initial state.
- * <p>
+ * <p/>
  * If you dont you may see routated (setRotate) or hidded (setAlpha) elements even if endAnimation()
  * restore thier initial states (do setRotate(0) or setApha(1) do not make them not rotated or
  * visible).
- * <p>
+ * <p/>
  * Second:
- * <p>
+ * <p/>
  * On normal run we have onAnimationEnd() is not final call applyTransformation() called after that.
- * <p>
+ * <p/>
  * applyTransformation()
  * onAnimationEnd()
  * applyTransformation()
- * <p>
+ * <p/>
  * On animation cancel we have:
  * applyTransformation()
  * onAnimationEnd()
- * <p>
+ * <p/>
  * Which makes unpredictable where do we have to finish animation with initial values on top of first
  * statement.
  */
-public class MarginAnimation extends StepAnimation {
+public class MarginBottomAnimation extends StepAnimation {
 
     ViewGroup.MarginLayoutParams viewLp;
     ViewGroup.MarginLayoutParams viewLpOrig;
-    int marginSlide;
+
+    int vh;
 
     public static void apply(final View v, final boolean expand, boolean animate) {
         apply(new LateCreator() {
             @Override
-            public MarginAnimation create() {
-                return new MarginAnimation(v, expand);
+            public MarginBottomAnimation create() {
+                return new MarginBottomAnimation(v, expand);
             }
         }, v, expand, animate);
     }
 
-    public MarginAnimation(View v, boolean expand) {
+    public MarginBottomAnimation(View v, boolean expand) {
         super(v, expand);
 
         setDuration(500);
@@ -82,16 +82,18 @@ public class MarginAnimation extends StepAnimation {
         w = View.MeasureSpec.makeMeasureSpec(Math.max(width, parentWidth), View.MeasureSpec.AT_MOST);
 
         view.measure(w, h);
-        marginSlide = view.getMeasuredHeight() + viewLpOrig.bottomMargin;
+        vh = view.getMeasuredHeight();
+
+        view.measure(w, h);
     }
 
     @Override
     public void calc(float i, Transformation t) {
         super.calc(i, t);
 
-        i = expand ? i : 1 - i;
+        i = expand ? 1 - i : i;
 
-        viewLp.topMargin = (int) (viewLpOrig.topMargin * i - marginSlide * (1 - i));
+        viewLp.bottomMargin = (int) (-vh * i);
         view.requestLayout();
     }
 
@@ -99,7 +101,7 @@ public class MarginAnimation extends StepAnimation {
     public void restore() {
         super.restore();
 
-        viewLp.topMargin = viewLpOrig.topMargin;
+        viewLp.bottomMargin = viewLpOrig.bottomMargin;
     }
 
     @Override
