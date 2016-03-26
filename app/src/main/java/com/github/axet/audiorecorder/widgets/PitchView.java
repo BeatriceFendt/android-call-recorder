@@ -479,6 +479,7 @@ public class PitchView extends ViewGroup {
 
             draw = new Runnable() {
                 long start = System.currentTimeMillis();
+                int count = 0;
 
                 @Override
                 public void run() {
@@ -493,7 +494,13 @@ public class PitchView extends ViewGroup {
 
                     start = cur;
 
-                    stableRefresh = true;
+                    synchronized (this) {
+                        if (count > 10)
+                            stableRefresh = true;
+                    }
+
+                    count += 1;
+
                     if (delay > 0)
                         handler.postDelayed(draw, delay);
                     else
@@ -559,6 +566,8 @@ public class PitchView extends ViewGroup {
     }
 
     public boolean stableRefresh() {
-        return stableRefresh;
+        synchronized (this) {
+            return stableRefresh;
+        }
     }
 }
