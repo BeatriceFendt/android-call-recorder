@@ -167,7 +167,7 @@ public class PitchView extends ViewGroup {
 
                 Paint p = paint;
 
-                if (edit != null && i >= editPos)
+                if ((edit != null || play != null) && i >= editPos)
                     p = cutColor;
 
                 // left channel pitch
@@ -176,12 +176,12 @@ public class PitchView extends ViewGroup {
                 canvas.drawLine(x, mid, x, mid + mid * right + 1, p);
             }
 
-            if (edit != null && editFlash) {
+            if ((edit != null || play != null) && editFlash) {
                 float x = editPos * pitchSize + pitchSize / 2f;
                 canvas.drawLine(x, 0, x, getHeight(), editPaint);
             }
 
-            if (edit != null && playPos > 0) {
+            if (play != null && playPos > 0) {
                 float x = playPos * pitchSize + pitchSize / 2f;
                 canvas.drawLine(x, 0, x, getHeight(), playPaint);
             }
@@ -491,7 +491,7 @@ public class PitchView extends ViewGroup {
                         if (stableCount > 20) {
                             stableRefresh = true;
                         }
-                        stableCount ++;
+                        stableCount++;
                     }
 
                     if (delay > 0)
@@ -519,11 +519,15 @@ public class PitchView extends ViewGroup {
                 handler.removeCallbacks(play);
                 play = null;
             }
+            if (edit == null) {
+                edit();
+            }
             return;
         }
 
         if (edit != null)
             handler.removeCallbacks(edit);
+        edit = null;
 
         if (draw != null)
             handler.removeCallbacks(draw);
