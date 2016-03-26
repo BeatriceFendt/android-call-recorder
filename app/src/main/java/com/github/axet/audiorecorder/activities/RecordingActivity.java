@@ -280,7 +280,6 @@ public class RecordingActivity extends AppCompatActivity {
         for (int i = 0; i < len; i += samplesUpdate) {
             pitch.add(getPa(buf, i, samplesUpdate));
         }
-        pitch.drawCalc();
         updateSamples(samplesTime);
     }
 
@@ -466,6 +465,7 @@ public class RecordingActivity extends AppCompatActivity {
         rs.close();
         edit(false);
         loadSamples();
+        pitch.drawCalc();
     }
 
     @Override
@@ -587,7 +587,13 @@ public class RecordingActivity extends AppCompatActivity {
 
                             samplesUpdateCount += s;
                             if (samplesUpdateCount >= samplesUpdate) {
-                                pitch.add(getPa(buffer, 0, readSize));
+                                final float pa = getPa(buffer, 0, readSize);
+                                handle.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        pitch.add(pa);
+                                    }
+                                });
                                 samplesUpdateCount -= samplesUpdate;
                             }
 
@@ -617,7 +623,12 @@ public class RecordingActivity extends AppCompatActivity {
                 } finally {
                     // redraw view, we may add one last pich which is not been drawen because draw tread already interrupted.
                     // to prevent resume recording jump - draw last added pitch here.
-                    pitch.drawEnd();
+                    handle.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            pitch.drawEnd();
+                        }
+                    });
 
                     if (rs != null)
                         rs.close();

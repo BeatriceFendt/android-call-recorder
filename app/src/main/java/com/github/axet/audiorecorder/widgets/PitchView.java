@@ -6,11 +6,13 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Build;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.LinkedList;
@@ -69,14 +71,13 @@ public class PitchView extends ViewGroup {
     Runnable draw;
     float offset = 0;
 
-    Thread thread;
+    Handler handler;
 
     int pitchColor = 0xff0433AE;
     Paint cutColor = new Paint();
     int bg;
 
-    public class PitchGraphView extends SurfaceView implements SurfaceHolder.Callback {
-        SurfaceHolder holder;
+    public class PitchGraphView extends View {
         Paint editPaint;
         Paint playPaint;
 
@@ -98,8 +99,6 @@ public class PitchView extends ViewGroup {
             playPaint = new Paint();
             playPaint.setColor(Color.BLUE);
             playPaint.setStrokeWidth(pitchWidth / 2);
-
-            getHolder().addCallback(this);
         }
 
         @Override
@@ -111,6 +110,8 @@ public class PitchView extends ViewGroup {
             pitchScreenCount = w / pitchSize + 1;
 
             pitchMemCount = pitchScreenCount + 1;
+
+            fit(pitchScreenCount);
         }
 
         @Override
@@ -149,9 +150,8 @@ public class PitchView extends ViewGroup {
             }
         }
 
-        void draw() {
-            Canvas canvas = holder.lockCanvas(null);
-
+        @Override
+        public void onDraw(Canvas canvas) {
             int m = Math.min(pitchMemCount, data.size());
             canvas.drawColor(bg);
 
@@ -188,39 +188,11 @@ public class PitchView extends ViewGroup {
                 float x = playPos * pitchSize + pitchSize / 2f;
                 canvas.drawLine(x, 0, x, getHeight(), playPaint);
             }
-
-            holder.unlockCanvasAndPost(canvas);
-        }
-
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-            synchronized (PitchView.this) {
-                this.holder = holder;
-                fit(pitchScreenCount);
-                draw();
-            }
-        }
-
-        @Override
-        public void surfaceCreated(final SurfaceHolder holder) {
-            synchronized (PitchView.this) {
-                this.holder = holder;
-                fit(pitchScreenCount);
-                draw();
-            }
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-            synchronized (PitchView.this) {
-                this.holder = null;
-            }
         }
     }
 
-    public class PitchCurrentView extends SurfaceView implements SurfaceHolder.Callback {
+    public class PitchCurrentView extends View {
         Paint paint;
-        SurfaceHolder holder;
 
         public PitchCurrentView(Context context) {
             this(context, null);
@@ -236,8 +208,6 @@ public class PitchView extends ViewGroup {
             paint = new Paint();
             paint.setColor(pitchColor);
             paint.setStrokeWidth(pitchWidth);
-
-            getHolder().addCallback(this);
         }
 
         @Override
@@ -253,8 +223,8 @@ public class PitchView extends ViewGroup {
             super.onLayout(changed, left, top, right, bottom);
         }
 
-        public void draw() {
-            Canvas canvas = holder.lockCanvas(null);
+        @Override
+        public void onDraw(Canvas canvas) {
             canvas.drawColor(bg);
 
             if (data.size() > 0) {
@@ -277,31 +247,6 @@ public class PitchView extends ViewGroup {
                 canvas.drawLine(mid, y, mid - mid * left, y, paint);
                 canvas.drawLine(mid, y, mid + mid * right, y, paint);
             }
-
-            holder.unlockCanvasAndPost(canvas);
-        }
-
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-            synchronized (PitchView.this) {
-                this.holder = holder;
-                draw();
-            }
-        }
-
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-            synchronized (PitchView.this) {
-                this.holder = holder;
-                draw();
-            }
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-            synchronized (PitchView.this) {
-                this.holder = null;
-            }
         }
     }
 
@@ -320,6 +265,8 @@ public class PitchView extends ViewGroup {
     }
 
     void create() {
+        handler = new Handler();
+
         pitchDlimiter = dp2px(PITCH_DELIMITER);
         pitchWidth = dp2px(PITCH_WIDTH);
         pitchSize = pitchWidth + pitchDlimiter;
@@ -375,38 +322,25 @@ public class PitchView extends ViewGroup {
     }
 
     public void add(float a) {
-        synchronized (this) {
-            data.add(a);
-        }
+        data.add(a);
     }
 
     public void drawCalc() {
-        synchronized (this) {
-            if (graph.holder != null) {
-                graph.calc();
-                graph.draw();
-            }
-            if (current.holder != null)
-                current.draw();
-        }
+        graph.calc();
+        graph.invalidate();
+        current.invalidate();
     }
 
     public void drawEnd() {
-        synchronized (this) {
-            fit(pitchMemCount);
-            offset = 0;
-            draw();
-        }
+        fit(pitchMemCount);
+        offset = 0;
+        draw();
     }
 
     // draw in edit mode
     public void draw() {
-        synchronized (this) {
-            if (graph.holder != null)
-                graph.draw();
-            if (current.holder != null)
-                current.draw();
-        }
+        graph.invalidate();
+        current.invalidate();
     }
 
     public int getPitchTime() {
@@ -453,41 +387,43 @@ public class PitchView extends ViewGroup {
     }
 
     public void stop() {
-        if (thread != null) {
-            thread.interrupt();
-            thread = null;
-        }
-
+        if (edit != null)
+            handler.removeCallbacks(edit);
         edit = null;
+
+        if (draw != null)
+            handler.removeCallbacks(draw);
         draw = null;
+
+        if (play != null)
+            handler.removeCallbacks(play);
         play = null;
 
         draw();
     }
 
     public long edit(float offset) {
-        synchronized (this) {
-            if (offset < 0)
-                offset = 0;
-            editPos = ((int) offset) / pitchSize;
+        if (offset < 0)
+            offset = 0;
+        editPos = ((int) offset) / pitchSize;
 
-            if (editPos >= pitchScreenCount)
-                editPos = pitchScreenCount - 1;
+        if (editPos >= pitchScreenCount)
+            editPos = pitchScreenCount - 1;
 
-            if (editPos >= data.size())
-                editPos = data.size() - 1;
-
-            editFlash = true;
-            draw();
-        }
+        if (editPos >= data.size())
+            editPos = data.size() - 1;
 
         if (draw != null) {
+            handler.removeCallbacks(draw);
             draw = null;
-            if (thread != null) {
-                thread.interrupt();
-                thread = null;
-            }
         }
+
+        if (play != null) {
+            handler.removeCallbacks(play);
+            play = null;
+        }
+
+        draw();
 
         edit();
 
@@ -495,142 +431,134 @@ public class PitchView extends ViewGroup {
     }
 
     public void edit() {
-        if (thread == null) {
+        if (edit == null) {
+            editFlash = true;
+
             edit = new Runnable() {
+                long start = System.currentTimeMillis();
+
                 @Override
                 public void run() {
-                    while (!Thread.currentThread().isInterrupted()) {
-                        long time = System.currentTimeMillis();
-                        draw();
+                    draw();
 
-                        editFlash = !editFlash;
+                    editFlash = !editFlash;
 
-                        long cur = System.currentTimeMillis();
+                    long cur = System.currentTimeMillis();
 
-                        long delay = EDIT_UPDATE_SPEED - (cur - time);
+                    long diff = cur - start;
 
-                        if (delay > 0) {
-                            try {
-                                Thread.sleep(delay);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                return;
-                            }
-                        }
-                    }
+                    long delay = EDIT_UPDATE_SPEED + (EDIT_UPDATE_SPEED - diff);
+                    if (delay > EDIT_UPDATE_SPEED)
+                        delay = EDIT_UPDATE_SPEED;
+
+                    start = cur;
+
+                    if (delay > 0)
+                        handler.postDelayed(edit, delay);
+                    else
+                        handler.post(edit);
                 }
             };
-            thread = new Thread(edit, TAG);
-            thread.start();
+            // post instead of draw.run() so 'start' will measure actual queue time
+            handler.post(edit);
         }
     }
 
     public void record() {
-        if (edit != null) {
-            edit = null;
-            if (thread != null) {
-                thread.interrupt();
-                thread = null;
-            }
-        }
-        if (play != null) {
-            play = null;
-            if (thread != null) {
-                thread.interrupt();
-                thread = null;
-            }
-        }
-        if (thread == null) {
+        if (edit != null)
+            handler.removeCallbacks(edit);
+        edit = null;
+
+        if (play != null)
+            handler.removeCallbacks(play);
+        play = null;
+
+        if (draw == null) {
             stableRefresh = false;
+            time = System.currentTimeMillis();
 
             draw = new Runnable() {
+                long start = System.currentTimeMillis();
+
                 @Override
                 public void run() {
-                    time = System.currentTimeMillis();
-                    while (!Thread.currentThread().isInterrupted()) {
-                        long time = System.currentTimeMillis();
-                        drawCalc();
-                        long cur = System.currentTimeMillis();
+                    drawCalc();
+                    long cur = System.currentTimeMillis();
 
-                        long delay = UPDATE_SPEED - (cur - time);
+                    long diff = cur - start;
 
-                        if (delay > 0) {
-                            stableRefresh = true;
-                            try {
-                                Thread.sleep(delay);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                return;
-                            }
-                        }
-                    }
+                    long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
+                    if (delay > UPDATE_SPEED)
+                        delay = UPDATE_SPEED;
+
+                    start = cur;
+
+                    stableRefresh = true;
+                    if (delay > 0)
+                        handler.postDelayed(draw, delay);
+                    else
+                        handler.post(draw);
                 }
             };
-            thread = new Thread(draw, TAG);
-            thread.start();
+            // post instead of draw.run() so 'start' will measure actual queue time
+            handler.post(draw);
         }
     }
 
     // current paying pos in actual samples
     public void play(float pos) {
-        synchronized (this) {
-            playPos = pos - samples;
+        playPos = pos - samples;
 
-            editFlash = true;
+        editFlash = true;
 
-            if (playPos < 0 || playPos > data.size())
-                playPos = -1;
+        if (playPos < 0 || playPos > data.size())
+            playPos = -1;
 
-            if (playPos < 0) {
-                if (play != null) {
-                    play = null;
-                    if (thread != null) {
-                        thread.interrupt();
-                        thread = null;
-                    }
-                }
-                if (thread == null) {
-                    edit();
-                }
-                return;
+        if (playPos < 0) {
+            if (play != null) {
+                handler.removeCallbacks(play);
+                play = null;
             }
+            return;
         }
 
-        if (play == null && thread != null) {
-            thread.interrupt();
-            thread = null;
-        }
+        if (edit != null)
+            handler.removeCallbacks(edit);
 
-        if (thread == null) {
+        if (draw != null)
+            handler.removeCallbacks(draw);
+        draw = null;
+
+        if (play == null) {
+            time = System.currentTimeMillis();
             play = new Runnable() {
+                long start = System.currentTimeMillis();
+
                 @Override
                 public void run() {
-                    time = System.currentTimeMillis();
-                    while (!Thread.currentThread().isInterrupted()) {
-                        long time = System.currentTimeMillis();
-                        draw();
-                        long cur = System.currentTimeMillis();
+                    draw();
+                    long cur = System.currentTimeMillis();
 
-                        long delay = UPDATE_SPEED - (cur - time);
+                    long diff = cur - start;
 
-                        if (delay > 0) {
-                            try {
-                                Thread.sleep(delay);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                        }
-                    }
+                    start = cur;
+
+                    long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
+                    if (delay > UPDATE_SPEED)
+                        delay = UPDATE_SPEED;
+
+                    if (delay > 0)
+                        handler.postDelayed(play, delay);
+                    else
+                        handler.post(play);
                 }
             };
-            thread = new Thread(play, TAG);
-            thread.start();
+            // post instead of draw.run() so 'start' will measure actual queue time
+            handler.post(play);
         }
     }
 
     public boolean stableRefresh() {
-        synchronized (this) {
-            return stableRefresh;
-        }
+        return stableRefresh;
     }
 }
