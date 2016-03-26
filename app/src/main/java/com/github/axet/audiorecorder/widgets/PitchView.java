@@ -381,8 +381,8 @@ public class PitchView extends ViewGroup {
         }
     }
 
-    public void add(int a) {
-        data.add(a / 100.0f);
+    public void add(float a) {
+        data.add(a);
 
         // after pause, we still may get one last sample. force view redraw.
         if (thread == null) {
