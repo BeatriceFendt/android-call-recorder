@@ -8,10 +8,7 @@ import android.graphics.Paint;
 import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -448,8 +445,6 @@ public class PitchView extends ViewGroup {
                     long diff = cur - start;
 
                     long delay = EDIT_UPDATE_SPEED + (EDIT_UPDATE_SPEED - diff);
-                    if (delay > EDIT_UPDATE_SPEED)
-                        delay = EDIT_UPDATE_SPEED;
 
                     start = cur;
 
@@ -460,7 +455,7 @@ public class PitchView extends ViewGroup {
                 }
             };
             // post instead of draw.run() so 'start' will measure actual queue time
-            handler.post(edit);
+            handler.postDelayed(edit, EDIT_UPDATE_SPEED);
         }
     }
 
@@ -479,7 +474,7 @@ public class PitchView extends ViewGroup {
 
             draw = new Runnable() {
                 long start = System.currentTimeMillis();
-                int count = 0;
+                int stableCount = 0;
 
                 @Override
                 public void run() {
@@ -489,17 +484,15 @@ public class PitchView extends ViewGroup {
                     long diff = cur - start;
 
                     long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
-                    if (delay > UPDATE_SPEED)
-                        delay = UPDATE_SPEED;
 
                     start = cur;
 
                     synchronized (this) {
-                        if (count > 10)
+                        if (stableCount > 20) {
                             stableRefresh = true;
+                        }
+                        stableCount ++;
                     }
-
-                    count += 1;
 
                     if (delay > 0)
                         handler.postDelayed(draw, delay);
@@ -508,7 +501,7 @@ public class PitchView extends ViewGroup {
                 }
             };
             // post instead of draw.run() so 'start' will measure actual queue time
-            handler.post(draw);
+            handler.postDelayed(draw, UPDATE_SPEED);
         }
     }
 
@@ -551,8 +544,6 @@ public class PitchView extends ViewGroup {
                     start = cur;
 
                     long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
-                    if (delay > UPDATE_SPEED)
-                        delay = UPDATE_SPEED;
 
                     if (delay > 0)
                         handler.postDelayed(play, delay);
@@ -561,7 +552,7 @@ public class PitchView extends ViewGroup {
                 }
             };
             // post instead of draw.run() so 'start' will measure actual queue time
-            handler.post(play);
+            handler.postDelayed(play, UPDATE_SPEED);
         }
     }
 
