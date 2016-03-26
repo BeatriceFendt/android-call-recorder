@@ -634,7 +634,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 // Otherwise, set the URL to null.
                 Uri.parse("http://host/path"),
                 // TODO: Make sure this auto-generated app deep link URI is correct.
-                Uri.parse("android-app://com.github.axet.mover/http/host/path")
+                Uri.parse("android-app://com.github.axet.android-audio-recorder/http/host/path")
         );
         AppIndex.AppIndexApi.start(client, viewAction);
     }
