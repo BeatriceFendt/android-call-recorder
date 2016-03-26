@@ -532,6 +532,8 @@ public class RecordingActivity extends AppCompatActivity {
             thread.interrupt();
         }
 
+        pitch.record();
+
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -639,8 +641,6 @@ public class RecordingActivity extends AppCompatActivity {
             }
         }, "RecordingThread");
         thread.start();
-
-        pitch.record();
 
         showNotificationAlarm(true);
     }
