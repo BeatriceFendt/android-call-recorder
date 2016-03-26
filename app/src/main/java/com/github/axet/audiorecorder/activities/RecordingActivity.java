@@ -531,11 +531,11 @@ public class RecordingActivity extends AppCompatActivity {
 
         pause.setImageResource(R.drawable.ic_pause_24dp);
 
+        pitch.record();
+
         if (thread != null) {
             thread.interrupt();
         }
-
-        pitch.record();
 
         thread = new Thread(new Runnable() {
             @Override
@@ -547,7 +547,6 @@ public class RecordingActivity extends AppCompatActivity {
                     Log.e(TAG, "Unable to set Thread Priority " + android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                 }
 
-                long start = System.currentTimeMillis();
                 RawSamples rs = null;
                 AudioRecord recorder = null;
                 try {
@@ -560,11 +559,15 @@ public class RecordingActivity extends AppCompatActivity {
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
                     }
 
+                    // min = 1 sec
+                    min = Math.max(sampleRate * (RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2), min);
+
                     recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, RawSamples.CHANNEL_CONFIG, RawSamples.AUDIO_FORMAT, min);
                     if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
                         throw new RuntimeException("Unable to initialize AudioRecord");
                     }
 
+                    long start = System.currentTimeMillis();
                     recorder.startRecording();
 
                     int samplesUpdateCount = 0;
@@ -573,6 +576,8 @@ public class RecordingActivity extends AppCompatActivity {
                     int samplesTimeUpdate = 1000 / 1000 * sampleRate * (RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2);
 
                     short[] buffer = null;
+
+                    boolean stableRefresh = false;
 
                     while (!Thread.currentThread().isInterrupted()) {
                         synchronized (bufferSize) {
@@ -584,10 +589,17 @@ public class RecordingActivity extends AppCompatActivity {
                         if (readSize <= 0) {
                             break;
                         }
+                        long end = System.currentTimeMillis();
+
+                        long diff = (end - start) * sampleRate / 1000;
+
+                        start = end;
 
                         int s = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
 
-                        if (pitch.stableRefresh()) {
+                        if (stableRefresh || diff >= s) {
+                            stableRefresh = true;
+
                             rs.write(buffer);
 
                             samplesUpdateCount += s;

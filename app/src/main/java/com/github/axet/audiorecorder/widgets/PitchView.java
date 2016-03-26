@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,8 +47,6 @@ public class PitchView extends ViewGroup {
     int pitchWidth;
     // pitch length in pn + pitch delimiter length in px
     int pitchSize;
-
-    boolean stableRefresh;
 
     PitchGraphView graph;
     PitchCurrentView current;
@@ -441,6 +440,8 @@ public class PitchView extends ViewGroup {
                     long diff = cur - start;
 
                     long delay = EDIT_UPDATE_SPEED + (EDIT_UPDATE_SPEED - diff);
+                    if(delay > EDIT_UPDATE_SPEED)
+                        delay = EDIT_UPDATE_SPEED;
 
                     start = cur;
 
@@ -465,7 +466,6 @@ public class PitchView extends ViewGroup {
         play = null;
 
         if (draw == null) {
-            stableRefresh = false;
             time = System.currentTimeMillis();
 
             draw = new Runnable() {
@@ -480,15 +480,10 @@ public class PitchView extends ViewGroup {
                     long diff = cur - start;
 
                     long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
+                    if(delay > UPDATE_SPEED)
+                        delay = UPDATE_SPEED;
 
                     start = cur;
-
-                    synchronized (this) {
-                        if (stableCount > 20) {
-                            stableRefresh = true;
-                        }
-                        stableCount++;
-                    }
 
                     if (delay > 0)
                         handler.postDelayed(draw, delay);
@@ -544,6 +539,8 @@ public class PitchView extends ViewGroup {
                     start = cur;
 
                     long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
+                    if(delay > UPDATE_SPEED)
+                        delay = UPDATE_SPEED;
 
                     if (delay > 0)
                         handler.postDelayed(play, delay);
@@ -553,12 +550,6 @@ public class PitchView extends ViewGroup {
             };
             // post instead of draw.run() so 'start' will measure actual queue time
             handler.postDelayed(play, UPDATE_SPEED);
-        }
-    }
-
-    public boolean stableRefresh() {
-        synchronized (this) {
-            return stableRefresh;
         }
     }
 }
