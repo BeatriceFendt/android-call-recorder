@@ -598,13 +598,11 @@ public class RecordingActivity extends AppCompatActivity {
                         if (cur > goTime || pitch.stableRefresh()) {
                             rs.write(buffer);
 
-                            int pa = getPa(buffer, 0, readSize);
-
                             int s = CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
 
                             samplesUpdateCount += s;
                             if (samplesUpdateCount >= samplesUpdate) {
-                                pitch.add(pa);
+                                pitch.add(getPa(buffer, 0, readSize));
                                 samplesUpdateCount -= samplesUpdate;
                             }
 
@@ -665,14 +663,14 @@ public class RecordingActivity extends AppCompatActivity {
         time.setText(MainApplication.formatDuration(ms));
     }
 
-    int getPa(short[] buffer, int offset, int len) {
+    float getPa(short[] buffer, int offset, int len) {
         double sum = 0;
         for (int i = offset; i < offset + len; i++) {
             sum += buffer[i] * buffer[i];
         }
 
         int amplitude = (int) (Math.sqrt(sum / len));
-        int pa = (int) (amplitude / (float) MAXIMUM_ALTITUDE * 100) + 1;
+        float pa = amplitude / (float) MAXIMUM_ALTITUDE + 0.01f;
 
         return pa;
     }

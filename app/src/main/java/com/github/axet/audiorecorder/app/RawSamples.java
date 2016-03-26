@@ -1,11 +1,9 @@
 package com.github.axet.audiorecorder.app;
 
 import android.media.AudioFormat;
-import android.util.Log;
 
 import com.github.axet.audiorecorder.activities.RecordingActivity;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +13,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
 import java.nio.channels.FileChannel;
 
 public class RawSamples {
@@ -42,10 +39,10 @@ public class RawSamples {
 
     // open for reading
     //
-    // bufReadSize - samples size
+    // bufReadSize - samples count
     public void open(int bufReadSize) {
         try {
-            readBuffer = new byte[(RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1) * bufReadSize];
+            readBuffer = new byte[getBufferLen(bufReadSize)];
             is = new FileInputStream(in);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -58,7 +55,7 @@ public class RawSamples {
     // bufReadSize - samples size
     public void open(long offset, int bufReadSize) {
         try {
-            readBuffer = new byte[(RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1) * bufReadSize];
+            readBuffer = new byte[getBufferLen(bufReadSize)];
             is = new FileInputStream(in);
             is.skip(offset * (RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1));
         } catch (IOException e) {
@@ -99,8 +96,12 @@ public class RawSamples {
         return getSamples(in.length());
     }
 
-    public long getSamples(long samples) {
-        return samples / (RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
+    public long getSamples(long len) {
+        return len / (RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
+    }
+
+    public int getBufferLen(int samples) {
+        return samples * (RecordingActivity.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
     }
 
     public void trunk(long pos) {
