@@ -461,7 +461,7 @@ public class RecordingActivity extends AppCompatActivity {
             return;
 
         RawSamples rs = new RawSamples(storage.getTempRecording());
-        rs.trunk(editSample);
+        rs.trunk(editSample + 1);
         rs.close();
         edit(false);
         loadSamples();
