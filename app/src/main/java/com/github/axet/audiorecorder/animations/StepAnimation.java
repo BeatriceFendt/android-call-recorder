@@ -2,9 +2,7 @@ package com.github.axet.audiorecorder.animations;
 
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
 
@@ -28,8 +26,8 @@ public class StepAnimation extends Animation {
 
             if (animate) {
                 if (m.hasEnded()) {
-                    if ((expand && v.getVisibility() == View.GONE) || (!expand && v.getVisibility() == View.VISIBLE)) {
-                        StepAnimation mm = c.create();
+                    StepAnimation mm = c.create();
+                    if (mm.animationReady()) {
                         mm.startAnimation(v);
                     } else {
                         // do nothing, already visible view
@@ -54,7 +52,8 @@ public class StepAnimation extends Animation {
         } else {
             StepAnimation mm = c.create();
             if (animate) {
-                if ((expand && v.getVisibility() == View.GONE) || (!expand && v.getVisibility() == View.VISIBLE)) {
+                Log.d("123", "new " + expand + " " + mm.view.getVisibility());
+                if (mm.animationReady()) {
                     mm.startAnimation(v);
                 } else {
                     // do nothing. already visible
@@ -69,6 +68,11 @@ public class StepAnimation extends Animation {
     public StepAnimation(View view, boolean expand) {
         this.view = view;
         this.expand = expand;
+    }
+
+    // start animation only if view in proper visible state. gone for expanding, and visible for collapsing.
+    public boolean animationReady() {
+        return (expand && view.getVisibility() == View.GONE) || (!expand && view.getVisibility() == View.VISIBLE);
     }
 
     public void startAnimation(View v) {
