@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.animation.Transformation;
 import android.widget.ListView;
 
+import com.github.axet.androidlibrary.animations.MarginAnimation;
 import com.github.axet.audiorecorder.R;
 
 public class RecordingAnimation extends MarginAnimation {

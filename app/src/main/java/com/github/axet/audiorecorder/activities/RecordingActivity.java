@@ -32,7 +32,6 @@ import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.Animation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RemoteViews;
@@ -40,7 +39,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
-import com.github.axet.audiorecorder.animations.MarginBottomAnimation;
+import com.github.axet.androidlibrary.animations.MarginBottomAnimation;
 import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.RawSamples;
 import com.github.axet.audiorecorder.app.Sound;

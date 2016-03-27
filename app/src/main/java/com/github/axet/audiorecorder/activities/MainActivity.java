@@ -34,13 +34,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.axet.androidlibrary.widgets.OpenFileDialog;
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.animations.RecordingAnimation;
-import com.github.axet.audiorecorder.animations.RemoveItemAnimation;
+import com.github.axet.androidlibrary.animations.RemoveItemAnimation;
 import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.Storage;
-import com.github.axet.audiorecorder.widgets.OpenFileDialog;
-import com.github.axet.audiorecorder.widgets.PopupShareActionProvider;
+import com.github.axet.androidlibrary.widgets.PopupShareActionProvider;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -464,7 +464,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     }
 
     void checkPending() {
-        if(storage.recordingPending()) {
+        if (storage.recordingPending()) {
             Intent intent = new Intent(this, RecordingActivity.class);
             intent.setAction(RecordingActivity.START_PAUSE);
             startActivity(intent);
