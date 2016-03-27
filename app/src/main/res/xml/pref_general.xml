@@ -1,6 +1,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <com.github.axet.audiorecorder.widgets.StoragePathPreference
-        android:defaultValue=""
+    <com.github.axet.androidlibrary.widgets.StoragePathPreference
+        android:defaultValue="Audio Recorder"
         android:key="storage_path"
         android:summary="/sdcard/some/"
         android:title="Storage Path" />
