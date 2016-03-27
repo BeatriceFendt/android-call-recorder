@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <com.github.axet.audiorecorder.widgets.EqualLinearLayout
+        <com.github.axet.androidlibrary.widgets.EqualLinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -57,7 +57,7 @@
                     android:padding="5dp"
                     android:text="0.1 MB" />
             </LinearLayout>
-        </com.github.axet.audiorecorder.widgets.EqualLinearLayout>
+        </com.github.axet.androidlibrary.widgets.EqualLinearLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -102,7 +102,7 @@
 
                 </LinearLayout>
 
-                <com.github.axet.audiorecorder.widgets.EqualLinearLayout
+                <com.github.axet.androidlibrary.widgets.EqualLinearLayout
                     android:id="@+id/recording_detail"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -128,7 +128,7 @@
                         android:layout_height="wrap_content"
                         android:src="@drawable/trash"
                         android:tint="@color/colorAccent" />
-                </com.github.axet.audiorecorder.widgets.EqualLinearLayout>
+                </com.github.axet.androidlibrary.widgets.EqualLinearLayout>
             </LinearLayout>
         </FrameLayout>
     </LinearLayout>

@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.github.axet.androidlibrary.widgets.OpenFileDialog;
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.activities.SettingsActivity;
 
