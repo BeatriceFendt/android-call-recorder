@@ -52,7 +52,6 @@ public class StepAnimation extends Animation {
         } else {
             StepAnimation mm = c.create();
             if (animate) {
-                Log.d("123", "new " + expand + " " + mm.view.getVisibility());
                 if (mm.animationReady()) {
                     mm.startAnimation(v);
                 } else {
