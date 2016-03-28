@@ -666,30 +666,8 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     void updateHeader() {
         File f = storage.getStoragePath();
         long free = storage.getFree(f);
-
         long sec = storage.average(free);
-
-        String str = "";
-
-        long diff = sec;
-        int diffSeconds = (int) (diff / 1000 % 60);
-        int diffMinutes = (int) (diff / (60 * 1000) % 60);
-        int diffHours = (int) (diff / (60 * 60 * 1000) % 24);
-        int diffDays = (int) (diff / (24 * 60 * 60 * 1000));
-
-        if (diffDays > 0) {
-            str = getResources().getQuantityString(R.plurals.days, diffDays, diffDays);
-        } else if (diffHours > 0) {
-            str = getResources().getQuantityString(R.plurals.hours, diffHours, diffHours);
-        } else if (diffMinutes > 0) {
-            str = getResources().getQuantityString(R.plurals.minutes, diffMinutes, diffMinutes);
-        } else if (diffSeconds > 0) {
-            str = getResources().getQuantityString(R.plurals.seconds, diffSeconds, diffSeconds);
-        }
-
-        String ss = String.format("%s free ~ %s left", MainApplication.formatSize(free), str);
-
         TextView text = (TextView) findViewById(R.id.space_left);
-        text.setText(ss);
+        text.setText(((MainApplication)getApplication()).formatFree(free, sec));
     }
 }
