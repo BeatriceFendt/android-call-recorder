@@ -5,11 +5,18 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.AudioFormat;
+import android.os.Build;
+import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
+import com.github.axet.audiorecorder.activities.RecordingActivity;
+import com.github.axet.audiorecorder.encoders.FormatM4A;
+import com.github.axet.audiorecorder.encoders.FormatWAV;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -185,8 +192,68 @@ public class Storage {
         return list;
     }
 
+    // get average recording miliseconds based on compression format
+    public long average(long free) {
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
+        int rate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
+        String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
+
+        if (ext.equals("m4a")) {
+            long y1 = 365723; // one minute sample 16000Hz
+            long x1 = 16000; // at 16000
+            long y2 = 493743; // one minute sample
+            long x2 = 44000; // at 44000
+            long x = rate;
+            long y = (x - x1) * (y2 - y1) / (x2 - x1) + y1;
+
+            int m = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2;
+            long perSec = (y / 60) * m;
+            return free / perSec * 1000;
+        }
+
+        // default raw
+        int m = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2;
+        int c = RawSamples.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1;
+        long perSec = (c * m * rate);
+        return free / perSec * 1000;
+    }
+
+    public long getFree(File f) {
+        while (!f.exists())
+            f = f.getParentFile();
+
+        StatFs fsi = new StatFs(f.getPath());
+        if (Build.VERSION.SDK_INT < 18)
+            return fsi.getBlockSize() * fsi.getAvailableBlocks();
+        else
+            return fsi.getBlockSizeLong() * fsi.getAvailableBlocksLong();
+    }
+
     public File getTempRecording() {
-        return new File(context.getApplicationInfo().dataDir, TMP_REC);
+        File internal = new File(context.getApplicationInfo().dataDir, TMP_REC);
+
+        // Starting in KITKAT, no permissions are required to read or write to the returned path;
+        // it's always accessible to the calling app
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            if (!permitted(PERMISSIONS))
+                return internal;
+        }
+
+        File external = new File(context.getExternalCacheDir(), TMP_REC);
+
+        if (internal.exists())
+            return internal;
+
+        if (external.exists())
+            return external;
+
+        long freeI = getFree(internal);
+        long freeE = getFree(external);
+
+        if (freeI > freeE)
+            return internal;
+        else
+            return external;
     }
 
     public FileOutputStream open(File f) {
