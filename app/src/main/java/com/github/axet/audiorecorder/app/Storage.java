@@ -232,17 +232,17 @@ public class Storage {
     public File getTempRecording() {
         File internal = new File(context.getApplicationInfo().dataDir, TMP_REC);
 
+        if (internal.exists())
+            return internal;
+
         // Starting in KITKAT, no permissions are required to read or write to the returned path;
-        // it's always accessible to the calling app
+        // it's always accessible to the calling app.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
             if (!permitted(PERMISSIONS))
                 return internal;
         }
 
         File external = new File(context.getExternalCacheDir(), TMP_REC);
-
-        if (internal.exists())
-            return internal;
 
         if (external.exists())
             return external;
