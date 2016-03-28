@@ -135,7 +135,7 @@ public class RecordingActivity extends AppCompatActivity {
                 case TelephonyManager.CALL_STATE_OFFHOOK:
                     wasRinging = true;
                     if (thread != null) {
-                        stopRecording("playerPause (hold by call)");
+                        stopRecording("pause (hold by call)");
                         pausedByCall = true;
                     }
                     break;
@@ -160,10 +160,10 @@ public class RecordingActivity extends AppCompatActivity {
         state = (TextView) findViewById(R.id.recording_state);
         title = (TextView) findViewById(R.id.recording_title);
 
-        edit(false, false);
-
         storage = new Storage(this);
         sound = new Sound(this);
+
+        edit(false, false);
 
         try {
             targetFile = storage.getNewFile();
@@ -338,7 +338,7 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     void stopRecording(String status) {
-        state.setText(status);
+        setState(status);
         pause.setImageResource(R.drawable.ic_mic_24dp);
 
         stopRecording();
@@ -366,7 +366,7 @@ public class RecordingActivity extends AppCompatActivity {
 
     void edit(boolean b, boolean animate) {
         if (b) {
-            state.setText("edit");
+            setState("edit");
             editPlay(false);
 
             View box = findViewById(R.id.recording_edit_box);
@@ -401,13 +401,28 @@ public class RecordingActivity extends AppCompatActivity {
             });
         } else {
             editSample = -1;
-            state.setText("pause");
+            setState("pause");
             editPlay(false);
             pitch.stop();
 
             View box = findViewById(R.id.recording_edit_box);
             MarginBottomAnimation.apply(box, false, animate);
         }
+    }
+
+    void setState(String s) {
+        long free = storage.getFree(storage.getTempRecording());
+
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+
+        int rate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
+        int m = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2;
+        int c = RawSamples.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1;
+
+        long perSec = (c * m * rate);
+        long sec = free / perSec * 1000;
+
+        state.setText(s + " (" + ((MainApplication) getApplication()).formatFree(free, sec) + ")");
     }
 
     void editPlay(boolean b) {
@@ -524,7 +539,7 @@ public class RecordingActivity extends AppCompatActivity {
         edit(false, true);
         pitch.setOnTouchListener(null);
 
-        state.setText("recording");
+        setState("recording");
 
         sound.silent();
 

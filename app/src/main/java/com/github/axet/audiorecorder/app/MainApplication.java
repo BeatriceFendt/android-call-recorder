@@ -25,6 +25,29 @@ public class MainApplication extends Application {
         return String.format("%02d", tt);
     }
 
+    public String formatFree(long free, long left) {
+        String str = "";
+
+        long diff = left;
+
+        int diffSeconds = (int) (diff / 1000 % 60);
+        int diffMinutes = (int) (diff / (60 * 1000) % 60);
+        int diffHours = (int) (diff / (60 * 60 * 1000) % 24);
+        int diffDays = (int) (diff / (24 * 60 * 60 * 1000));
+
+        if (diffDays > 0) {
+            str = getResources().getQuantityString(R.plurals.days, diffDays, diffDays);
+        } else if (diffHours > 0) {
+            str = getResources().getQuantityString(R.plurals.hours, diffHours, diffHours);
+        } else if (diffMinutes > 0) {
+            str = getResources().getQuantityString(R.plurals.minutes, diffMinutes, diffMinutes);
+        } else if (diffSeconds > 0) {
+            str = getResources().getQuantityString(R.plurals.seconds, diffSeconds, diffSeconds);
+        }
+
+        return String.format("%s free ~ %s left", MainApplication.formatSize(free), str);
+    }
+
     public static String formatSize(long s) {
         if (s > 0.1 * 1024 * 1024 * 1024) {
             float f = s / 1024f / 1024f / 1024f;
