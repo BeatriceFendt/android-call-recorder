@@ -26,7 +26,10 @@ public class MainApplication extends Application {
     }
 
     public static String formatSize(long s) {
-        if (s > 0.1 * 1024 * 1024) {
+        if (s > 0.1 * 1024 * 1024 * 1024) {
+            float f = s / 1024f / 1024f / 1024f;
+            return String.format("%.1f GB", f);
+        } else if (s > 0.1 * 1024 * 1024) {
             float f = s / 1024f / 1024f;
             return String.format("%.1f MB", f);
         } else {
