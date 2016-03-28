@@ -664,7 +664,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     }
 
     void updateHeader() {
-        File f = storage.getTempRecording();
+        File f = storage.getStoragePath();
         long free = storage.getFree(f);
 
         long sec = storage.average(free);
