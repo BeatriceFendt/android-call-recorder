@@ -687,7 +687,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             str = getResources().getQuantityString(R.plurals.seconds, diffSeconds, diffSeconds);
         }
 
-        String ss = String.format("free %s ~ %s left", MainApplication.formatSize(free), str);
+        String ss = String.format("%s free ~ %s left", MainApplication.formatSize(free), str);
 
         TextView text = (TextView) findViewById(R.id.space_left);
         text.setText(ss);
