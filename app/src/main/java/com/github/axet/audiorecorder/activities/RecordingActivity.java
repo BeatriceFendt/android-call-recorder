@@ -50,6 +50,7 @@ import com.github.axet.audiorecorder.encoders.FileEncoder;
 import com.github.axet.audiorecorder.encoders.Format3GP;
 import com.github.axet.audiorecorder.encoders.FormatM4A;
 import com.github.axet.audiorecorder.encoders.FormatWAV;
+import com.github.axet.audiorecorder.services.RecordingService;
 import com.github.axet.audiorecorder.widgets.PitchView;
 
 import java.io.File;
@@ -58,16 +59,10 @@ public class RecordingActivity extends AppCompatActivity {
     public static int MAXIMUM_ALTITUDE = 5000;
 
     public static final String TAG = RecordingActivity.class.getSimpleName();
-    public static final String START_RECORDING = RecordingActivity.class.getCanonicalName() + ".START_RECORDING";
-    public static final String CLOSE_ACTIVITY = RecordingActivity.class.getCanonicalName() + ".CLOSE_ACTIVITY";
-    public static final int NOTIFICATION_RECORDING_ICON = 0;
-    public static String SHOW_ACTIVITY = RecordingActivity.class.getCanonicalName() + ".SHOW_ACTIVITY";
-    public static String PAUSE = RecordingActivity.class.getCanonicalName() + ".PAUSE";
     public static String START_PAUSE = RecordingActivity.class.getCanonicalName() + ".START_PAUSE";
 
     public static final String PHONE_STATE = "android.intent.action.PHONE_STATE";
 
-    RecordingReceiver receiver;
     PhoneStateChangeListener pscl = new PhoneStateChangeListener();
     Handler handle = new Handler();
     FileEncoder encoder;
@@ -103,24 +98,6 @@ public class RecordingActivity extends AppCompatActivity {
 
     Storage storage;
     Sound sound;
-
-    public class RecordingReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                // showRecordingActivity();
-            }
-            if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                // do nothing. do not annoy user. he will see alarm screen on next screen on event.
-            }
-            if (intent.getAction().equals(SHOW_ACTIVITY)) {
-                showRecordingActivity();
-            }
-            if (intent.getAction().equals(PAUSE)) {
-                pauseButton();
-            }
-        }
-    }
 
     class PhoneStateChangeListener extends PhoneStateListener {
         public boolean wasRinging;
@@ -174,14 +151,6 @@ public class RecordingActivity extends AppCompatActivity {
         }
 
         title.setText(targetFile.getName());
-
-        receiver = new RecordingReceiver();
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_SCREEN_ON);
-        filter.addAction(Intent.ACTION_SCREEN_OFF);
-        filter.addAction(SHOW_ACTIVITY);
-        filter.addAction(PAUSE);
-        registerReceiver(receiver, filter);
 
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -250,6 +219,26 @@ public class RecordingActivity extends AppCompatActivity {
             start = false;
             stopRecording("pause");
         }
+        if (a != null && a.equals(RecordingService.PAUSE_BUTTON)) {
+            start = false;
+            stopRecording("pause");
+        }
+
+        RecordingService.startService(this, targetFile.getName(), thread != null);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        String a = intent.getAction();
+
+        if (a != null && a.equals(START_PAUSE)) {
+            stopRecording("pause");
+        }
+        if (a != null && a.equals(RecordingService.PAUSE_BUTTON)) {
+            pauseButton();
+        }
     }
 
     void loadSamples() {
@@ -286,17 +275,6 @@ public class RecordingActivity extends AppCompatActivity {
 
     boolean isEmulator() {
         return "goldfish".equals(Build.HARDWARE);
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-    }
-
-    public void showRecordingActivity() {
-        Intent intent = new Intent(this, RecordingActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
     }
 
     void pauseButton() {
@@ -343,7 +321,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         stopRecording();
 
-        showNotificationAlarm(true);
+        RecordingService.startService(this, targetFile.getName(), thread != null);
 
         pitch.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -521,18 +499,13 @@ public class RecordingActivity extends AppCompatActivity {
 
         stopRecording();
 
-        if (receiver != null) {
-            unregisterReceiver(receiver);
-            receiver = null;
-        }
+        RecordingService.stopService(this);
 
         if (pscl != null) {
             TelephonyManager tm = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
             tm.listen(pscl, PhoneStateListener.LISTEN_NONE);
             pscl = null;
         }
-
-        showNotificationAlarm(false);
     }
 
     void startRecording() {
@@ -671,7 +644,7 @@ public class RecordingActivity extends AppCompatActivity {
         }, "RecordingThread");
         thread.start();
 
-        showNotificationAlarm(true);
+        RecordingService.startService(this, targetFile.getName(), thread != null);
     }
 
     // calcuale buffer length dynamically, this way we can reduce thread cycles when activity in background
@@ -704,40 +677,6 @@ public class RecordingActivity extends AppCompatActivity {
         float pa = amplitude / (float) MAXIMUM_ALTITUDE;
 
         return pa;
-    }
-
-    // alarm dismiss button
-    public void showNotificationAlarm(boolean show) {
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-        if (!show) {
-            notificationManager.cancel(NOTIFICATION_RECORDING_ICON);
-        } else {
-            PendingIntent main = PendingIntent.getBroadcast(this, 0,
-                    new Intent(SHOW_ACTIVITY),
-                    PendingIntent.FLAG_UPDATE_CURRENT);
-
-            PendingIntent pe = PendingIntent.getBroadcast(this, 0,
-                    new Intent(PAUSE),
-                    PendingIntent.FLAG_UPDATE_CURRENT);
-
-            RemoteViews view = new RemoteViews(getPackageName(), R.layout.notifictaion_recording);
-            view.setOnClickPendingIntent(R.id.status_bar_latest_event_content, main);
-            view.setTextViewText(R.id.notification_text, ".../" + targetFile.getName());
-            view.setOnClickPendingIntent(R.id.notification_pause, pe);
-            view.setImageViewResource(R.id.notification_pause, thread == null ? R.drawable.play : R.drawable.pause);
-
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                    .setOngoing(true)
-                    .setContentTitle("Recording")
-                    .setSmallIcon(R.drawable.ic_mic_24dp)
-                    .setContent(view);
-
-            if (Build.VERSION.SDK_INT >= 21)
-                builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-
-            notificationManager.notify(NOTIFICATION_RECORDING_ICON, builder.build());
-        }
     }
 
     @Override
