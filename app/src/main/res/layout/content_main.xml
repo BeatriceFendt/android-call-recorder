@@ -18,21 +18,33 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:padding="5dp"
-        android:text="free 32G ~ 3 hours left" />
+        android:text="32G free ~ 3 hours left" />
+
+    <LinearLayout
+        android:id="@+id/empty_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="Recording List is Empty\n\nClick Record to Start Recording"
+            android:textAlignment="center"></TextView>
+
+    </LinearLayout>
 
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:clipToPadding="false"
         android:paddingBottom="61dp"></ListView>
-
-    <TextView
-        android:id="@+id/empty_list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Recording List is Empty\n\nClick Record to Start Recording"
-        android:textAlignment="center"
-        android:visibility="gone"></TextView>
-
 </LinearLayout>
