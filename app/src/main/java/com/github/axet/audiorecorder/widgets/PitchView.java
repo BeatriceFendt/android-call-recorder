@@ -225,7 +225,7 @@ public class PitchView extends ViewGroup {
             textPaint.getTextBounds(this.text, 0, this.text.length(), textBounds);
             h += textBounds.height();
             h += dp2px(2);
-            h += dp2px(pitchDlimiter + getPaddingTop() + getPaddingBottom());
+            h += dp2px(pitchDlimiter) + getPaddingTop() + getPaddingBottom();
 
             setMeasuredDimension(w, h);
         }
