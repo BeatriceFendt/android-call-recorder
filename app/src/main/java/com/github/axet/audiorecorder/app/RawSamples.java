@@ -116,21 +116,26 @@ public class RawSamples {
     public void trunk(long pos) {
         try {
             FileChannel outChan = new FileOutputStream(in, true).getChannel();
-            outChan.truncate(getBufferLen(pos + 1));
+            outChan.truncate(getBufferLen(pos));
             outChan.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static float getdB(short[] buffer, int offset, int len) {
+    public static double getAmplitude(short[] buffer, int offset, int len) {
         double sum = 0;
         for (int i = offset; i < offset + len; i++) {
             sum += buffer[i] * buffer[i];
         }
+        return Math.sqrt(sum / len);
+    }
 
-        double amplitude = Math.sqrt(sum / len);
+    public static float getdB(short[] buffer, int offset, int len) {
+        return getdB(getAmplitude(buffer, offset, len));
+    }
 
+    public static float getdB(double amplitude) {
         // https://en.wikipedia.org/wiki/Sound_pressure
         double decibel = 20.0 * Math.log10(amplitude / 32768f);
 

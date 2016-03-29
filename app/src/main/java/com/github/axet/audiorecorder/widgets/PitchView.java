@@ -466,6 +466,7 @@ public class PitchView extends ViewGroup {
     public long edit(float offset) {
         if (offset < 0)
             offset = 0;
+
         editPos = ((int) offset) / pitchSize;
 
         if (editPos >= pitchScreenCount)

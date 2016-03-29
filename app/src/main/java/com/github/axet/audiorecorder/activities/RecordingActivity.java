@@ -24,6 +24,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Display;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -451,8 +452,9 @@ public class RecordingActivity extends AppCompatActivity {
             return;
 
         RawSamples rs = new RawSamples(storage.getTempRecording());
-        rs.trunk(editSample);
+        rs.trunk(editSample + samplesUpdate);
         rs.close();
+
         edit(false, true);
         loadSamples();
         pitch.drawCalc();
@@ -552,7 +554,6 @@ public class RecordingActivity extends AppCompatActivity {
                     long start = System.currentTimeMillis();
                     recorder.startRecording();
 
-                    int samplesUpdateCount = 0;
                     int samplesTimeCount = 0;
                     // how many samples we need to update 'samples'. time clock. every 1000ms.
                     int samplesTimeUpdate = 1000 / 1000 * sampleRate * (RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2);
@@ -584,17 +585,13 @@ public class RecordingActivity extends AppCompatActivity {
 
                             rs.write(buffer);
 
-                            samplesUpdateCount += s;
-                            if (samplesUpdateCount >= samplesUpdate) {
-                                final float dB = RawSamples.getdB(buffer, 0, readSize);
-                                handle.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        pitch.add(dB);
-                                    }
-                                });
-                                samplesUpdateCount -= samplesUpdate;
-                            }
+                            final float dB = RawSamples.getdB(buffer, 0, readSize);
+                            handle.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    pitch.add(dB);
+                                }
+                            });
 
                             samplesTime += s;
                             samplesTimeCount += s;
@@ -647,7 +644,17 @@ public class RecordingActivity extends AppCompatActivity {
     void updateBufferSize(boolean pause) {
         synchronized (bufferSize) {
             if (pause) {
-                samplesUpdate = (int) (1000 * sampleRate / 1000.0);
+                // we need make buffer multiply of pitch.getPitchTime() (100 ms).
+                // to prevent missing blocks from view otherwise:
+
+                // file may contain not multiply 'samplesUpdate' count of samples. it is about 100ms.
+                // we can't show on pitchView sorter then 100ms samples. we can't add partial sample because on
+                // resumeRecording we have to apply rest of samplesUpdate or reload all samples again
+                // from file. better then confusing user we cut them on next resumeRecording.
+
+                long l = 1000;
+                l = l / pitch.getPitchTime() * pitch.getPitchTime();
+                samplesUpdate = (int) (l * sampleRate / 1000.0);
             } else {
                 samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
             }
