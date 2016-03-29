@@ -1,6 +1,7 @@
 package com.github.axet.audiorecorder.app;
 
 import android.media.AudioFormat;
+import android.util.Log;
 
 import com.github.axet.audiorecorder.activities.RecordingActivity;
 
@@ -18,6 +19,11 @@ import java.nio.channels.FileChannel;
 public class RawSamples {
     public static int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
     public static int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
+
+    // quite root gives me 20db
+    public static int NOISE_DB = 20;
+    // max 90 dB for mic
+    public static int MAXIMUM_DB = 90;
 
     File in;
 
@@ -115,6 +121,34 @@ public class RawSamples {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static float getdB(short[] buffer, int offset, int len) {
+        double sum = 0;
+        for (int i = offset; i < offset + len; i++) {
+            sum += buffer[i] * buffer[i];
+        }
+
+        double amplitude = Math.sqrt(sum / len);
+
+        // https://en.wikipedia.org/wiki/Sound_pressure
+        double decibel = 20.0 * Math.log10(amplitude / 32768f);
+
+        decibel = MAXIMUM_DB + decibel;
+
+        return (float) decibel;
+    }
+
+    public static float filterdB(float db) {
+        // do not show below NOISE_DB
+        db = db - NOISE_DB;
+
+        if (db < 0)
+            db = 0;
+
+        int rest = MAXIMUM_DB - NOISE_DB;
+
+        return db / rest;
     }
 
     public void close() {

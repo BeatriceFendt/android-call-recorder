@@ -2,14 +2,10 @@ package com.github.axet.audiorecorder.activities;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
@@ -22,7 +18,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.PhoneStateListener;
@@ -34,7 +29,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,12 +50,9 @@ import com.github.axet.audiorecorder.widgets.PitchView;
 import java.io.File;
 
 public class RecordingActivity extends AppCompatActivity {
-    public static int MAXIMUM_ALTITUDE = 5000;
-
     public static final String TAG = RecordingActivity.class.getSimpleName();
-    public static String START_PAUSE = RecordingActivity.class.getCanonicalName() + ".START_PAUSE";
 
-    public static final String PHONE_STATE = "android.intent.action.PHONE_STATE";
+    public static String START_PAUSE = RecordingActivity.class.getCanonicalName() + ".START_PAUSE";
 
     PhoneStateChangeListener pscl = new PhoneStateChangeListener();
     Handler handle = new Handler();
@@ -83,11 +74,12 @@ public class RecordingActivity extends AppCompatActivity {
     long samplesTime;
     // current cut position in samples from begining of file
     long editSample = -1;
+
     // current sample index in edit mode while playing;
     long playIndex;
     // send ui update every 'playUpdate' samples.
     int playUpdate;
-
+    // current play sound track
     AudioTrack play;
 
     TextView title;
@@ -98,6 +90,15 @@ public class RecordingActivity extends AppCompatActivity {
 
     Storage storage;
     Sound sound;
+
+    public static void startActivity(Context context, boolean pause) {
+        Intent i = new Intent(context, RecordingActivity.class);
+        if (pause)
+            i.setAction(RecordingActivity.START_PAUSE);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        context.startActivity(i);
+    }
 
     class PhoneStateChangeListener extends PhoneStateListener {
         public boolean wasRinging;
@@ -125,15 +126,6 @@ public class RecordingActivity extends AppCompatActivity {
                     break;
             }
         }
-    }
-
-    public static void startActivity(Context context, boolean pause) {
-        Intent i = new Intent(context, RecordingActivity.class);
-        if (pause)
-            i.setAction(RecordingActivity.START_PAUSE);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        context.startActivity(i);
     }
 
     @Override
@@ -268,7 +260,8 @@ public class RecordingActivity extends AppCompatActivity {
 
         pitch.clear(cut / samplesUpdate);
         for (int i = 0; i < len; i += samplesUpdate) {
-            pitch.add(getPa(buf, i, samplesUpdate));
+            float dB = RawSamples.getdB(buf, i, samplesUpdate);
+            pitch.add(RawSamples.filterdB(dB));
         }
         updateSamples(samplesTime);
     }
@@ -344,8 +337,8 @@ public class RecordingActivity extends AppCompatActivity {
         sound.unsilent();
     }
 
-    void edit(boolean b, boolean animate) {
-        if (b) {
+    void edit(boolean show, boolean animate) {
+        if (show) {
             setState("edit");
             editPlay(false);
 
@@ -405,11 +398,11 @@ public class RecordingActivity extends AppCompatActivity {
         state.setText(s + " (" + ((MainApplication) getApplication()).formatFree(free, sec) + ")");
     }
 
-    void editPlay(boolean b) {
+    void editPlay(boolean show) {
         View box = findViewById(R.id.recording_edit_box);
         final ImageView playButton = (ImageView) box.findViewById(R.id.recording_play);
 
-        if (b) {
+        if (show) {
             playButton.setImageResource(R.drawable.pause);
 
             playIndex = editSample;
@@ -593,11 +586,11 @@ public class RecordingActivity extends AppCompatActivity {
 
                             samplesUpdateCount += s;
                             if (samplesUpdateCount >= samplesUpdate) {
-                                final float pa = getPa(buffer, 0, readSize);
+                                final float dB = RawSamples.getdB(buffer, 0, readSize);
                                 handle.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        pitch.add(pa);
+                                        pitch.add(RawSamples.filterdB(dB));
                                     }
                                 });
                                 samplesUpdateCount -= samplesUpdate;
@@ -667,18 +660,6 @@ public class RecordingActivity extends AppCompatActivity {
         long ms = samplesTime / sampleRate * 1000;
 
         time.setText(MainApplication.formatDuration(ms));
-    }
-
-    float getPa(short[] buffer, int offset, int len) {
-        double sum = 0;
-        for (int i = offset; i < offset + len; i++) {
-            sum += buffer[i] * buffer[i];
-        }
-
-        int amplitude = (int) (Math.sqrt(sum / len));
-        float pa = amplitude / (float) MAXIMUM_ALTITUDE;
-
-        return pa;
     }
 
     @Override
