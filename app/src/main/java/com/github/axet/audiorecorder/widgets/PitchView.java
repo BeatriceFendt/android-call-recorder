@@ -34,7 +34,8 @@ public class PitchView extends ViewGroup {
     // edit update time
     public static final int EDIT_UPDATE_SPEED = 250;
 
-    // 'pitch length' in milliseconds.
+    // 'pitch length' in milliseconds (100ms)
+    //
     // in other words how many milliseconds do we need to show whole pitch.
     int pitchTime;
 
