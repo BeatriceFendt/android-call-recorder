@@ -252,8 +252,15 @@ public class PitchView extends ViewGroup {
         }
 
         void updateText() {
-            int end = getEnd();
-            setText(Integer.toString(data.get(end).intValue()) + " dB");
+            // we need to put empty streing to measure text Paint height
+            String str = "";
+
+            if (data.size() > 0) {
+                int end = getEnd();
+                str = Integer.toString(data.get(end).intValue()) + " dB";
+            }
+
+            setText(str);
         }
 
         @Override
