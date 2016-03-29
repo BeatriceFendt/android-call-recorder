@@ -261,7 +261,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         pitch.clear(cut / samplesUpdate);
         for (int i = 0; i < len; i += samplesUpdate) {
-            float dB = RawSamples.getdB(buf, i, samplesUpdate);
+            double dB = RawSamples.getDB(buf, i, samplesUpdate);
             pitch.add(dB);
         }
         updateSamples(samplesTime);
@@ -585,7 +585,7 @@ public class RecordingActivity extends AppCompatActivity {
 
                             rs.write(buffer);
 
-                            final float dB = RawSamples.getdB(buffer, 0, readSize);
+                            final double dB = RawSamples.getDB(buffer, 0, readSize);
                             handle.post(new Runnable() {
                                 @Override
                                 public void run() {
