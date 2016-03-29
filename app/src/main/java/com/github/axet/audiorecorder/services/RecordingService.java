@@ -86,16 +86,9 @@ public class RecordingService extends Service {
             recording = intent.getBooleanExtra("recording", false);
             showNotificationAlarm(true);
         } else if (a.equals(PAUSE_BUTTON)) {
-            Intent i = new Intent(this, RecordingActivity.class);
-            i.setAction(PAUSE_BUTTON);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(i);
+            RecordingActivity.startActivity(this, true);
         } else if (a.equals(SHOW_ACTIVITY)) {
-            Intent i = new Intent(this, RecordingActivity.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(i);
+            RecordingActivity.startActivity(this, false);
         }
 
         return super.onStartCommand(intent, flags, startId);

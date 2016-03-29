@@ -127,6 +127,15 @@ public class RecordingActivity extends AppCompatActivity {
         }
     }
 
+    public static void startActivity(Context context, boolean pause) {
+        Intent i = new Intent(context, RecordingActivity.class);
+        if (pause)
+            i.setAction(RecordingActivity.START_PAUSE);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        context.startActivity(i);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -219,12 +228,6 @@ public class RecordingActivity extends AppCompatActivity {
             start = false;
             stopRecording("pause");
         }
-        if (a != null && a.equals(RecordingService.PAUSE_BUTTON)) {
-            start = false;
-            stopRecording("pause");
-        }
-
-        RecordingService.startService(this, targetFile.getName(), thread != null);
     }
 
     @Override
@@ -234,9 +237,6 @@ public class RecordingActivity extends AppCompatActivity {
         String a = intent.getAction();
 
         if (a != null && a.equals(START_PAUSE)) {
-            stopRecording("pause");
-        }
-        if (a != null && a.equals(RecordingService.PAUSE_BUTTON)) {
             pauseButton();
         }
     }
@@ -301,6 +301,8 @@ public class RecordingActivity extends AppCompatActivity {
                 startRecording();
             }
         }
+
+        RecordingService.startService(this, targetFile.getName(), thread != null);
 
         if (thread != null)
             pitch.record();
@@ -779,5 +781,11 @@ public class RecordingActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+        MainActivity.startActivity(this);
     }
 }

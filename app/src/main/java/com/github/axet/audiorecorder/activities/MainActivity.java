@@ -75,6 +75,13 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     ListView list;
     Handler handler;
 
+    public static void startActivity(Context context) {
+        Intent i = new Intent(context, MainActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        context.startActivity(i);
+    }
+
     static class SortFiles implements Comparator<File> {
         @Override
         public int compare(File file, File file2) {
@@ -444,8 +451,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, RecordingActivity.class);
-                startActivity(intent);
+                RecordingActivity.startActivity(MainActivity.this, false);
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
             }
@@ -465,9 +471,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
     void checkPending() {
         if (storage.recordingPending()) {
-            Intent intent = new Intent(this, RecordingActivity.class);
-            intent.setAction(RecordingActivity.START_PAUSE);
-            startActivity(intent);
+            RecordingActivity.startActivity(MainActivity.this, true);
             return;
         }
     }
