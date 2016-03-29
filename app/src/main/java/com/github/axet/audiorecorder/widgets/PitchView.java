@@ -204,6 +204,9 @@ public class PitchView extends ViewGroup {
         public PitchCurrentView(Context context, AttributeSet attrs, int defStyleAttr) {
             super(context, attrs, defStyleAttr);
 
+            text = "100 dB";
+            textBounds = new Rect();
+
             textPaint = new Paint();
             textPaint.setColor(Color.GRAY);
             textPaint.setAntiAlias(true);
@@ -217,19 +220,18 @@ public class PitchView extends ViewGroup {
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             int w = MeasureSpec.getSize(widthMeasureSpec);
-            int h = Math.min(MeasureSpec.getSize(heightMeasureSpec), dp2px(pitchDlimiter + getPaddingTop() + getPaddingBottom()));
+            int h = 0;
 
-            updateText();
-
+            textPaint.getTextBounds(this.text, 0, this.text.length(), textBounds);
             h += textBounds.height();
+            h += dp2px(2);
+            h += dp2px(pitchDlimiter + getPaddingTop() + getPaddingBottom());
 
             setMeasuredDimension(w, h);
         }
 
         public void setText(String text) {
             this.text = text;
-
-            textBounds = new Rect();
             textPaint.getTextBounds(this.text, 0, this.text.length(), textBounds);
         }
 
@@ -251,14 +253,10 @@ public class PitchView extends ViewGroup {
             return end;
         }
 
-        void updateText() {
-            // we need to put empty streing to measure text Paint height
+        void updateText(int end) {
             String str = "";
 
-            if (data.size() > 0) {
-                int end = getEnd();
-                str = Integer.toString(data.get(end).intValue()) + " dB";
-            }
+            str = Integer.toString(data.get(end).intValue()) + " dB";
 
             setText(str);
         }
@@ -268,16 +266,21 @@ public class PitchView extends ViewGroup {
             if (data.size() > 0) {
                 int end = getEnd();
 
-                updateText();
+                updateText(end);
+
+                float y = getPaddingTop() + textBounds.height();
+
                 int x = getWidth() / 2 - textBounds.width() / 2;
-                canvas.drawText(text, x, textBounds.height(), textPaint);
+                canvas.drawText(text, x, y, textPaint);
+
+                y += dp2px(2);
 
                 float left = filterdB(end);
                 float right = filterdB(end);
 
                 float mid = getWidth() / 2f;
 
-                float y = textBounds.bottom + getHeight() / 2f;
+                y = y + dp2px(pitchDlimiter) / 2;
 
                 canvas.drawLine(mid, y, mid - mid * left, y, paint);
                 canvas.drawLine(mid, y, mid + mid * right, y, paint);
@@ -315,7 +318,7 @@ public class PitchView extends ViewGroup {
         addView(graph);
 
         current = new PitchCurrentView(getContext());
-        current.setPadding(0, dp2px(5), 0, 0);
+        current.setPadding(0, dp2px(2), 0, 0);
         addView(current);
 
         if (isInEditMode()) {
