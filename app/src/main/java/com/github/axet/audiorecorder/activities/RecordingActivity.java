@@ -63,8 +63,10 @@ public class RecordingActivity extends AppCompatActivity {
     boolean start = true;
 
     Thread thread;
+    // lock for bufferSize
+    final Object bufferSizeLock = new Object();
     // dynamic buffer size. big for backgound recording. small for realtime view updates.
-    Integer bufferSize = 0;
+    int bufferSize;
     // variable from settings. how may samples per second.
     int sampleRate;
     // pitch size in samples. how many samples count need to update view. 4410 for 100ms update.
@@ -565,7 +567,7 @@ public class RecordingActivity extends AppCompatActivity {
                     boolean stableRefresh = false;
 
                     while (!Thread.currentThread().isInterrupted()) {
-                        synchronized (bufferSize) {
+                        synchronized (bufferSizeLock) {
                             if (buffer == null || buffer.length != bufferSize)
                                 buffer = new short[bufferSize];
                         }
@@ -646,7 +648,7 @@ public class RecordingActivity extends AppCompatActivity {
     // calcuale buffer length dynamically, this way we can reduce thread cycles when activity in background
     // or phone screen is off.
     void updateBufferSize(boolean pause) {
-        synchronized (bufferSize) {
+        synchronized (bufferSizeLock) {
             int samplesUpdate;
 
             if (pause) {
