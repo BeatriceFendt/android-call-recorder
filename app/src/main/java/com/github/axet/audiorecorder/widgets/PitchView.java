@@ -53,7 +53,7 @@ public class PitchView extends ViewGroup {
 
     long time = 0;
 
-    // how many samples were cut from 'data' list
+    // how many samples were cut from begining of 'data' list
     long samples = 0;
 
     Runnable edit;
@@ -105,13 +105,13 @@ public class PitchView extends ViewGroup {
             pitchScreenCount = w / pitchSize + 1;
 
             pitchMemCount = pitchScreenCount + 1;
-
-            fit(pitchScreenCount);
         }
 
         @Override
         protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
             super.onLayout(changed, left, top, right, bottom);
+
+            fit(pitchScreenCount);
         }
 
         public void calc() {
@@ -124,9 +124,7 @@ public class PitchView extends ViewGroup {
                 if (data.size() > pitchMemCount + 1) {
                     tick = 0;
                     time = cur;
-                    int cut = data.size() - pitchMemCount;
-                    data.subList(0, cut).clear();
-                    samples += cut;
+                    fit(pitchMemCount);
                 }
 
                 if (tick > 1) {
@@ -440,7 +438,7 @@ public class PitchView extends ViewGroup {
                     long diff = cur - start;
 
                     long delay = EDIT_UPDATE_SPEED + (EDIT_UPDATE_SPEED - diff);
-                    if(delay > EDIT_UPDATE_SPEED)
+                    if (delay > EDIT_UPDATE_SPEED)
                         delay = EDIT_UPDATE_SPEED;
 
                     start = cur;
@@ -480,7 +478,7 @@ public class PitchView extends ViewGroup {
                     long diff = cur - start;
 
                     long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
-                    if(delay > UPDATE_SPEED)
+                    if (delay > UPDATE_SPEED)
                         delay = UPDATE_SPEED;
 
                     start = cur;
@@ -502,7 +500,9 @@ public class PitchView extends ViewGroup {
 
         editFlash = true;
 
-        if (playPos < 0 || playPos > data.size())
+        int max = data.size() - 1;
+
+        if (playPos < 0 || playPos > max)
             playPos = -1;
 
         if (playPos < 0) {
@@ -539,7 +539,7 @@ public class PitchView extends ViewGroup {
                     start = cur;
 
                     long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
-                    if(delay > UPDATE_SPEED)
+                    if (delay > UPDATE_SPEED)
                         delay = UPDATE_SPEED;
 
                     if (delay > 0)

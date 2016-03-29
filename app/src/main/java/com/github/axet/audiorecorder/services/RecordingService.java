@@ -28,7 +28,7 @@ import com.github.axet.audiorecorder.activities.RecordingActivity;
 public class RecordingService extends Service {
     public static final String TAG = RecordingService.class.getSimpleName();
 
-    public static final int NOTIFICATION_RECORDING_ICON = 0;
+    public static final int NOTIFICATION_RECORDING_ICON = 1;
 
     public static String SHOW_ACTIVITY = RecordingService.class.getCanonicalName() + ".SHOW_ACTIVITY";
     public static String PAUSE_BUTTON = RecordingService.class.getCanonicalName() + ".PAUSE_BUTTON";
@@ -79,16 +79,18 @@ public class RecordingService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand");
 
-        String a = intent.getAction();
+        if (intent != null) {
+            String a = intent.getAction();
 
-        if (a == null) {
-            targetFile = intent.getStringExtra("targetFile");
-            recording = intent.getBooleanExtra("recording", false);
-            showNotificationAlarm(true);
-        } else if (a.equals(PAUSE_BUTTON)) {
-            RecordingActivity.startActivity(this, true);
-        } else if (a.equals(SHOW_ACTIVITY)) {
-            RecordingActivity.startActivity(this, false);
+            if (a == null) {
+                targetFile = intent.getStringExtra("targetFile");
+                recording = intent.getBooleanExtra("recording", false);
+                showNotificationAlarm(true);
+            } else if (a.equals(PAUSE_BUTTON)) {
+                RecordingActivity.startActivity(this, true);
+            } else if (a.equals(SHOW_ACTIVITY)) {
+                RecordingActivity.startActivity(this, false);
+            }
         }
 
         return super.onStartCommand(intent, flags, startId);
