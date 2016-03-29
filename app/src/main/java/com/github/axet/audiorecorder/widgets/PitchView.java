@@ -282,8 +282,9 @@ public class PitchView extends ViewGroup {
 
                 y += dp2px(2);
 
-                float left = data.get(end);
-                float right = data.get(end);
+                float dB = data.get(end) / RawSamples.MAXIMUM_DB;
+                float left = dB;
+                float right = dB;
 
                 float mid = getWidth() / 2f;
 
