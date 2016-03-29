@@ -308,6 +308,13 @@ public class PitchView extends ViewGroup {
             int cut = data.size() - max;
             data.subList(0, cut).clear();
             samples += cut;
+
+            int m = data.size() - 1;
+            // screen rotate may cause play/edit offsets off screen
+            if (editPos > m)
+                editPos = m;
+            if (playPos > m)
+                playPos = m;
         }
     }
 
