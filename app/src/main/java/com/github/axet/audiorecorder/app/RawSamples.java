@@ -22,7 +22,7 @@ public class RawSamples {
 
     // quite root gives me 20db
     public static int NOISE_DB = 20;
-    // max 90 dB for mic
+    // max 90 dB detection for android mic
     public static int MAXIMUM_DB = 90;
 
     File in;
