@@ -3,9 +3,11 @@ package com.github.axet.audiorecorder.activities;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
@@ -24,7 +26,6 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Display;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -54,6 +55,7 @@ public class RecordingActivity extends AppCompatActivity {
     public static final String TAG = RecordingActivity.class.getSimpleName();
 
     public static String START_PAUSE = RecordingActivity.class.getCanonicalName() + ".START_PAUSE";
+    public static String PAUSE_BUTTON = RecordingActivity.class.getCanonicalName() + ".PAUSE_BUTTON";
 
     PhoneStateChangeListener pscl = new PhoneStateChangeListener();
     Handler handle = new Handler();
@@ -63,8 +65,10 @@ public class RecordingActivity extends AppCompatActivity {
     boolean start = true;
 
     Thread thread;
+    // lock for bufferSize
+    final Object bufferSizeLock = new Object();
     // dynamic buffer size. big for backgound recording. small for realtime view updates.
-    Integer bufferSize = 0;
+    int bufferSize;
     // variable from settings. how may samples per second.
     int sampleRate;
     // pitch size in samples. how many samples count need to update view. 4410 for 100ms update.
@@ -91,14 +95,25 @@ public class RecordingActivity extends AppCompatActivity {
 
     Storage storage;
     Sound sound;
+    RecordingReceiver receiver;
 
     public static void startActivity(Context context, boolean pause) {
         Intent i = new Intent(context, RecordingActivity.class);
-        if (pause)
+        if (pause) {
             i.setAction(RecordingActivity.START_PAUSE);
+        }
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         context.startActivity(i);
+    }
+
+    public class RecordingReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(PAUSE_BUTTON)) {
+                pauseButton();
+            }
+        }
     }
 
     class PhoneStateChangeListener extends PhoneStateListener {
@@ -223,17 +238,11 @@ public class RecordingActivity extends AppCompatActivity {
             start = false;
             stopRecording("pause");
         }
-    }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-
-        String a = intent.getAction();
-
-        if (a != null && a.equals(START_PAUSE)) {
-            pauseButton();
-        }
+        receiver = new RecordingReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(PAUSE_BUTTON);
+        registerReceiver(receiver, filter);
     }
 
     void loadSamples() {
@@ -498,6 +507,11 @@ public class RecordingActivity extends AppCompatActivity {
 
         stopRecording();
 
+        if (receiver != null) {
+            unregisterReceiver(receiver);
+            receiver = null;
+        }
+
         RecordingService.stopService(this);
 
         if (pscl != null) {
@@ -565,7 +579,7 @@ public class RecordingActivity extends AppCompatActivity {
                     boolean stableRefresh = false;
 
                     while (!Thread.currentThread().isInterrupted()) {
-                        synchronized (bufferSize) {
+                        synchronized (bufferSizeLock) {
                             if (buffer == null || buffer.length != bufferSize)
                                 buffer = new short[bufferSize];
                         }
@@ -646,7 +660,7 @@ public class RecordingActivity extends AppCompatActivity {
     // calcuale buffer length dynamically, this way we can reduce thread cycles when activity in background
     // or phone screen is off.
     void updateBufferSize(boolean pause) {
-        synchronized (bufferSize) {
+        synchronized (bufferSizeLock) {
             int samplesUpdate;
 
             if (pause) {

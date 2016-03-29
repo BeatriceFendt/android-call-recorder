@@ -87,7 +87,8 @@ public class RecordingService extends Service {
                 recording = intent.getBooleanExtra("recording", false);
                 showNotificationAlarm(true);
             } else if (a.equals(PAUSE_BUTTON)) {
-                RecordingActivity.startActivity(this, true);
+                Intent i = new Intent(RecordingActivity.PAUSE_BUTTON);
+                sendBroadcast(i);
             } else if (a.equals(SHOW_ACTIVITY)) {
                 RecordingActivity.startActivity(this, false);
             }
