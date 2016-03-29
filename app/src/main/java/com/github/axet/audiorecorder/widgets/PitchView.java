@@ -39,6 +39,7 @@ public class PitchView extends ViewGroup {
     int pitchTime;
 
     Paint paint;
+    Paint paintRed;
     List<Float> data = new LinkedList<>();
 
     // how many pitches we can fit on screen
@@ -166,6 +167,12 @@ public class PitchView extends ViewGroup {
 
                 Paint p = paint;
 
+                if (data.get(i) < 0) {
+                    p = paintRed;
+                    left = 1;
+                    right = 1;
+                }
+
                 if ((edit != null || play != null) && i >= editPos)
                     p = cutColor;
 
@@ -275,15 +282,15 @@ public class PitchView extends ViewGroup {
 
                 y += dp2px(2);
 
-                float left = filterdB(end);
-                float right = filterdB(end);
+                float left = data.get(end);
+                float right = data.get(end);
 
                 float mid = getWidth() / 2f;
 
                 y = y + dp2px(pitchDlimiter) / 2;
 
-                canvas.drawLine(mid, y, mid - mid * left, y, paint);
-                canvas.drawLine(mid, y, mid + mid * right, y, paint);
+                canvas.drawLine(mid, y, mid - mid * left - 1, y, paint);
+                canvas.drawLine(mid, y, mid + mid * right + 1, y, paint);
             }
         }
     }
@@ -330,6 +337,10 @@ public class PitchView extends ViewGroup {
         paint = new Paint();
         paint.setColor(0xff0433AE);
         paint.setStrokeWidth(pitchWidth);
+
+        paintRed = new Paint();
+        paintRed.setColor(Color.RED);
+        paintRed.setStrokeWidth(pitchWidth);
 
         time = System.currentTimeMillis();
     }
