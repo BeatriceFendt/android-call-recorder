@@ -131,29 +131,13 @@ public class RawSamples {
         return Math.sqrt(sum / len);
     }
 
-    public static float getdB(short[] buffer, int offset, int len) {
-        return getdB(getAmplitude(buffer, offset, len));
+    public static double getDB(short[] buffer, int offset, int len) {
+        return getDB(getAmplitude(buffer, offset, len));
     }
 
-    public static float getdB(double amplitude) {
+    public static double getDB(double amplitude) {
         // https://en.wikipedia.org/wiki/Sound_pressure
-        double decibel = 20.0 * Math.log10(amplitude / 32768f);
-
-        decibel = MAXIMUM_DB + decibel;
-
-        return (float) decibel;
-    }
-
-    public static float filterdB(float db) {
-        // do not show below NOISE_DB
-        db = db - NOISE_DB;
-
-        if (db < 0)
-            db = 0;
-
-        int rest = MAXIMUM_DB - NOISE_DB;
-
-        return db / rest;
+        return 20.0 * Math.log10(amplitude / 32768d);
     }
 
     public void close() {

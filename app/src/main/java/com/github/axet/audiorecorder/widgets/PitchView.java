@@ -34,13 +34,14 @@ public class PitchView extends ViewGroup {
     // edit update time
     public static final int EDIT_UPDATE_SPEED = 250;
 
-    // 'pitch length' in milliseconds.
+    // 'pitch length' in milliseconds (100ms)
+    //
     // in other words how many milliseconds do we need to show whole pitch.
     int pitchTime;
 
     Paint paint;
     Paint paintRed;
-    List<Float> data = new LinkedList<>();
+    List<Double> data = new LinkedList<>();
 
     // how many pitches we can fit on screen
     int pitchScreenCount;
@@ -158,8 +159,10 @@ public class PitchView extends ViewGroup {
 //            }
 
             for (int i = 0; i < m; i++) {
-                float left = filterdB(i);
-                float right = filterdB(i);
+                double dB = filterDB(i);
+
+                float left = (float) dB;
+                float right = (float) dB;
 
                 float mid = getHeight() / 2f;
 
@@ -167,7 +170,7 @@ public class PitchView extends ViewGroup {
 
                 Paint p = paint;
 
-                if (data.get(i) < 0) {
+                if (getDB(i) < 0) {
                     p = paintRed;
                     left = 1;
                     right = 1;
@@ -263,7 +266,7 @@ public class PitchView extends ViewGroup {
         void updateText(int end) {
             String str = "";
 
-            str = Integer.toString(data.get(end).intValue()) + " dB";
+            str = Integer.toString((int) getDB(end)) + " dB";
 
             setText(str);
         }
@@ -282,9 +285,10 @@ public class PitchView extends ViewGroup {
 
                 y += dp2px(2);
 
-                float dB = data.get(end) / RawSamples.MAXIMUM_DB;
-                float left = dB;
-                float right = dB;
+                double dB = getDB(end) / RawSamples.MAXIMUM_DB;
+
+                float left = (float) dB;
+                float right = (float) dB;
 
                 float mid = getWidth() / 2f;
 
@@ -331,7 +335,7 @@ public class PitchView extends ViewGroup {
 
         if (isInEditMode()) {
             for (int i = 0; i < 3000; i++) {
-                data.add((float) (Math.random() * RawSamples.MAXIMUM_DB));
+                data.add((Math.random() * RawSamples.MAXIMUM_DB));
             }
         }
 
@@ -378,7 +382,7 @@ public class PitchView extends ViewGroup {
         }
     }
 
-    public void add(float a) {
+    public void add(double a) {
         data.add(a);
     }
 
@@ -394,9 +398,28 @@ public class PitchView extends ViewGroup {
         draw();
     }
 
-    public float filterdB(int i) {
-        float f = data.get(i);
-        return RawSamples.filterdB(f);
+    public double getDB(int i) {
+        double db = data.get(i);
+
+        db = RawSamples.MAXIMUM_DB + db;
+
+        return db;
+    }
+
+    public double filterDB(int i) {
+        double db = getDB(i);
+
+        // do not show below NOISE_DB
+        db = db - RawSamples.NOISE_DB;
+
+        if (db < 0)
+            db = 0;
+
+        int rest = RawSamples.MAXIMUM_DB - RawSamples.NOISE_DB;
+
+        db = db / rest;
+
+        return db;
     }
 
     // draw in edit mode

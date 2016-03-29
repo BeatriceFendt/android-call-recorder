@@ -174,6 +174,8 @@ public class RecordingActivity extends AppCompatActivity {
             sampleRate = 8000;
         }
 
+        samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
+
         updateBufferSize(false);
 
         loadSamples();
@@ -261,7 +263,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         pitch.clear(cut / samplesUpdate);
         for (int i = 0; i < len; i += samplesUpdate) {
-            float dB = RawSamples.getdB(buf, i, samplesUpdate);
+            double dB = RawSamples.getDB(buf, i, samplesUpdate);
             pitch.add(dB);
         }
         updateSamples(samplesTime);
@@ -585,13 +587,15 @@ public class RecordingActivity extends AppCompatActivity {
 
                             rs.write(buffer);
 
-                            final float dB = RawSamples.getdB(buffer, 0, readSize);
-                            handle.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    pitch.add(dB);
-                                }
-                            });
+                            for (int i = 0; i < readSize; i += samplesUpdate) {
+                                final double dB = RawSamples.getDB(buffer, i, samplesUpdate);
+                                handle.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        pitch.add(dB);
+                                    }
+                                });
+                            }
 
                             samplesTime += s;
                             samplesTimeCount += s;
@@ -643,6 +647,8 @@ public class RecordingActivity extends AppCompatActivity {
     // or phone screen is off.
     void updateBufferSize(boolean pause) {
         synchronized (bufferSize) {
+            int samplesUpdate;
+
             if (pause) {
                 // we need make buffer multiply of pitch.getPitchTime() (100 ms).
                 // to prevent missing blocks from view otherwise:
@@ -656,7 +662,7 @@ public class RecordingActivity extends AppCompatActivity {
                 l = l / pitch.getPitchTime() * pitch.getPitchTime();
                 samplesUpdate = (int) (l * sampleRate / 1000.0);
             } else {
-                samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
+                samplesUpdate = this.samplesUpdate;
             }
 
             bufferSize = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2;
