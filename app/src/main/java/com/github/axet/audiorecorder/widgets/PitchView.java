@@ -5,6 +5,7 @@ import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
@@ -12,6 +13,9 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+
+import com.github.axet.audiorecorder.app.RawSamples;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -153,8 +157,8 @@ public class PitchView extends ViewGroup {
 //            }
 
             for (int i = 0; i < m; i++) {
-                float left = data.get(i);
-                float right = data.get(i);
+                float left = filterdB(i);
+                float right = filterdB(i);
 
                 float mid = getHeight() / 2f;
 
@@ -185,6 +189,9 @@ public class PitchView extends ViewGroup {
 
     public class PitchCurrentView extends View {
         Paint paint;
+        Paint textPaint;
+        String text;
+        Rect textBounds;
 
         public PitchCurrentView(Context context) {
             this(context, null);
@@ -197,6 +204,11 @@ public class PitchView extends ViewGroup {
         public PitchCurrentView(Context context, AttributeSet attrs, int defStyleAttr) {
             super(context, attrs, defStyleAttr);
 
+            textPaint = new Paint();
+            textPaint.setColor(Color.GRAY);
+            textPaint.setAntiAlias(true);
+            textPaint.setTextSize(20f);
+
             paint = new Paint();
             paint.setColor(pitchColor);
             paint.setStrokeWidth(pitchWidth);
@@ -207,7 +219,18 @@ public class PitchView extends ViewGroup {
             int w = MeasureSpec.getSize(widthMeasureSpec);
             int h = Math.min(MeasureSpec.getSize(heightMeasureSpec), dp2px(pitchDlimiter + getPaddingTop() + getPaddingBottom()));
 
+            updateText();
+
+            h += textBounds.height();
+
             setMeasuredDimension(w, h);
+        }
+
+        public void setText(String text) {
+            this.text = text;
+
+            textBounds = new Rect();
+            textPaint.getTextBounds(this.text, 0, this.text.length(), textBounds);
         }
 
         @Override
@@ -215,24 +238,39 @@ public class PitchView extends ViewGroup {
             super.onLayout(changed, left, top, right, bottom);
         }
 
+        public int getEnd() {
+            int end = data.size() - 1;
+
+            if (edit != null) {
+                end = editPos;
+            }
+            if (play != null) {
+                end = (int) playPos;
+            }
+
+            return end;
+        }
+
+        void updateText() {
+            int end = getEnd();
+            setText(Integer.toString(data.get(end).intValue()) + " dB");
+        }
+
         @Override
         public void onDraw(Canvas canvas) {
             if (data.size() > 0) {
-                int end = data.size() - 1;
+                int end = getEnd();
 
-                if (edit != null) {
-                    end = editPos;
-                }
-                if (play != null) {
-                    end = (int) playPos;
-                }
+                updateText();
+                int x = getWidth() / 2 - textBounds.width() / 2;
+                canvas.drawText(text, x, textBounds.height(), textPaint);
 
-                float left = data.get(end);
-                float right = data.get(end);
+                float left = filterdB(end);
+                float right = filterdB(end);
 
                 float mid = getWidth() / 2f;
 
-                float y = getHeight() / 2f;
+                float y = textBounds.bottom + getHeight() / 2f;
 
                 canvas.drawLine(mid, y, mid - mid * left, y, paint);
                 canvas.drawLine(mid, y, mid + mid * right, y, paint);
@@ -275,7 +313,7 @@ public class PitchView extends ViewGroup {
 
         if (isInEditMode()) {
             for (int i = 0; i < 3000; i++) {
-                data.add((float) Math.random());
+                data.add((float) (Math.random() * RawSamples.MAXIMUM_DB));
             }
         }
 
@@ -332,6 +370,11 @@ public class PitchView extends ViewGroup {
         fit(pitchMemCount);
         offset = 0;
         draw();
+    }
+
+    public float filterdB(int i) {
+        float f = data.get(i);
+        return RawSamples.filterdB(f);
     }
 
     // draw in edit mode
