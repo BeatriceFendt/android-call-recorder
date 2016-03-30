@@ -95,6 +95,10 @@ public class PitchView extends ViewGroup {
             return r;
         }
 
+        public static void stop(Handler handler, Runnable run) {
+            handler.removeCallbacks(run);
+        }
+
         @Override
         public void run() {
             this.run.run();
@@ -512,15 +516,15 @@ public class PitchView extends ViewGroup {
 
     public void stop() {
         if (edit != null)
-            handler.removeCallbacks(edit);
+            HandlerUpdate.stop(handler, edit);
         edit = null;
 
         if (draw != null)
-            handler.removeCallbacks(draw);
+            HandlerUpdate.stop(handler, draw);
         draw = null;
 
         if (play != null)
-            handler.removeCallbacks(play);
+            HandlerUpdate.stop(handler, play);
         play = null;
 
         draw();
@@ -541,12 +545,12 @@ public class PitchView extends ViewGroup {
             editPos = data.size() - 1;
 
         if (draw != null) {
-            handler.removeCallbacks(draw);
+            HandlerUpdate.stop(handler, draw);
             draw = null;
         }
 
         if (play != null) {
-            handler.removeCallbacks(play);
+            HandlerUpdate.stop(handler, play);
             play = null;
         }
 
@@ -573,12 +577,12 @@ public class PitchView extends ViewGroup {
 
     public void record() {
         if (edit != null)
-            handler.removeCallbacks(edit);
+            HandlerUpdate.stop(handler, edit);
         edit = null;
         editPos = -1;
 
         if (play != null)
-            handler.removeCallbacks(play);
+            HandlerUpdate.stop(handler, play);
         play = null;
         playPos = -1;
 
@@ -599,7 +603,7 @@ public class PitchView extends ViewGroup {
         if (pos < 0) {
             playPos = -1;
             if (play != null) {
-                handler.removeCallbacks(play);
+                HandlerUpdate.stop(handler, play);
                 play = null;
             }
             if (edit == null) {
@@ -618,11 +622,11 @@ public class PitchView extends ViewGroup {
             playPos = max;
 
         if (edit != null)
-            handler.removeCallbacks(edit);
+            HandlerUpdate.stop(handler, edit);
         edit = null;
 
         if (draw != null)
-            handler.removeCallbacks(draw);
+            HandlerUpdate.stop(handler, draw);
         draw = null;
 
         if (play == null) {
