@@ -192,7 +192,7 @@ public class PitchView extends ViewGroup {
             }
 
             // paint play mark
-            if (playPos != -1) {
+            if (playPos > 0) {
                 float x = playPos * pitchSize + pitchSize / 2f;
                 canvas.drawLine(x, 0, x, getHeight(), playPaint);
             }
@@ -258,7 +258,7 @@ public class PitchView extends ViewGroup {
             if (editPos != -1) {
                 end = editPos;
             }
-            if (playPos != -1) {
+            if (playPos >0) {
                 end = (int) playPos;
             }
 
@@ -597,16 +597,8 @@ public class PitchView extends ViewGroup {
 
     // current paying pos in actual samples
     public void play(float pos) {
-        playPos = pos - samples;
-
-        editFlash = true;
-
-        int max = data.size() - 1;
-
-        if (playPos < 0 || playPos > max)
+        if (pos < 0) {
             playPos = -1;
-
-        if (playPos < 0) {
             if (play != null) {
                 handler.removeCallbacks(play);
                 play = null;
@@ -616,6 +608,15 @@ public class PitchView extends ViewGroup {
             }
             return;
         }
+
+        playPos = pos - samples;
+
+        editFlash = true;
+
+        int max = data.size() - 1;
+
+        if (playPos > max)
+            playPos = max;
 
         if (edit != null)
             handler.removeCallbacks(edit);
