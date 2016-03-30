@@ -274,12 +274,12 @@ public class PitchView extends ViewGroup {
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             int w = MeasureSpec.getSize(widthMeasureSpec);
-            int h = 0;
-
             textPaint.getTextBounds(this.text, 0, this.text.length(), textBounds);
+
+            int h = getPaddingTop();
             h += textBounds.height();
             h += dp2px(2);
-            h += dp2px(pitchDlimiter) + getPaddingTop() + getPaddingBottom();
+            h += pitchWidth + getPaddingBottom();
 
             setMeasuredDimension(w, h);
         }
@@ -336,7 +336,7 @@ public class PitchView extends ViewGroup {
 
                 float mid = getWidth() / 2f;
 
-                y = getHeight() - dp2px(pitchDlimiter) - getPaddingBottom();
+                y += pitchWidth / 2;
 
                 canvas.drawLine(mid, y, mid - mid * left - 1, y, paint);
                 canvas.drawLine(mid, y, mid + mid * right + 1, y, paint);
