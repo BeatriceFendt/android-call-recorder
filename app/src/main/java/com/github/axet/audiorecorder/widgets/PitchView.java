@@ -318,6 +318,7 @@ public class PitchView extends ViewGroup {
         @Override
         public void onDraw(Canvas canvas) {
             if (data.size() > 0) {
+                canvas.drawColor(Color.RED);
                 int end = getEnd();
 
                 updateText(end);
@@ -493,15 +494,22 @@ public class PitchView extends ViewGroup {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        graph.measure(widthMeasureSpec, heightMeasureSpec);
         current.measure(widthMeasureSpec, heightMeasureSpec);
+
+        int hh = MeasureSpec.getSize(heightMeasureSpec) - current.getMeasuredHeight();
+        graph.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(hh, MeasureSpec.getMode(widthMeasureSpec)));
+
+        int w = Math.max(graph.getMeasuredWidth(), current.getMeasuredWidth());
+        int h = graph.getMeasuredHeight() + current.getMeasuredHeight();
+
+        setMeasuredDimension(w, h);
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        int gb = graph.getMeasuredHeight() - current.getMeasuredHeight();
-        graph.layout(0, 0, graph.getMeasuredWidth(), gb);
-        current.layout(0, gb, current.getMeasuredWidth(), gb + current.getMeasuredHeight());
+        graph.layout(0, 0, graph.getMeasuredWidth(), graph.getMeasuredHeight());
+        current.layout(0, graph.getMeasuredHeight(), current.getMeasuredWidth(),
+                graph.getMeasuredHeight() + current.getMeasuredHeight());
     }
 
     int dp2px(float dp) {
