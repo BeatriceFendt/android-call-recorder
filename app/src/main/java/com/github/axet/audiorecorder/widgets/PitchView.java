@@ -336,7 +336,7 @@ public class PitchView extends ViewGroup {
 
                 float mid = getWidth() / 2f;
 
-                y = y + dp2px(pitchDlimiter) / 2;
+                y = getHeight() - dp2px(pitchDlimiter) - getPaddingBottom();
 
                 canvas.drawLine(mid, y, mid - mid * left - 1, y, paint);
                 canvas.drawLine(mid, y, mid + mid * right + 1, y, paint);
