@@ -78,6 +78,44 @@ public class PitchView extends ViewGroup {
     int pitchColor = 0xff0433AE;
     Paint cutColor = new Paint();
 
+    public static class HandlerUpdate implements Runnable {
+        long start;
+        long updateSpeed;
+        Handler handler;
+        Runnable run;
+
+        public static HandlerUpdate start(Handler handler, Runnable run, long updateSpeed) {
+            HandlerUpdate r = new HandlerUpdate();
+            r.run = run;
+            r.start = System.currentTimeMillis();
+            r.updateSpeed = updateSpeed;
+            r.handler = handler;
+            // post instead of draw.run() so 'start' will measure actual queue time
+            handler.postDelayed(r, updateSpeed);
+            return r;
+        }
+
+        @Override
+        public void run() {
+            this.run.run();
+
+            long cur = System.currentTimeMillis();
+
+            long diff = cur - start;
+
+            start = cur;
+
+            long delay = updateSpeed + (updateSpeed - diff);
+            if (delay > updateSpeed)
+                delay = updateSpeed;
+
+            if (delay > 0)
+                this.handler.postDelayed(this, delay);
+            else
+                this.handler.post(this);
+        }
+    }
+
     public class PitchGraphView extends View {
         Paint editPaint;
         Paint playPaint;
@@ -258,7 +296,7 @@ public class PitchView extends ViewGroup {
             if (editPos != -1) {
                 end = editPos;
             }
-            if (playPos >0) {
+            if (playPos > 0) {
                 end = (int) playPos;
             }
 
@@ -523,33 +561,13 @@ public class PitchView extends ViewGroup {
         if (edit == null) {
             editFlash = true;
 
-            edit = new Runnable() {
-                long start = System.currentTimeMillis();
-
+            edit = HandlerUpdate.start(handler, new Runnable() {
                 @Override
                 public void run() {
                     draw();
-
                     editFlash = !editFlash;
-
-                    long cur = System.currentTimeMillis();
-
-                    long diff = cur - start;
-
-                    long delay = EDIT_UPDATE_SPEED + (EDIT_UPDATE_SPEED - diff);
-                    if (delay > EDIT_UPDATE_SPEED)
-                        delay = EDIT_UPDATE_SPEED;
-
-                    start = cur;
-
-                    if (delay > 0)
-                        handler.postDelayed(edit, delay);
-                    else
-                        handler.post(edit);
                 }
-            };
-            // post instead of draw.run() so 'start' will measure actual queue time
-            handler.postDelayed(edit, EDIT_UPDATE_SPEED);
+            }, EDIT_UPDATE_SPEED);
         }
     }
 
@@ -567,31 +585,12 @@ public class PitchView extends ViewGroup {
         if (draw == null) {
             time = System.currentTimeMillis();
 
-            draw = new Runnable() {
-                long start = System.currentTimeMillis();
-                int stableCount = 0;
-
+            draw = HandlerUpdate.start(handler, new Runnable() {
                 @Override
                 public void run() {
                     drawCalc();
-                    long cur = System.currentTimeMillis();
-
-                    long diff = cur - start;
-
-                    long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
-                    if (delay > UPDATE_SPEED)
-                        delay = UPDATE_SPEED;
-
-                    start = cur;
-
-                    if (delay > 0)
-                        handler.postDelayed(draw, delay);
-                    else
-                        handler.post(draw);
                 }
-            };
-            // post instead of draw.run() so 'start' will measure actual queue time
-            handler.postDelayed(draw, UPDATE_SPEED);
+            }, UPDATE_SPEED);
         }
     }
 
@@ -628,30 +627,12 @@ public class PitchView extends ViewGroup {
 
         if (play == null) {
             time = System.currentTimeMillis();
-            play = new Runnable() {
-                long start = System.currentTimeMillis();
-
+            play = HandlerUpdate.start(handler, new Runnable() {
                 @Override
                 public void run() {
                     draw();
-                    long cur = System.currentTimeMillis();
-
-                    long diff = cur - start;
-
-                    start = cur;
-
-                    long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
-                    if (delay > UPDATE_SPEED)
-                        delay = UPDATE_SPEED;
-
-                    if (delay > 0)
-                        handler.postDelayed(play, delay);
-                    else
-                        handler.post(play);
                 }
-            };
-            // post instead of draw.run() so 'start' will measure actual queue time
-            handler.postDelayed(play, UPDATE_SPEED);
+            }, UPDATE_SPEED);
         }
     }
 }
