@@ -379,7 +379,7 @@ public class PitchView extends ViewGroup {
 
         if (isInEditMode()) {
             for (int i = 0; i < 3000; i++) {
-                data.add((Math.random() * RawSamples.MAXIMUM_DB));
+                data.add(-Math.random() * RawSamples.MAXIMUM_DB);
             }
         }
 
