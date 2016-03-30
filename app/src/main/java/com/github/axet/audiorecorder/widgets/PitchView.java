@@ -64,7 +64,7 @@ public class PitchView extends ViewGroup {
 
     Runnable edit;
     // index
-    int editPos = 0;
+    int editPos = -1;
     boolean editFlash = false;
     // current playing position in samples
     float playPos = -1;
@@ -176,7 +176,7 @@ public class PitchView extends ViewGroup {
                     right = 1;
                 }
 
-                if ((edit != null || play != null) && i >= editPos)
+                if (editPos != -1 && i >= editPos)
                     p = cutColor;
 
                 // left channel pitch
@@ -185,12 +185,14 @@ public class PitchView extends ViewGroup {
                 canvas.drawLine(x, mid, x, mid + mid * right + 1, p);
             }
 
-            if ((edit != null || play != null) && editFlash) {
+            // paint edit mark
+            if (editPos != -1 && editFlash) {
                 float x = editPos * pitchSize + pitchSize / 2f;
                 canvas.drawLine(x, 0, x, getHeight(), editPaint);
             }
 
-            if (play != null && playPos > 0) {
+            // paint play mark
+            if (playPos != -1) {
                 float x = playPos * pitchSize + pitchSize / 2f;
                 canvas.drawLine(x, 0, x, getHeight(), playPaint);
             }
@@ -253,10 +255,10 @@ public class PitchView extends ViewGroup {
         public int getEnd() {
             int end = data.size() - 1;
 
-            if (edit != null) {
+            if (editPos != -1) {
                 end = editPos;
             }
-            if (play != null) {
+            if (playPos != -1) {
                 end = (int) playPos;
             }
 
@@ -422,7 +424,6 @@ public class PitchView extends ViewGroup {
         return db;
     }
 
-    // draw in edit mode
     public void draw() {
         graph.invalidate();
         current.invalidate();
@@ -489,9 +490,11 @@ public class PitchView extends ViewGroup {
 
     public long edit(float offset) {
         if (offset < 0)
-            offset = 0;
+            editPos = -1;
+        else
+            editPos = ((int) offset) / pitchSize;
 
-        editPos = ((int) offset) / pitchSize;
+        playPos = -1;
 
         if (editPos >= pitchScreenCount)
             editPos = pitchScreenCount - 1;
@@ -554,10 +557,12 @@ public class PitchView extends ViewGroup {
         if (edit != null)
             handler.removeCallbacks(edit);
         edit = null;
+        editPos = -1;
 
         if (play != null)
             handler.removeCallbacks(play);
         play = null;
+        playPos = -1;
 
         if (draw == null) {
             time = System.currentTimeMillis();
