@@ -307,10 +307,16 @@ public class RecordingActivity extends AppCompatActivity {
             }
         }
 
-        RecordingService.startService(this, targetFile.getName(), thread != null);
+        boolean recording = thread != null;
 
-        if (thread != null)
+        RecordingService.startService(this, targetFile.getName(), recording);
+
+        if (recording) {
             pitch.record();
+        } else {
+            if (editSample != -1)
+                edit(true, false);
+        }
     }
 
     @Override
@@ -318,7 +324,7 @@ public class RecordingActivity extends AppCompatActivity {
         super.onPause();
         Log.d(TAG, "onPause");
         updateBufferSize(true);
-        edit(false, true);
+        editPlay(false);
         pitch.stop();
     }
 
@@ -334,7 +340,10 @@ public class RecordingActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 edit(true, true);
-                editSample = pitch.edit(event.getX()) * samplesUpdate;
+                float x = event.getX();
+                if (x < 0)
+                    x = 0;
+                editSample = pitch.edit(x) * samplesUpdate;
                 return true;
             }
         });
@@ -388,6 +397,7 @@ public class RecordingActivity extends AppCompatActivity {
             editSample = -1;
             setState("pause");
             editPlay(false);
+            pitch.edit(-1);
             pitch.stop();
 
             View box = findViewById(R.id.recording_edit_box);
