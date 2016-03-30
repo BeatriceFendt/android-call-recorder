@@ -318,7 +318,6 @@ public class PitchView extends ViewGroup {
         @Override
         public void onDraw(Canvas canvas) {
             if (data.size() > 0) {
-                canvas.drawColor(Color.RED);
                 int end = getEnd();
 
                 updateText(end);
