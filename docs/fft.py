@@ -41,4 +41,4 @@ def real_sound_weave(freqHz):
 
   plot(Fe, N, x, y)
 
-real_sound_weave(4000)
+real_sound_weave(4500)
