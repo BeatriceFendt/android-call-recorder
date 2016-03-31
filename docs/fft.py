@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.fftpack
+import random
 
 # Fe = sample rate
 # N = samples count
@@ -13,13 +14,19 @@ def plot(Fe, N, x, y):
 
   plt.subplot(2, 1, 2)
   plt.plot(xf, 2.0/N * np.abs(yf[:N/2]))
+
   plt.show()
 
-def sample():
+def noise(y, amp):
+  return y + amp*np.random.sample(len(y))
+
+def simple():
   Fe = 1000
   N = Fe
   x = np.linspace(0.0, 1.0, N)
   y = np.sin(50.0 * 2.0*np.pi*x) + 0.5*np.sin(80.0 * 2.0*np.pi*x)
+  
+  y = noise(y, 2)
 
   plot(Fe, N, x, y)
 
@@ -30,6 +37,8 @@ def real_sound_weave(freqHz):
   x = np.linspace(0.0, N, N)
   y = np.sin(2.0 * np.pi * x / (Fe / float(freqHz))) * 0x7FFF
 
+  y = noise(y, 0x7fff)
+
   plot(Fe, N, x, y)
 
-real_sound_weave(4500)
+real_sound_weave(4000)
