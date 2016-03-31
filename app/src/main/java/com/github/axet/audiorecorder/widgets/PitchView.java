@@ -248,6 +248,8 @@ public class PitchView extends ViewGroup {
         String text;
         Rect textBounds;
 
+        double dB;
+
         public PitchCurrentView(Context context) {
             this(context, null);
         }
@@ -295,7 +297,9 @@ public class PitchView extends ViewGroup {
             super.onLayout(changed, left, top, right, bottom);
         }
 
-        void updateText(int end) {
+        void update(int end) {
+            dB = getDB(end) / RawSamples.MAXIMUM_DB;
+
             String str = "";
 
             str = Integer.toString((int) getDB(end)) + " dB";
@@ -305,30 +309,22 @@ public class PitchView extends ViewGroup {
 
         @Override
         public void onDraw(Canvas canvas) {
-            if (data.size() > 0) {
-                int end = getEnd();
+            float y = getPaddingTop() + textBounds.height();
 
-                updateText(end);
+            int x = getWidth() / 2 - textBounds.width() / 2;
+            canvas.drawText(text, x, y, textPaint);
 
-                float y = getPaddingTop() + textBounds.height();
+            y += dp2px(2);
 
-                int x = getWidth() / 2 - textBounds.width() / 2;
-                canvas.drawText(text, x, y, textPaint);
+            float left = (float) dB;
+            float right = (float) dB;
 
-                y += dp2px(2);
+            float mid = getWidth() / 2f;
 
-                double dB = getDB(end) / RawSamples.MAXIMUM_DB;
+            y += pitchWidth / 2;
 
-                float left = (float) dB;
-                float right = (float) dB;
-
-                float mid = getWidth() / 2f;
-
-                y += pitchWidth / 2;
-
-                canvas.drawLine(mid, y, mid - mid * left - 1, y, paint);
-                canvas.drawLine(mid, y, mid + mid * right + 1, y, paint);
-            }
+            canvas.drawLine(mid, y, mid - mid * left - 1, y, paint);
+            canvas.drawLine(mid, y, mid + mid * right + 1, y, paint);
         }
     }
 
@@ -372,6 +368,8 @@ public class PitchView extends ViewGroup {
         if (isInEditMode()) {
             for (int i = 0; i < 3000; i++) {
                 data.add(-Math.random() * RawSamples.MAXIMUM_DB);
+                short[] buf = new short[1600];
+                dataSamples.add(buf);
             }
         }
 
@@ -474,10 +472,15 @@ public class PitchView extends ViewGroup {
 
     public void draw() {
         graph.invalidate();
-        if(data.size()>0) {
+
+        if (data.size() > 0) {
             fft.setBuffer(dataSamples.get(getEnd()));
         }
         fft.invalidate();
+
+        if (data.size() > 0) {
+            current.update(getEnd());
+        }
         current.invalidate();
     }
 
