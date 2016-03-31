@@ -42,6 +42,7 @@ public class PitchView extends ViewGroup {
     Paint paint;
     Paint paintRed;
     List<Double> data = new LinkedList<>();
+    List<short[]> dataSamples = new LinkedList<>();
 
     // how many pitches we can fit on screen
     int pitchScreenCount;
@@ -55,6 +56,7 @@ public class PitchView extends ViewGroup {
     int pitchSize;
 
     PitchGraphView graph;
+    FFTBarView fft;
     PitchCurrentView current;
 
     long time = 0;
@@ -183,8 +185,7 @@ public class PitchView extends ViewGroup {
                         tick = 0;
                         time = cur;
                     }
-                    data.subList(0, 1).clear();
-                    samples += 1;
+                    fit(data.size() - 1);
                 }
 
                 offset = pitchSize * tick;
@@ -294,19 +295,6 @@ public class PitchView extends ViewGroup {
             super.onLayout(changed, left, top, right, bottom);
         }
 
-        public int getEnd() {
-            int end = data.size() - 1;
-
-            if (editPos != -1) {
-                end = editPos;
-            }
-            if (playPos > 0) {
-                end = (int) playPos;
-            }
-
-            return end;
-        }
-
         void updateText(int end) {
             String str = "";
 
@@ -373,6 +361,10 @@ public class PitchView extends ViewGroup {
         graph = new PitchGraphView(getContext());
         addView(graph);
 
+        fft = new FFTBarView(getContext());
+        fft.setPadding(0, dp2px(2), 0, 0);
+        addView(fft);
+
         current = new PitchCurrentView(getContext());
         current.setPadding(0, dp2px(2), 0, 0);
         addView(current);
@@ -415,6 +407,7 @@ public class PitchView extends ViewGroup {
         if (data.size() > max) {
             int cut = data.size() - max;
             data.subList(0, cut).clear();
+            dataSamples.subList(0, cut).clear();
             samples += cut;
 
             int m = data.size() - 1;
@@ -426,20 +419,33 @@ public class PitchView extends ViewGroup {
         }
     }
 
-    public void add(double a) {
+    public void add(double a, short[] ss) {
         data.add(a);
+        dataSamples.add(ss);
     }
 
     public void drawCalc() {
         graph.calc();
-        graph.invalidate();
-        current.invalidate();
+        draw();
     }
 
     public void drawEnd() {
         fit(pitchMemCount);
         offset = 0;
         draw();
+    }
+
+    public int getEnd() {
+        int end = data.size() - 1;
+
+        if (editPos != -1) {
+            end = editPos;
+        }
+        if (playPos > 0) {
+            end = (int) playPos;
+        }
+
+        return end;
     }
 
     public double getDB(int i) {
@@ -468,6 +474,10 @@ public class PitchView extends ViewGroup {
 
     public void draw() {
         graph.invalidate();
+        if(data.size()>0) {
+            fft.setBuffer(dataSamples.get(getEnd()));
+        }
+        fft.invalidate();
         current.invalidate();
     }
 
@@ -495,20 +505,19 @@ public class PitchView extends ViewGroup {
 
         current.measure(widthMeasureSpec, heightMeasureSpec);
 
-        int hh = MeasureSpec.getSize(heightMeasureSpec) - current.getMeasuredHeight();
+        fft.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(dp2px(20), MeasureSpec.getMode(widthMeasureSpec)));
+
+        int hh = MeasureSpec.getSize(heightMeasureSpec) - current.getMeasuredHeight() - fft.getMeasuredHeight();
         graph.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(hh, MeasureSpec.getMode(widthMeasureSpec)));
-
-        int w = Math.max(graph.getMeasuredWidth(), current.getMeasuredWidth());
-        int h = graph.getMeasuredHeight() + current.getMeasuredHeight();
-
-        setMeasuredDimension(w, h);
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         graph.layout(0, 0, graph.getMeasuredWidth(), graph.getMeasuredHeight());
-        current.layout(0, graph.getMeasuredHeight(), current.getMeasuredWidth(),
-                graph.getMeasuredHeight() + current.getMeasuredHeight());
+        fft.layout(0, graph.getMeasuredHeight(), fft.getMeasuredWidth(),
+                graph.getMeasuredHeight() + fft.getMeasuredHeight());
+        current.layout(0, fft.getBottom(), current.getMeasuredWidth(),
+                fft.getBottom() + current.getMeasuredHeight());
     }
 
     int dp2px(float dp) {

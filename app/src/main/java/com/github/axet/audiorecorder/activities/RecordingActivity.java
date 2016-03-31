@@ -273,7 +273,9 @@ public class RecordingActivity extends AppCompatActivity {
         pitch.clear(cut / samplesUpdate);
         for (int i = 0; i < len; i += samplesUpdate) {
             double dB = RawSamples.getDB(buf, i, samplesUpdate);
-            pitch.add(dB);
+            short[] ss = new short[samplesUpdate];
+            System.arraycopy(buf, i, ss, 0, ss.length);
+            pitch.add(dB, ss);
         }
         updateSamples(samplesTime);
     }
@@ -613,10 +615,12 @@ public class RecordingActivity extends AppCompatActivity {
 
                             for (int i = 0; i < readSize; i += samplesUpdate) {
                                 final double dB = RawSamples.getDB(buffer, i, samplesUpdate);
+                                final short[] ss = new short[samplesUpdate];
+                                System.arraycopy(buffer, i, ss, 0, ss.length);
                                 handle.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        pitch.add(dB);
+                                        pitch.add(dB, ss);
                                     }
                                 });
                             }
