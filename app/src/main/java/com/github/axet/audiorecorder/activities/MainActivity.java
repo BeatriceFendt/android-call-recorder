@@ -435,6 +435,9 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setTheme(((MainApplication) getApplication()).getMainTheme());
+
         setContentView(R.layout.activity_main);
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.

@@ -2,6 +2,7 @@ package com.github.axet.audiorecorder.widgets;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -15,6 +16,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.github.axet.androidlibrary.widgets.ThemeUtils;
+import com.github.axet.audiorecorder.R;
+import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.RawSamples;
 
 import java.util.LinkedList;
@@ -39,10 +43,7 @@ public class PitchView extends ViewGroup {
     // in other words how many milliseconds do we need to show whole pitch.
     int pitchTime;
 
-    Paint paint;
-    Paint paintRed;
     List<Double> data = new LinkedList<>();
-    List<short[]> dataSamples = new LinkedList<>();
 
     // how many pitches we can fit on screen
     int pitchScreenCount;
@@ -56,7 +57,6 @@ public class PitchView extends ViewGroup {
     int pitchSize;
 
     PitchGraphView graph;
-    FFTBarView fft;
     PitchCurrentView current;
 
     long time = 0;
@@ -76,9 +76,6 @@ public class PitchView extends ViewGroup {
     float offset = 0;
 
     Handler handler;
-
-    int pitchColor = 0xff0433AE;
-    Paint cutColor = new Paint();
 
     public static class HandlerUpdate implements Runnable {
         long start;
@@ -123,8 +120,11 @@ public class PitchView extends ViewGroup {
     }
 
     public class PitchGraphView extends View {
+        Paint paint;
+        Paint paintRed;
         Paint editPaint;
         Paint playPaint;
+        Paint cutColor;
 
         public PitchGraphView(Context context) {
             this(context, null);
@@ -137,12 +137,24 @@ public class PitchView extends ViewGroup {
         public PitchGraphView(Context context, AttributeSet attrs, int defStyleAttr) {
             super(context, attrs, defStyleAttr);
 
+            paint = new Paint();
+            paint.setColor(getThemeColor(R.attr.colorPrimary));
+            paint.setStrokeWidth(pitchWidth);
+
+            paintRed = new Paint();
+            paintRed.setColor(Color.RED);
+            paintRed.setStrokeWidth(pitchWidth);
+
+            cutColor = new Paint();
+            cutColor.setColor(getThemeColor(android.R.attr.textColorHint));
+            cutColor.setStrokeWidth(pitchWidth);
+
             editPaint = new Paint();
-            editPaint.setColor(Color.BLACK);
+            editPaint.setColor(getThemeColor(R.attr.colorPrimaryDark));
             editPaint.setStrokeWidth(pitchWidth);
 
             playPaint = new Paint();
-            playPaint.setColor(Color.BLUE);
+            playPaint.setColor(getThemeColor(R.attr.colorPrimaryDark));
             playPaint.setStrokeWidth(pitchWidth / 2);
         }
 
@@ -270,7 +282,7 @@ public class PitchView extends ViewGroup {
             textPaint.setTextSize(20f);
 
             paint = new Paint();
-            paint.setColor(pitchColor);
+            paint.setColor(getThemeColor(R.attr.colorPrimary));
             paint.setStrokeWidth(pitchWidth);
         }
 
@@ -309,6 +321,10 @@ public class PitchView extends ViewGroup {
 
         @Override
         public void onDraw(Canvas canvas) {
+            if (data.size() > 0) {
+                current.update(getEnd());
+            }
+
             float y = getPaddingTop() + textBounds.height();
 
             int x = getWidth() / 2 - textBounds.width() / 2;
@@ -351,15 +367,24 @@ public class PitchView extends ViewGroup {
 
         pitchTime = pitchSize * UPDATE_SPEED;
 
-        // bg = getThemeColor(android.R.attr.windowBackground);
-        cutColor.setColor(0xff0443BE); // getThemeColor(android.R.attr.textColorPrimaryDisableOnly));
-
         graph = new PitchGraphView(getContext());
         addView(graph);
 
-        fft = new FFTBarView(getContext());
-        fft.setPadding(0, dp2px(2), 0, 0);
-        addView(fft);
+//        fft = new FFTChartView(getContext()) {
+//            @Override
+//            public void onDraw(Canvas canvas) {
+//                if (data.size() > 0) {
+//                    short[] buf = dataSamples.get(getEnd());
+//                    double[] d = FFTView.fft(buf, 0, buf.length);
+//                    //double[] d = asDouble(buf, 0, buf.length);
+//                    fft.setBuffer(d);
+//                }
+//
+//                super.onDraw(canvas);
+//            }
+//        };
+//        fft.setPadding(0, dp2px(2), 0, 0);
+//        addView(fft);
 
         current = new PitchCurrentView(getContext());
         current.setPadding(0, dp2px(2), 0, 0);
@@ -367,21 +392,15 @@ public class PitchView extends ViewGroup {
 
         if (isInEditMode()) {
             for (int i = 0; i < 3000; i++) {
-                data.add(-Math.random() * RawSamples.MAXIMUM_DB);
-                short[] buf = new short[1600];
-                dataSamples.add(buf);
+                data.add(-Math.sin(i) * RawSamples.MAXIMUM_DB);
             }
         }
 
-        paint = new Paint();
-        paint.setColor(0xff0433AE);
-        paint.setStrokeWidth(pitchWidth);
-
-        paintRed = new Paint();
-        paintRed.setColor(Color.RED);
-        paintRed.setStrokeWidth(pitchWidth);
-
         time = System.currentTimeMillis();
+    }
+
+    public int getThemeColor(int id) {
+        return ThemeUtils.getThemeColor(getContext(), id);
     }
 
     public int getMaxPitchCount(int width) {
@@ -405,7 +424,6 @@ public class PitchView extends ViewGroup {
         if (data.size() > max) {
             int cut = data.size() - max;
             data.subList(0, cut).clear();
-            dataSamples.subList(0, cut).clear();
             samples += cut;
 
             int m = data.size() - 1;
@@ -417,9 +435,8 @@ public class PitchView extends ViewGroup {
         }
     }
 
-    public void add(double a, short[] ss) {
+    public void add(double a) {
         data.add(a);
-        dataSamples.add(ss);
     }
 
     public void drawCalc() {
@@ -472,15 +489,6 @@ public class PitchView extends ViewGroup {
 
     public void draw() {
         graph.invalidate();
-
-        if (data.size() > 0) {
-            fft.setBuffer(dataSamples.get(getEnd()));
-        }
-        fft.invalidate();
-
-        if (data.size() > 0) {
-            current.update(getEnd());
-        }
         current.invalidate();
     }
 
@@ -488,49 +496,33 @@ public class PitchView extends ViewGroup {
         return pitchTime;
     }
 
-    int getThemeColor(int id) {
-        TypedValue typedValue = new TypedValue();
-        Context context = getContext();
-        Resources.Theme theme = context.getTheme();
-        if (theme.resolveAttribute(id, typedValue, true)) {
-            if (Build.VERSION.SDK_INT >= 23)
-                return context.getResources().getColor(typedValue.resourceId, theme);
-            else
-                return context.getResources().getColor(typedValue.resourceId);
-        } else {
-            return Color.TRANSPARENT;
-        }
-    }
-
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        current.measure(widthMeasureSpec, heightMeasureSpec);
+        int ww = getMeasuredWidth() - getPaddingRight() - getPaddingLeft();
+        int hh = getMeasuredHeight() - getPaddingTop() - getPaddingBottom();
 
-        fft.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(dp2px(20), MeasureSpec.getMode(widthMeasureSpec)));
+        current.measure(MeasureSpec.makeMeasureSpec(ww, MeasureSpec.AT_MOST),
+                MeasureSpec.makeMeasureSpec(hh, MeasureSpec.AT_MOST));
 
-        int hh = MeasureSpec.getSize(heightMeasureSpec) - current.getMeasuredHeight() - fft.getMeasuredHeight();
-        graph.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(hh, MeasureSpec.getMode(widthMeasureSpec)));
+        hh = hh - current.getMeasuredHeight();
+
+        graph.measure(MeasureSpec.makeMeasureSpec(ww, MeasureSpec.AT_MOST),
+                MeasureSpec.makeMeasureSpec(hh, MeasureSpec.AT_MOST));
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        graph.layout(0, 0, graph.getMeasuredWidth(), graph.getMeasuredHeight());
-        fft.layout(0, graph.getMeasuredHeight(), fft.getMeasuredWidth(),
-                graph.getMeasuredHeight() + fft.getMeasuredHeight());
-        current.layout(0, fft.getBottom(), current.getMeasuredWidth(),
-                fft.getBottom() + current.getMeasuredHeight());
+        graph.layout(getPaddingLeft(), getPaddingTop(),
+                getPaddingLeft() + graph.getMeasuredWidth(), getPaddingTop() + graph.getMeasuredHeight());
+
+        current.layout(getPaddingLeft(), graph.getBottom(),
+                getPaddingLeft() + current.getMeasuredWidth(), graph.getBottom() + current.getMeasuredHeight());
     }
 
     int dp2px(float dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        graph.draw(canvas);
-        current.draw(canvas);
     }
 
     public void stop() {

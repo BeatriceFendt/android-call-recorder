@@ -15,7 +15,5 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
     }
 
     public void testFFT() {
-        short[] buf = RawSamples.generateSound(16000, 4500, 100);
-        short[] fft = RawSamples.fft(buf, 0, buf.length);
     }
 }

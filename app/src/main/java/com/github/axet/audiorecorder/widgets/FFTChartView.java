@@ -13,14 +13,8 @@ import android.view.View;
 
 import com.github.axet.audiorecorder.app.RawSamples;
 
-public class FFTChartView extends View {
+public class FFTChartView extends FFTView {
     public static final String TAG = FFTChartView.class.getSimpleName();
-
-    Paint paint;
-    short[] buffer;
-
-    Paint textPaint;
-    Rect textBounds;
 
     public FFTChartView(Context context) {
         this(context, null);
@@ -37,42 +31,13 @@ public class FFTChartView extends View {
     }
 
     void create() {
-        paint = new Paint();
-        paint.setColor(0xff0433AE);
-        paint.setStrokeWidth(dp2px(1));
-
-        textBounds = new Rect();
-
-        textPaint = new Paint();
-        textPaint.setColor(Color.GRAY);
-        textPaint.setAntiAlias(true);
-        textPaint.setTextSize(20f);
-
-        if (isInEditMode()) {
-            buffer = simple();
-            //buffer = RawSamples.generateSound(16000, 4000, 100);
-            //buffer = RawSamples.fft(buffer, 0, buffer.length);
-        }
+        super.create();
     }
 
-    public void setBuffer(short[] buf) {
-        buffer = RawSamples.fft(buf, 0, buf.length);
+    public void setBuffer(double[] buf) {
+        super.setBuffer(buf);
     }
 
-    short[] simple() {
-        int sampleRate = 1000;
-        int count = sampleRate;
-        short[] samples = new short[count];
-        for (int i = 0; i < count; i++) {
-            double x = i / (double) sampleRate;
-            double y = 0;
-            y += 0.9 * Math.sin(50 * 2 * Math.PI * x);
-            y += 0.5 * Math.sin(80 * 2 * Math.PI * x);
-            y += 0.7 * Math.sin(40 * 2 * Math.PI * x);
-            samples[i] = (short) (y / 2.1 * 0x7fff);
-        }
-        return samples;
-    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -83,33 +48,34 @@ public class FFTChartView extends View {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
     }
 
-    int dp2px(float dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
-    }
-
     @Override
     public void onDraw(Canvas canvas) {
-        int min = Integer.MAX_VALUE;
-        int max = Integer.MIN_VALUE;
+        if (buffer == null)
+            return;
 
-        for (int i = 0; i < buffer.length; i++) {
-            min = Math.min(buffer[i], min);
-            max = Math.max(buffer[i], max);
-        }
+        canvas.drawColor(Color.RED);
 
         int h = getHeight();
 
-        if (min < 0) {
-            h = h / 2;
-        }
-
         float startX = 0, startY = h;
 
-        float step = canvas.getWidth() / (float) buffer.length;
+        int w = getWidth() - getPaddingLeft() - getPaddingRight();
+
+        float step = w / (float) buffer.length;
+
+        double min = Integer.MAX_VALUE;
+        double max = Integer.MIN_VALUE;
 
         for (int i = 0; i < buffer.length; i++) {
+            double v = buffer[i];
+
+            min = Math.min(v, min);
+            max = Math.max(v, max);
+
+            v = (RawSamples.MAXIMUM_DB + v) / RawSamples.MAXIMUM_DB;
+
             float endX = startX;
-            float endY = h - h * (buffer[i] / (float) 0x7fff);
+            float endY = (float) (h - h * v);
 
             canvas.drawLine(startX, startY, endX, endY, paint);
 
@@ -122,7 +88,7 @@ public class FFTChartView extends View {
 
         String tMax = "" + max;
         textPaint.getTextBounds(tMax, 0, tMax.length(), textBounds);
-        canvas.drawText("" + max, getWidth() - textBounds.width(), getHeight(), textPaint);
+        canvas.drawText("" + max, w - textBounds.width(), getHeight(), textPaint);
     }
 
 }

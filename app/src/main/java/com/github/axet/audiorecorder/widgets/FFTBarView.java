@@ -11,20 +11,12 @@ import android.view.View;
 
 import com.github.axet.audiorecorder.app.RawSamples;
 
-public class FFTBarView extends View {
+public class FFTBarView extends FFTView {
     public static final String TAG = FFTBarView.class.getSimpleName();
-
-    Paint paint;
-    short[] buffer;
 
     int barCount;
     float barWidth;
     float barDeli;
-
-    int max;
-
-    Paint textPaint;
-    Rect textBounds;
 
     public FFTBarView(Context context) {
         this(context, null);
@@ -41,46 +33,11 @@ public class FFTBarView extends View {
     }
 
     void create() {
-        paint = new Paint();
-        paint.setColor(0xff0433AE);
-        paint.setStrokeWidth(dp2px(1));
-
-        textBounds = new Rect();
-
-        textPaint = new Paint();
-        textPaint.setColor(Color.GRAY);
-        textPaint.setAntiAlias(true);
-        textPaint.setTextSize(20f);
-
-        if (isInEditMode()) {
-            //buffer = simple();
-            buffer = RawSamples.generateSound(16000, 4000, 100);
-            buffer = RawSamples.fft(buffer, 0, buffer.length);
-        }
+        super.create();
     }
 
-    public void setBuffer(short[] buf) {
-        buffer = RawSamples.fft(buf, 0, buf.length);
-
-        max = Integer.MIN_VALUE;
-        for (int i = 0; i < buffer.length; i++) {
-            max = Math.max(buffer[i], max);
-        }
-    }
-
-    short[] simple() {
-        int sampleRate = 1000;
-        int count = sampleRate;
-        short[] samples = new short[count];
-        for (int i = 0; i < count; i++) {
-            double x = i / (double) sampleRate;
-            double y = 0;
-            y += 0.9 * Math.sin(50 * 2 * Math.PI * x);
-            y += 0.5 * Math.sin(80 * 2 * Math.PI * x);
-            y += 0.7 * Math.sin(40 * 2 * Math.PI * x);
-            samples[i] = (short) (y / 2.1 * 0x7fff);
-        }
-        return samples;
+    public void setBuffer(double[] buf) {
+        super.setBuffer(buf);
     }
 
     @Override
@@ -113,10 +70,6 @@ public class FFTBarView extends View {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
     }
 
-    int dp2px(float dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
-    }
-
     @Override
     public void onDraw(Canvas canvas) {
         if (barCount == 0)
@@ -134,7 +87,7 @@ public class FFTBarView extends View {
                 int offset = i * step;
                 int end = Math.min(offset + step, buffer.length);
                 for (int k = offset; k < end; k++) {
-                    short s = buffer[k];
+                    double s = buffer[k];
                     max = Math.max(max, s);
                 }
             }

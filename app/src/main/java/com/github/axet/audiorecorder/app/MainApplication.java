@@ -1,9 +1,14 @@
 package com.github.axet.audiorecorder.app;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.TypedArray;
 import android.preference.PreferenceManager;
+import android.util.Log;
+import android.util.TypedValue;
 
+import com.github.axet.androidlibrary.widgets.ThemeUtils;
 import com.github.axet.audiorecorder.R;
 
 public class MainApplication extends Application {
@@ -13,12 +18,37 @@ public class MainApplication extends Application {
     public static final String PREFERENCE_SILENT = "silence";
     public static final String PREFERENCE_ENCODING = "encoding";
     public static final String PREFERENCE_LAST = "last_recording";
+    public static final String PREFERENCE_THEME = "theme";
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+
+        Context context = this;
+        context.setTheme(getUserTheme());
+        Log.d("123", "color " + Integer.toHexString(ThemeUtils.getThemeColor(context, android.R.attr.textColorSecondary)));
+    }
+
+    public int getUserTheme() {
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        String theme = shared.getString(MainApplication.PREFERENCE_THEME, "");
+        if (theme.equals("Theme_Dark")) {
+            return R.style.AppThemeDark;
+        } else {
+            return R.style.AppThemeLight;
+        }
+    }
+
+    public int getMainTheme() {
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        String theme = shared.getString(MainApplication.PREFERENCE_THEME, "");
+        if (theme.equals("Theme_Dark")) {
+            return R.style.AppThemeDark_NoActionBar;
+        } else {
+            return R.style.AppThemeLight_NoActionBar;
+        }
     }
 
     static public String formatTime(int tt) {

@@ -143,43 +143,7 @@ public class RawSamples {
 
     public static double getDB(double amplitude) {
         // https://en.wikipedia.org/wiki/Sound_pressure
-        return 20.0 * Math.log10(amplitude / 32768d);
-    }
-
-    public static short[] generateSound(int sampleRate, int freqHz, int durationMs) {
-        int count = sampleRate * durationMs / 1000;
-        short[] samples = new short[count];
-        for (int i = 0; i < count; i++) {
-            short sample = (short) (Math.sin(2 * Math.PI * i / (sampleRate / freqHz)) * 0x7FFF);
-            samples[i] = sample;
-        }
-        return samples;
-    }
-
-    public static short[] fft(short[] buffer, int offset, int len) {
-        int len2 = (int) Math.pow(2, Math.ceil(Math.log(len) / Math.log(2)));
-
-        final double[][] dataRI = new double[][]{
-                new double[len2], new double[len2]
-        };
-
-        double[] dataR = dataRI[0];
-        double[] dataI = dataRI[1];
-
-        for (int i = 0; i < len; i++) {
-            dataR[i] = buffer[offset + i];
-        }
-
-        FastFourierTransformer.transformInPlace(dataRI, DftNormalization.STANDARD, TransformType.FORWARD);
-
-        short[] data = new short[len2 / 2];
-
-        for (int i = 0; i < data.length; i++) {
-            Complex c = new Complex(dataR[i], dataI[i]);
-            data[i] = (short) (2.0 / len * c.abs());
-        }
-
-        return data;
+        return 20.0 * Math.log10(amplitude / 0x7FFF);
     }
 
     public void close() {
