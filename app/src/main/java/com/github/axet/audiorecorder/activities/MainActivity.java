@@ -437,7 +437,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setTheme(((MainApplication) getApplication()).getMainTheme());
+        setTheme(MainApplication.getTheme(this, R.style.AppThemeLight_NoActionBar, R.style.AppThemeDark_NoActionBar));
 
         setContentView(R.layout.activity_main);
 
