@@ -147,6 +147,9 @@ public class RecordingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setTheme(((MainApplication) getApplication()).getUserTheme());
+
         setContentView(R.layout.activity_recording);
 
         pitch = (PitchView) findViewById(R.id.recording_pitch);

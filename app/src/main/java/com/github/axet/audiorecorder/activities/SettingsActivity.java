@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.media.Ringtone;
@@ -23,6 +24,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
@@ -41,7 +43,7 @@ import java.util.List;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class SettingsActivity extends AppCompatPreferenceActivity {
+public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -120,7 +122,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setupActionBar();
+
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        shared.registerOnSharedPreferenceChangeListener(this);
 
         getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
     }
@@ -195,6 +201,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         return true;
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if(key.equals(MainApplication.PREFERENCE_THEME)) {
+            finish();
+            startActivity(new Intent(this, SettingsActivity.class));
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        shared.unregisterOnSharedPreferenceChangeListener(this);
+    }
+
     /**
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.
@@ -226,6 +249,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
 
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_THEME));
         }
 
         @Override

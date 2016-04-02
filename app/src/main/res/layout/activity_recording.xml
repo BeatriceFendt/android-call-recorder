@@ -38,7 +38,8 @@
         android:id="@+id/recording_pitch"
         android:layout_width="match_parent"
         android:layout_height="120dp"
-        android:layout_centerInParent="true" />
+        android:layout_centerInParent="true"
+        android:padding="5dp" />
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -51,28 +52,24 @@
             android:layout_height="wrap_content"
             android:paddingBottom="5dp">
 
-            <ImageButton
+            <com.github.axet.androidlibrary.widgets.RoundButton
                 android:id="@+id/recording_cut"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/round"
-                android:gravity="center"
                 android:src="@drawable/ic_content_cut_24dp"
                 android:text="Cancel" />
 
-            <ImageButton
+            <com.github.axet.androidlibrary.widgets.RoundButton
                 android:id="@+id/recording_play"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/round"
                 android:src="@drawable/play" />
 
-
-            <ImageButton
+            <com.github.axet.androidlibrary.widgets.RoundButton
                 android:id="@+id/recording_edit_done"
+                style="Widget.AppCompat.RoundButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/round"
                 android:src="@drawable/ic_close_24dp" />
         </com.github.axet.androidlibrary.widgets.EqualLinearLayout>
     </FrameLayout>
@@ -96,28 +93,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <ImageButton
+            <com.github.axet.androidlibrary.widgets.RoundButton
                 android:id="@+id/recording_cancel"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/round"
                 android:gravity="center"
                 android:src="@drawable/ic_close_24dp"
                 android:text="Cancel" />
 
-            <ImageButton
+            <com.github.axet.androidlibrary.widgets.RoundButton
                 android:id="@+id/recording_pause"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/round"
                 android:src="@drawable/ic_pause_24dp" />
 
-
-            <ImageButton
+            <com.github.axet.androidlibrary.widgets.RoundButton
                 android:id="@+id/recording_done"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/round"
                 android:src="@drawable/ic_done" />
 
         </com.github.axet.androidlibrary.widgets.EqualLinearLayout>

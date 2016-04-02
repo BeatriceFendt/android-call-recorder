@@ -5,8 +5,11 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -16,6 +19,7 @@ import android.widget.RemoteViews;
 
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.activities.RecordingActivity;
+import com.github.axet.audiorecorder.app.MainApplication;
 
 /**
  * RecordingActivity more likly to be removed from memory when paused then service. Notification button
@@ -139,6 +143,19 @@ public class RecordingService extends Service {
             view.setTextViewText(R.id.notification_text, ".../" + targetFile);
             view.setOnClickPendingIntent(R.id.notification_pause, pe);
             view.setImageViewResource(R.id.notification_pause, !recording ? R.drawable.play : R.drawable.pause);
+
+            getBaseContext().setTheme(((MainApplication) getApplication()).getUserTheme());
+
+            view.apply(new ContextWrapper(getBaseContext()) {
+                public Context createPackageContext(String packageName, int flags) throws PackageManager.NameNotFoundException {
+                    return new ContextWrapper(getBaseContext().createPackageContext(packageName, flags)) {
+                        @Override
+                        public Resources.Theme getTheme() {
+                            return getBaseContext().getTheme();
+                        }
+                    };
+                }
+            }, null);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                     .setOngoing(true)

@@ -2,6 +2,7 @@ package com.github.axet.audiorecorder.widgets;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -15,6 +16,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.github.axet.androidlibrary.widgets.ThemeUtils;
+import com.github.axet.audiorecorder.R;
+import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.RawSamples;
 
 import java.util.LinkedList;
@@ -39,8 +43,6 @@ public class PitchView extends ViewGroup {
     // in other words how many milliseconds do we need to show whole pitch.
     int pitchTime;
 
-    Paint paint;
-    Paint paintRed;
     List<Double> data = new LinkedList<>();
 
     // how many pitches we can fit on screen
@@ -75,12 +77,54 @@ public class PitchView extends ViewGroup {
 
     Handler handler;
 
-    int pitchColor = 0xff0433AE;
-    Paint cutColor = new Paint();
+    public static class HandlerUpdate implements Runnable {
+        long start;
+        long updateSpeed;
+        Handler handler;
+        Runnable run;
+
+        public static HandlerUpdate start(Handler handler, Runnable run, long updateSpeed) {
+            HandlerUpdate r = new HandlerUpdate();
+            r.run = run;
+            r.start = System.currentTimeMillis();
+            r.updateSpeed = updateSpeed;
+            r.handler = handler;
+            // post instead of draw.run() so 'start' will measure actual queue time
+            handler.postDelayed(r, updateSpeed);
+            return r;
+        }
+
+        public static void stop(Handler handler, Runnable run) {
+            handler.removeCallbacks(run);
+        }
+
+        @Override
+        public void run() {
+            this.run.run();
+
+            long cur = System.currentTimeMillis();
+
+            long diff = cur - start;
+
+            start = cur;
+
+            long delay = updateSpeed + (updateSpeed - diff);
+            if (delay > updateSpeed)
+                delay = updateSpeed;
+
+            if (delay > 0)
+                this.handler.postDelayed(this, delay);
+            else
+                this.handler.post(this);
+        }
+    }
 
     public class PitchGraphView extends View {
+        Paint paint;
+        Paint paintRed;
         Paint editPaint;
         Paint playPaint;
+        Paint cutColor;
 
         public PitchGraphView(Context context) {
             this(context, null);
@@ -93,12 +137,24 @@ public class PitchView extends ViewGroup {
         public PitchGraphView(Context context, AttributeSet attrs, int defStyleAttr) {
             super(context, attrs, defStyleAttr);
 
+            paint = new Paint();
+            paint.setColor(getThemeColor(R.attr.colorPrimary));
+            paint.setStrokeWidth(pitchWidth);
+
+            paintRed = new Paint();
+            paintRed.setColor(Color.RED);
+            paintRed.setStrokeWidth(pitchWidth);
+
+            cutColor = new Paint();
+            cutColor.setColor(getThemeColor(android.R.attr.textColorHint));
+            cutColor.setStrokeWidth(pitchWidth);
+
             editPaint = new Paint();
-            editPaint.setColor(Color.BLACK);
+            editPaint.setColor(getThemeColor(R.attr.colorPrimaryDark));
             editPaint.setStrokeWidth(pitchWidth);
 
             playPaint = new Paint();
-            playPaint.setColor(Color.BLUE);
+            playPaint.setColor(getThemeColor(R.attr.colorPrimaryDark));
             playPaint.setStrokeWidth(pitchWidth / 2);
         }
 
@@ -141,8 +197,7 @@ public class PitchView extends ViewGroup {
                         tick = 0;
                         time = cur;
                     }
-                    data.subList(0, 1).clear();
-                    samples += 1;
+                    fit(data.size() - 1);
                 }
 
                 offset = pitchSize * tick;
@@ -192,7 +247,7 @@ public class PitchView extends ViewGroup {
             }
 
             // paint play mark
-            if (playPos != -1) {
+            if (playPos > 0) {
                 float x = playPos * pitchSize + pitchSize / 2f;
                 canvas.drawLine(x, 0, x, getHeight(), playPaint);
             }
@@ -204,6 +259,8 @@ public class PitchView extends ViewGroup {
         Paint textPaint;
         String text;
         Rect textBounds;
+
+        double dB;
 
         public PitchCurrentView(Context context) {
             this(context, null);
@@ -225,19 +282,19 @@ public class PitchView extends ViewGroup {
             textPaint.setTextSize(20f);
 
             paint = new Paint();
-            paint.setColor(pitchColor);
+            paint.setColor(getThemeColor(R.attr.colorPrimary));
             paint.setStrokeWidth(pitchWidth);
         }
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             int w = MeasureSpec.getSize(widthMeasureSpec);
-            int h = 0;
-
             textPaint.getTextBounds(this.text, 0, this.text.length(), textBounds);
+
+            int h = getPaddingTop();
             h += textBounds.height();
             h += dp2px(2);
-            h += dp2px(pitchDlimiter) + getPaddingTop() + getPaddingBottom();
+            h += pitchWidth + getPaddingBottom();
 
             setMeasuredDimension(w, h);
         }
@@ -252,20 +309,9 @@ public class PitchView extends ViewGroup {
             super.onLayout(changed, left, top, right, bottom);
         }
 
-        public int getEnd() {
-            int end = data.size() - 1;
+        void update(int end) {
+            dB = getDB(end) / RawSamples.MAXIMUM_DB;
 
-            if (editPos != -1) {
-                end = editPos;
-            }
-            if (playPos != -1) {
-                end = (int) playPos;
-            }
-
-            return end;
-        }
-
-        void updateText(int end) {
             String str = "";
 
             str = Integer.toString((int) getDB(end)) + " dB";
@@ -276,29 +322,25 @@ public class PitchView extends ViewGroup {
         @Override
         public void onDraw(Canvas canvas) {
             if (data.size() > 0) {
-                int end = getEnd();
-
-                updateText(end);
-
-                float y = getPaddingTop() + textBounds.height();
-
-                int x = getWidth() / 2 - textBounds.width() / 2;
-                canvas.drawText(text, x, y, textPaint);
-
-                y += dp2px(2);
-
-                double dB = getDB(end) / RawSamples.MAXIMUM_DB;
-
-                float left = (float) dB;
-                float right = (float) dB;
-
-                float mid = getWidth() / 2f;
-
-                y = y + dp2px(pitchDlimiter) / 2;
-
-                canvas.drawLine(mid, y, mid - mid * left - 1, y, paint);
-                canvas.drawLine(mid, y, mid + mid * right + 1, y, paint);
+                current.update(getEnd());
             }
+
+            float y = getPaddingTop() + textBounds.height();
+
+            int x = getWidth() / 2 - textBounds.width() / 2;
+            canvas.drawText(text, x, y, textPaint);
+
+            y += dp2px(2);
+
+            float left = (float) dB;
+            float right = (float) dB;
+
+            float mid = getWidth() / 2f;
+
+            y += pitchWidth / 2;
+
+            canvas.drawLine(mid, y, mid - mid * left - 1, y, paint);
+            canvas.drawLine(mid, y, mid + mid * right + 1, y, paint);
         }
     }
 
@@ -325,11 +367,24 @@ public class PitchView extends ViewGroup {
 
         pitchTime = pitchSize * UPDATE_SPEED;
 
-        // bg = getThemeColor(android.R.attr.windowBackground);
-        cutColor.setColor(0xff0443BE); // getThemeColor(android.R.attr.textColorPrimaryDisableOnly));
-
         graph = new PitchGraphView(getContext());
         addView(graph);
+
+//        fft = new FFTChartView(getContext()) {
+//            @Override
+//            public void onDraw(Canvas canvas) {
+//                if (data.size() > 0) {
+//                    short[] buf = dataSamples.get(getEnd());
+//                    double[] d = FFTView.fft(buf, 0, buf.length);
+//                    //double[] d = asDouble(buf, 0, buf.length);
+//                    fft.setBuffer(d);
+//                }
+//
+//                super.onDraw(canvas);
+//            }
+//        };
+//        fft.setPadding(0, dp2px(2), 0, 0);
+//        addView(fft);
 
         current = new PitchCurrentView(getContext());
         current.setPadding(0, dp2px(2), 0, 0);
@@ -337,19 +392,15 @@ public class PitchView extends ViewGroup {
 
         if (isInEditMode()) {
             for (int i = 0; i < 3000; i++) {
-                data.add((Math.random() * RawSamples.MAXIMUM_DB));
+                data.add(-Math.sin(i) * RawSamples.MAXIMUM_DB);
             }
         }
 
-        paint = new Paint();
-        paint.setColor(0xff0433AE);
-        paint.setStrokeWidth(pitchWidth);
-
-        paintRed = new Paint();
-        paintRed.setColor(Color.RED);
-        paintRed.setStrokeWidth(pitchWidth);
-
         time = System.currentTimeMillis();
+    }
+
+    public int getThemeColor(int id) {
+        return ThemeUtils.getThemeColor(getContext(), id);
     }
 
     public int getMaxPitchCount(int width) {
@@ -390,14 +441,26 @@ public class PitchView extends ViewGroup {
 
     public void drawCalc() {
         graph.calc();
-        graph.invalidate();
-        current.invalidate();
+        draw();
     }
 
     public void drawEnd() {
         fit(pitchMemCount);
         offset = 0;
         draw();
+    }
+
+    public int getEnd() {
+        int end = data.size() - 1;
+
+        if (editPos != -1) {
+            end = editPos;
+        }
+        if (playPos > 0) {
+            end = (int) playPos;
+        }
+
+        return end;
     }
 
     public double getDB(int i) {
@@ -433,56 +496,46 @@ public class PitchView extends ViewGroup {
         return pitchTime;
     }
 
-    int getThemeColor(int id) {
-        TypedValue typedValue = new TypedValue();
-        Context context = getContext();
-        Resources.Theme theme = context.getTheme();
-        if (theme.resolveAttribute(id, typedValue, true)) {
-            if (Build.VERSION.SDK_INT >= 23)
-                return context.getResources().getColor(typedValue.resourceId, theme);
-            else
-                return context.getResources().getColor(typedValue.resourceId);
-        } else {
-            return Color.TRANSPARENT;
-        }
-    }
-
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        graph.measure(widthMeasureSpec, heightMeasureSpec);
-        current.measure(widthMeasureSpec, heightMeasureSpec);
+        int ww = getMeasuredWidth() - getPaddingRight() - getPaddingLeft();
+        int hh = getMeasuredHeight() - getPaddingTop() - getPaddingBottom();
+
+        current.measure(MeasureSpec.makeMeasureSpec(ww, MeasureSpec.AT_MOST),
+                MeasureSpec.makeMeasureSpec(hh, MeasureSpec.AT_MOST));
+
+        hh = hh - current.getMeasuredHeight();
+
+        graph.measure(MeasureSpec.makeMeasureSpec(ww, MeasureSpec.AT_MOST),
+                MeasureSpec.makeMeasureSpec(hh, MeasureSpec.AT_MOST));
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        int gb = graph.getMeasuredHeight() - current.getMeasuredHeight();
-        graph.layout(0, 0, graph.getMeasuredWidth(), gb);
-        current.layout(0, gb, current.getMeasuredWidth(), gb + current.getMeasuredHeight());
+        graph.layout(getPaddingLeft(), getPaddingTop(),
+                getPaddingLeft() + graph.getMeasuredWidth(), getPaddingTop() + graph.getMeasuredHeight());
+
+        current.layout(getPaddingLeft(), graph.getBottom(),
+                getPaddingLeft() + current.getMeasuredWidth(), graph.getBottom() + current.getMeasuredHeight());
     }
 
     int dp2px(float dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        graph.draw(canvas);
-        current.draw(canvas);
-    }
-
     public void stop() {
         if (edit != null)
-            handler.removeCallbacks(edit);
+            HandlerUpdate.stop(handler, edit);
         edit = null;
 
         if (draw != null)
-            handler.removeCallbacks(draw);
+            HandlerUpdate.stop(handler, draw);
         draw = null;
 
         if (play != null)
-            handler.removeCallbacks(play);
+            HandlerUpdate.stop(handler, play);
         play = null;
 
         draw();
@@ -503,12 +556,12 @@ public class PitchView extends ViewGroup {
             editPos = data.size() - 1;
 
         if (draw != null) {
-            handler.removeCallbacks(draw);
+            HandlerUpdate.stop(handler, draw);
             draw = null;
         }
 
         if (play != null) {
-            handler.removeCallbacks(play);
+            HandlerUpdate.stop(handler, play);
             play = null;
         }
 
@@ -523,92 +576,45 @@ public class PitchView extends ViewGroup {
         if (edit == null) {
             editFlash = true;
 
-            edit = new Runnable() {
-                long start = System.currentTimeMillis();
-
+            edit = HandlerUpdate.start(handler, new Runnable() {
                 @Override
                 public void run() {
                     draw();
-
                     editFlash = !editFlash;
-
-                    long cur = System.currentTimeMillis();
-
-                    long diff = cur - start;
-
-                    long delay = EDIT_UPDATE_SPEED + (EDIT_UPDATE_SPEED - diff);
-                    if (delay > EDIT_UPDATE_SPEED)
-                        delay = EDIT_UPDATE_SPEED;
-
-                    start = cur;
-
-                    if (delay > 0)
-                        handler.postDelayed(edit, delay);
-                    else
-                        handler.post(edit);
                 }
-            };
-            // post instead of draw.run() so 'start' will measure actual queue time
-            handler.postDelayed(edit, EDIT_UPDATE_SPEED);
+            }, EDIT_UPDATE_SPEED);
         }
     }
 
     public void record() {
         if (edit != null)
-            handler.removeCallbacks(edit);
+            HandlerUpdate.stop(handler, edit);
         edit = null;
         editPos = -1;
 
         if (play != null)
-            handler.removeCallbacks(play);
+            HandlerUpdate.stop(handler, play);
         play = null;
         playPos = -1;
 
         if (draw == null) {
             time = System.currentTimeMillis();
 
-            draw = new Runnable() {
-                long start = System.currentTimeMillis();
-                int stableCount = 0;
-
+            draw = HandlerUpdate.start(handler, new Runnable() {
                 @Override
                 public void run() {
                     drawCalc();
-                    long cur = System.currentTimeMillis();
-
-                    long diff = cur - start;
-
-                    long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
-                    if (delay > UPDATE_SPEED)
-                        delay = UPDATE_SPEED;
-
-                    start = cur;
-
-                    if (delay > 0)
-                        handler.postDelayed(draw, delay);
-                    else
-                        handler.post(draw);
                 }
-            };
-            // post instead of draw.run() so 'start' will measure actual queue time
-            handler.postDelayed(draw, UPDATE_SPEED);
+            }, UPDATE_SPEED);
         }
     }
 
     // current paying pos in actual samples
     public void play(float pos) {
-        playPos = pos - samples;
-
-        editFlash = true;
-
-        int max = data.size() - 1;
-
-        if (playPos < 0 || playPos > max)
+        if (pos < 0) {
             playPos = -1;
-
-        if (playPos < 0) {
             if (play != null) {
-                handler.removeCallbacks(play);
+                HandlerUpdate.stop(handler, play);
                 play = null;
             }
             if (edit == null) {
@@ -617,40 +623,31 @@ public class PitchView extends ViewGroup {
             return;
         }
 
+        playPos = pos - samples;
+
+        editFlash = true;
+
+        int max = data.size() - 1;
+
+        if (playPos > max)
+            playPos = max;
+
         if (edit != null)
-            handler.removeCallbacks(edit);
+            HandlerUpdate.stop(handler, edit);
         edit = null;
 
         if (draw != null)
-            handler.removeCallbacks(draw);
+            HandlerUpdate.stop(handler, draw);
         draw = null;
 
         if (play == null) {
             time = System.currentTimeMillis();
-            play = new Runnable() {
-                long start = System.currentTimeMillis();
-
+            play = HandlerUpdate.start(handler, new Runnable() {
                 @Override
                 public void run() {
                     draw();
-                    long cur = System.currentTimeMillis();
-
-                    long diff = cur - start;
-
-                    start = cur;
-
-                    long delay = UPDATE_SPEED + (UPDATE_SPEED - diff);
-                    if (delay > UPDATE_SPEED)
-                        delay = UPDATE_SPEED;
-
-                    if (delay > 0)
-                        handler.postDelayed(play, delay);
-                    else
-                        handler.post(play);
                 }
-            };
-            // post instead of draw.run() so 'start' will measure actual queue time
-            handler.postDelayed(play, UPDATE_SPEED);
+            }, UPDATE_SPEED);
         }
     }
 }

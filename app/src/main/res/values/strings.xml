@@ -21,14 +21,24 @@
         <item>8000</item>
     </string-array>
 
-    <string-array name="encodings" >
+    <string-array name="encodings">
         <item>.wav (default)</item>
         <item>.m4a</item>
     </string-array>
 
-    <string-array name="encodings_values" >
+    <string-array name="encodings_values">
         <item>wav</item>
         <item>m4a</item>
+    </string-array>
+
+    <string-array name="themes">
+        <item>Theme White (default)</item>
+        <item>Theme Dark</item>
+    </string-array>
+
+    <string-array name="themes_values">
+        <item>Theme_White</item>
+        <item>Theme_Dark</item>
     </string-array>
 
     <string name="title_activity_main">Audio Recorder</string>

@@ -5,6 +5,12 @@ import android.util.Log;
 
 import com.github.axet.audiorecorder.activities.RecordingActivity;
 
+import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.transform.DftNormalization;
+import org.apache.commons.math3.transform.FastFourierTransformer;
+import org.apache.commons.math3.transform.TransformType;
+import org.apache.commons.math3.util.MathArrays;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -137,7 +143,7 @@ public class RawSamples {
 
     public static double getDB(double amplitude) {
         // https://en.wikipedia.org/wiki/Sound_pressure
-        return 20.0 * Math.log10(amplitude / 32768d);
+        return 20.0 * Math.log10(amplitude / 0x7FFF);
     }
 
     public void close() {
