@@ -28,7 +28,6 @@ public class MainApplication extends Application {
 
         Context context = this;
         context.setTheme(getUserTheme());
-        Log.d("123", "color " + Integer.toHexString(ThemeUtils.getThemeColor(context, android.R.attr.textColorSecondary)));
     }
 
     public int getUserTheme() {
