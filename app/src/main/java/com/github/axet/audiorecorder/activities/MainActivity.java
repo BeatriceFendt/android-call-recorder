@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     Storage storage;
     ListView list;
     Handler handler;
+    PopupShareActionProvider shareProvider;
 
     public static void startActivity(Context context) {
         Intent i = new Intent(context, MainActivity.class);
@@ -234,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 share.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        PopupShareActionProvider shareProvider = new PopupShareActionProvider(getContext(), share);
+                        shareProvider = new PopupShareActionProvider(getContext(), share);
 
                         Intent emailIntent = new Intent(Intent.ACTION_SEND);
                         emailIntent.setType("audio/mp4a-latm");
@@ -536,19 +537,10 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         updateHeader();
 
         final int selected = getLastRecording();
-        list.setSelection(selected);
         if (selected != -1) {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    recordings.select(selected);
-                }
-            });
+            list.setSelection(selected);
+            recordings.select(selected);
         }
-        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-        SharedPreferences.Editor edit = shared.edit();
-        edit.putString(MainApplication.PREFERENCE_LAST, "");
-        edit.commit();
     }
 
     int getLastRecording() {
@@ -559,8 +551,12 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         for (int i = 0; i < recordings.getCount(); i++) {
             File f = recordings.getItem(i);
             String n = f.getName().toLowerCase();
-            if (n.equals(last))
+            if (n.equals(last)) {
+                SharedPreferences.Editor edit = shared.edit();
+                edit.putString(MainApplication.PREFERENCE_LAST, "");
+                edit.commit();
                 return i;
+            }
         }
         return -1;
     }
@@ -675,6 +671,6 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         long free = storage.getFree(f);
         long sec = storage.average(free);
         TextView text = (TextView) findViewById(R.id.space_left);
-        text.setText(((MainApplication)getApplication()).formatFree(free, sec));
+        text.setText(((MainApplication) getApplication()).formatFree(free, sec));
     }
 }
