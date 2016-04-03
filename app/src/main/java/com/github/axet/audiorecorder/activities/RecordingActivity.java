@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
+import android.graphics.drawable.ColorDrawable;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
@@ -21,6 +22,7 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -152,6 +154,8 @@ public class RecordingActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_recording);
 
+        setupActionBar();
+
         pitch = (PitchView) findViewById(R.id.recording_pitch);
         time = (TextView) findViewById(R.id.recording_time);
         state = (TextView) findViewById(R.id.recording_state);
@@ -246,6 +250,13 @@ public class RecordingActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(PAUSE_BUTTON);
         registerReceiver(receiver, filter);
+    }
+
+    private void setupActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setBackgroundDrawable(new ColorDrawable(MainApplication.getActionbarColor(this)));
+        }
     }
 
     void loadSamples() {

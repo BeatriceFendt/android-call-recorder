@@ -138,24 +138,14 @@ public class RecordingService extends Service {
                     new Intent(this, RecordingService.class).setAction(PAUSE_BUTTON),
                     PendingIntent.FLAG_UPDATE_CURRENT);
 
-            RemoteViews view = new RemoteViews(getPackageName(), R.layout.notifictaion_recording);
+            RemoteViews view = new RemoteViews(getPackageName(), MainApplication.getTheme(getBaseContext(),
+                    R.layout.notifictaion_recording_light,
+                    R.layout.notifictaion_recording_dark));
+
             view.setOnClickPendingIntent(R.id.status_bar_latest_event_content, main);
             view.setTextViewText(R.id.notification_text, ".../" + targetFile);
             view.setOnClickPendingIntent(R.id.notification_pause, pe);
             view.setImageViewResource(R.id.notification_pause, !recording ? R.drawable.play : R.drawable.pause);
-
-            getBaseContext().setTheme(((MainApplication) getApplication()).getUserTheme());
-
-            view.apply(new ContextWrapper(getBaseContext()) {
-                public Context createPackageContext(String packageName, int flags) throws PackageManager.NameNotFoundException {
-                    return new ContextWrapper(getBaseContext().createPackageContext(packageName, flags)) {
-                        @Override
-                        public Resources.Theme getTheme() {
-                            return getBaseContext().getTheme();
-                        }
-                    };
-                }
-            }, null);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                     .setOngoing(true)

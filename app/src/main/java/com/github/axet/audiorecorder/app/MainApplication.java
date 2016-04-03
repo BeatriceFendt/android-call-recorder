@@ -30,24 +30,24 @@ public class MainApplication extends Application {
         context.setTheme(getUserTheme());
     }
 
-    public int getUserTheme() {
-        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-        String theme = shared.getString(MainApplication.PREFERENCE_THEME, "");
+    public static int getTheme(Context context, int light, int dark) {
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
+        String theme = shared.getString(PREFERENCE_THEME, "");
         if (theme.equals("Theme_Dark")) {
-            return R.style.AppThemeDark;
+            return dark;
         } else {
-            return R.style.AppThemeLight;
+            return light;
         }
     }
 
-    public int getMainTheme() {
-        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-        String theme = shared.getString(MainApplication.PREFERENCE_THEME, "");
-        if (theme.equals("Theme_Dark")) {
-            return R.style.AppThemeDark_NoActionBar;
-        } else {
-            return R.style.AppThemeLight_NoActionBar;
-        }
+    public static int getActionbarColor(Context context) {
+        int colorId = MainApplication.getTheme(context, android.R.attr.colorPrimary, R.attr.secondBackground);
+        int color = ThemeUtils.getThemeColor(context, colorId);
+        return color;
+    }
+
+    public int getUserTheme() {
+        return getTheme(this, R.style.AppThemeLight, R.style.AppThemeDark);
     }
 
     static public String formatTime(int tt) {
