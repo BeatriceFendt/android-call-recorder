@@ -81,6 +81,8 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     Handler handler;
     PopupShareActionProvider shareProvider;
 
+    int themeId;
+
     public static void startActivity(Context context) {
         Intent i = new Intent(context, MainActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -112,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         }
 
         public void scan(File dir) {
+            setNotifyOnChange(false);
             clear();
             durations.clear();
 
@@ -132,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             }
 
             sort(new SortFiles());
+            notifyDataSetChanged();
         }
 
         public void close() {
@@ -438,11 +442,21 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         }
     }
 
+    public void setAppTheme(int id) {
+        super.setTheme(id);
+
+        themeId = id;
+    }
+
+    int getAppTheme() {
+        return MainApplication.getTheme(this, R.style.AppThemeLight_NoActionBar, R.style.AppThemeDark_NoActionBar);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setTheme(MainApplication.getTheme(this, R.style.AppThemeLight_NoActionBar, R.style.AppThemeDark_NoActionBar));
+        setAppTheme(getAppTheme());
 
         setContentView(R.layout.activity_main);
 
@@ -509,7 +523,6 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            finish();
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
@@ -532,6 +545,12 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
+
+        if (themeId != getAppTheme()) {
+            finish();
+            MainActivity.startActivity(this);
+            return;
+        }
 
         if (permitted(PERMISSIONS))
             load();

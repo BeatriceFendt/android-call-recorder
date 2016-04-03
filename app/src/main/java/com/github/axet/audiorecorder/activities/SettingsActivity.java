@@ -48,6 +48,7 @@ import java.util.List;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -168,8 +169,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            finish();
-            startActivity(new Intent(this, MainActivity.class));
+            onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -226,8 +226,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     @Override
     public void onBackPressed() {
-        finish();
-        startActivity(new Intent(this, MainActivity.class));
+            super.onBackPressed();
     }
 
     /**
@@ -268,8 +267,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-                getActivity().finish();
-                startActivity(new Intent(getActivity(), MainActivity.class));
+                getActivity().onBackPressed();
                 return true;
             }
             return super.onOptionsItemSelected(item);

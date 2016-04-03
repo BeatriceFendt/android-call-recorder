@@ -109,7 +109,7 @@ public class RecordingActivity extends AppCompatActivity {
         context.startActivity(i);
     }
 
-    public class RecordingReceiver extends BroadcastReceiver {
+    class RecordingReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(PAUSE_BUTTON)) {
@@ -500,7 +500,9 @@ public class RecordingActivity extends AppCompatActivity {
         cancelDialog(new Runnable() {
             @Override
             public void run() {
-                RecordingActivity.super.onBackPressed();
+                stopRecording();
+                storage.delete(storage.getTempRecording());
+                finish();
             }
         });
     }
@@ -818,6 +820,7 @@ public class RecordingActivity extends AppCompatActivity {
     @Override
     public void finish() {
         super.finish();
+
         MainActivity.startActivity(this);
     }
 }
