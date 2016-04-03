@@ -40,6 +40,12 @@ public class MainApplication extends Application {
         }
     }
 
+    public static int getActionbarColor(Context context) {
+        int colorId = MainApplication.getTheme(context, android.R.attr.colorPrimary, R.attr.secondBackground);
+        int color = ThemeUtils.getThemeColor(context, colorId);
+        return color;
+    }
+
     public int getUserTheme() {
         return getTheme(this, R.style.AppThemeLight, R.style.AppThemeDark);
     }

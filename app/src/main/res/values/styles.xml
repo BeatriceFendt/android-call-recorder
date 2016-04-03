@@ -20,7 +20,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">#a4a4a4</item>
-        <item name="secondBackground">#5a595b</item>
+        <item name="secondBackground">#151515</item>
     </style>
 
     <style name="AppThemeDark.NoActionBar">
