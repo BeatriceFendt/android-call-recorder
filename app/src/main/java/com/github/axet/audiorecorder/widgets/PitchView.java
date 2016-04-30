@@ -293,7 +293,7 @@ public class PitchView extends ViewGroup {
 
             int h = getPaddingTop();
             h += textBounds.height();
-            h += dp2px(2);
+            h += ThemeUtils.dp2px(getContext(), 2);
             h += pitchWidth + getPaddingBottom();
 
             setMeasuredDimension(w, h);
@@ -330,7 +330,7 @@ public class PitchView extends ViewGroup {
             int x = getWidth() / 2 - textBounds.width() / 2;
             canvas.drawText(text, x, y, textPaint);
 
-            y += dp2px(2);
+            y += ThemeUtils.dp2px(getContext(), 2);
 
             float left = (float) dB;
             float right = (float) dB;
@@ -361,8 +361,8 @@ public class PitchView extends ViewGroup {
     void create() {
         handler = new Handler();
 
-        pitchDlimiter = dp2px(PITCH_DELIMITER);
-        pitchWidth = dp2px(PITCH_WIDTH);
+        pitchDlimiter = ThemeUtils.dp2px(getContext(), PITCH_DELIMITER);
+        pitchWidth = ThemeUtils.dp2px(getContext(), PITCH_WIDTH);
         pitchSize = pitchWidth + pitchDlimiter;
 
         pitchTime = pitchSize * UPDATE_SPEED;
@@ -383,11 +383,11 @@ public class PitchView extends ViewGroup {
 //                super.onDraw(canvas);
 //            }
 //        };
-//        fft.setPadding(0, dp2px(2), 0, 0);
+//        fft.setPadding(0, ThemeUtils.dp2px(2), 0, 0);
 //        addView(fft);
 
         current = new PitchCurrentView(getContext());
-        current.setPadding(0, dp2px(2), 0, 0);
+        current.setPadding(0, ThemeUtils.dp2px(getContext(), 2), 0, 0);
         addView(current);
 
         if (isInEditMode()) {
@@ -519,10 +519,6 @@ public class PitchView extends ViewGroup {
 
         current.layout(getPaddingLeft(), graph.getBottom(),
                 getPaddingLeft() + current.getMeasuredWidth(), graph.getBottom() + current.getMeasuredHeight());
-    }
-
-    int dp2px(float dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
     }
 
     public void stop() {
