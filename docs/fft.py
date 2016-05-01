@@ -61,16 +61,15 @@ def real_sound_weave(durationMs):
   
   y = np.zeros(len(x))
   
-  y += np.sin(2.0 * np.pi * x / (Fe / float(4500)))
-  y += 0.5 * np.sin(2.0 * np.pi * x / (Fe / float(4000)))
-  y += 0.5 * np.sin(2.0 * np.pi * x / (Fe / float(1000)))
-  y += 0.9 * np.sin(2.0 * np.pi * x / (Fe / float(7500)))
-  y += 1 * np.sin(2.0 * np.pi * x / (Fe / float(3000)))
+  wav_max = 0x7fff
+  
+  y += np.sin(2.0 * np.pi * x / (Fe / float(4500))) * wav_max
+  y += 0.5 * np.sin(2.0 * np.pi * x / (Fe / float(4000))) * wav_max
+  y += 0.5 * np.sin(2.0 * np.pi * x / (Fe / float(1000))) * wav_max
+  y += 0.9 * np.sin(2.0 * np.pi * x / (Fe / float(7500))) * wav_max
+  y += 1 * np.sin(2.0 * np.pi * x / (Fe / float(3000))) * wav_max
 
-  m = np.max(np.abs(y))
-
-  y = y * 0x7fff
-#  y = y / m
+  y = y / np.max(np.abs(y)) * wav_max
 
   #y = noise(y, 0x7fff)
 

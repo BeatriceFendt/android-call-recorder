@@ -8,6 +8,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 
+import com.github.axet.androidlibrary.widgets.ThemeUtils;
 import com.github.axet.audiorecorder.app.RawSamples;
 
 import org.apache.commons.math3.complex.Complex;
@@ -41,7 +42,7 @@ public class FFTView extends View {
     void create() {
         paint = new Paint();
         paint.setColor(0xff0433AE);
-        paint.setStrokeWidth(dp2px(1));
+        paint.setStrokeWidth(ThemeUtils.dp2px(getContext(), 1));
 
         textBounds = new Rect();
 
@@ -142,10 +143,6 @@ public class FFTView extends View {
             samples[i] = (short) (y / 3 * 0x7fff);
         }
         return samples;
-    }
-
-    int dp2px(float dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
     }
 
 }

@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 
+import com.github.axet.androidlibrary.widgets.ThemeUtils;
 import com.github.axet.audiorecorder.app.RawSamples;
 
 public class FFTBarView extends FFTView {
@@ -45,8 +46,8 @@ public class FFTBarView extends FFTView {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
         // set initial width
-        int w = dp2px(15);
-        int d = dp2px(4);
+        int w = ThemeUtils.dp2px(getContext(), 15);
+        int d = ThemeUtils.dp2px(getContext(), 4);
         int s = w + d;
 
         int mw = getMeasuredWidth() - getPaddingLeft() - getPaddingRight();
@@ -92,7 +93,7 @@ public class FFTBarView extends FFTView {
                 }
             }
 
-            float y = getPaddingTop() + h - h * ((float) max / 0x7fff) - dp2px(1);
+            float y = getPaddingTop() + h - h * ((float) max / 0x7fff) - ThemeUtils.dp2px(getContext(), 1);
 
             if (y < getPaddingTop())
                 y = getPaddingTop();
