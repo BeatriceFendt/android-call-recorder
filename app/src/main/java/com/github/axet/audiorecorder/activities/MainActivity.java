@@ -158,13 +158,13 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 convertView.setTag(-1);
             }
 
-            if ((int) convertView.getTag() == TYPE_DELETED) {
-                RemoveItemAnimation.restore(convertView);
-                convertView.setTag(-1);
-            }
-
             final View view = convertView;
             final View base = convertView.findViewById(R.id.recording_base);
+
+            if ((int) convertView.getTag() == TYPE_DELETED) {
+                RemoveItemAnimation.restore(base);
+                convertView.setTag(-1);
+            }
 
             final File f = getItem(position);
 
