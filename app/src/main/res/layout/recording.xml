@@ -16,19 +16,25 @@
             android:layout_height="wrap_content">
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_weight="1"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:gravity="left"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/recording_title"
+                <com.github.axet.androidlibrary.widgets.PathMax
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="5dp"
-                    android:textColor="?attr/colorPrimary"
-                    android:text="2016-02-01.wav"
-                    android:textSize="20dp" />
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/recording_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="2016-02-01.wav"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="20dp" />
+                </com.github.axet.androidlibrary.widgets.PathMax>
 
                 <TextView
                     android:id="@+id/recording_time"
@@ -104,7 +110,7 @@
 
                 </LinearLayout>
 
-                <com.github.axet.androidlibrary.widgets.EqualLinearLayout
+                <LinearLayout
                     android:id="@+id/recording_detail"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -117,6 +123,24 @@
                         android:src="@drawable/play"
                         android:tint="?attr/colorAccent" />
 
+                    <Space
+                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <ImageView
+                        android:id="@+id/recording_player_edit"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_create_black_24dp"
+                        android:tint="?attr/colorAccent" />
+
+                    <Space
+                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+
                     <ImageView
                         android:id="@+id/recording_player_share"
                         android:layout_width="wrap_content"
@@ -124,13 +148,18 @@
                         android:src="@drawable/share"
                         android:tint="?attr/colorAccent" />
 
+                    <Space
+                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
                     <ImageView
                         android:id="@+id/recording_player_trash"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:src="@drawable/trash"
                         android:tint="?attr/colorAccent" />
-                </com.github.axet.androidlibrary.widgets.EqualLinearLayout>
+                </LinearLayout>
             </LinearLayout>
         </FrameLayout>
     </LinearLayout>

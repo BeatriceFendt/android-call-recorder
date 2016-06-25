@@ -220,6 +220,27 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 }
             };
 
+            final Runnable rename = new Runnable() {
+                @Override
+                public void run() {
+                    final OpenFileDialog.EditTextDialog e = new OpenFileDialog.EditTextDialog(getContext());
+                    e.setTitle("Rename Recording");
+                    e.setText(Storage.getNameNoExt(f));
+                    e.setPositiveButton(new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String ext = Storage.getExt(f);
+                            String s = String.format("%s.%s", e.getText(), ext);
+                            File ff = new File(f.getParent(), s);
+                            f.renameTo(ff);
+                            load();
+                        }
+                    });
+                    e.show();
+
+                }
+            };
+
             if (selected == position) {
                 RecordingAnimation.apply(list, convertView, true, scrollState == SCROLL_STATE_IDLE && (int) convertView.getTag() == TYPE_COLLAPSED);
                 convertView.setTag(TYPE_EXPANDED);
@@ -237,6 +258,14 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                         } else {
                             playerPlay(playerBase, f);
                         }
+                    }
+                });
+
+                final View edit = convertView.findViewById(R.id.recording_player_edit);
+                edit.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        rename.run();
                     }
                 });
 
@@ -299,20 +328,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                                 return true;
                             }
                             if (item.getItemId() == R.id.action_rename) {
-                                final OpenFileDialog.EditTextDialog e = new OpenFileDialog.EditTextDialog(getContext());
-                                e.setTitle("Rename Recording");
-                                e.setText(Storage.getNameNoExt(f));
-                                e.setPositiveButton(new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        String ext = Storage.getExt(f);
-                                        String s = String.format("%s.%s", e.getText(), ext);
-                                        File ff = new File(f.getParent(), s);
-                                        f.renameTo(ff);
-                                        load();
-                                    }
-                                });
-                                e.show();
+                                rename.run();
                                 return true;
                             }
                             return false;
@@ -567,6 +583,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             @Override
             public void run() {
                 if (selected != -1) {
+                    list.smoothScrollToPosition(recordings.selected);
                     list.setSelection(selected);
                     recordings.select(selected);
                 }
