@@ -583,9 +583,14 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             @Override
             public void run() {
                 if (selected != -1) {
-                    list.smoothScrollToPosition(recordings.selected);
-                    list.setSelection(selected);
                     recordings.select(selected);
+                    list.smoothScrollToPosition(selected);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            list.setSelection(selected);
+                        }
+                    });
                 }
             }
         });
