@@ -475,6 +475,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                recordings.select(-1);
                 RecordingActivity.startActivity(MainActivity.this, false);
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
@@ -562,10 +563,15 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         updateHeader();
 
         final int selected = getLastRecording();
-        if (selected != -1) {
-            list.setSelection(selected);
-            recordings.select(selected);
-        }
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (selected != -1) {
+                    list.setSelection(selected);
+                    recordings.select(selected);
+                }
+            }
+        });
     }
 
     int getLastRecording() {
