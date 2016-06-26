@@ -26,6 +26,13 @@ android {
             signingConfig signingConfigs.release
         }
     }
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def file = output.packageApplication.outputFile
+            def fileName = org.apache.commons.io.FilenameUtils.getExtension(android.defaultConfig.applicationId) + "-" + android.defaultConfig.versionName + "-" + variant.buildType.name + ".apk"
+            output.packageApplication.outputFile = new File(file.parent, fileName)
+        }
+    }
 }
 
 dependencies {
