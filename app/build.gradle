@@ -8,8 +8,8 @@ android {
         applicationId "com.github.axet.audiorecorder"
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode 65
-        versionName "1.1.43"
+        versionCode 66
+        versionName "1.1.44"
     }
     signingConfigs {
         release {
@@ -24,6 +24,13 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+        }
+    }
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def file = output.packageApplication.outputFile
+            def fileName = org.apache.commons.io.FilenameUtils.getExtension(android.defaultConfig.applicationId) + "-" + android.defaultConfig.versionName + "-" + variant.buildType.name + ".apk"
+            output.packageApplication.outputFile = new File(file.parent, fileName)
         }
     }
 }
