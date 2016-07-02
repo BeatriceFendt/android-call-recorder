@@ -3,8 +3,9 @@
     <style name="AppThemeLight" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">#FF4081</item>
+        <item name="colorAccent">@color/colorAccentLight</item>
         <item name="secondBackground">#c2c2c2</item>
+        <item name="roundButton">@drawable/round_button_light</item>
     </style>
 
     <style name="AppThemeLight.NoActionBar">
@@ -19,8 +20,9 @@
     <style name="AppThemeDark" parent="Theme.AppCompat">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">#a4a4a4</item>
+        <item name="colorAccent">@color/colorAccentDark</item>
         <item name="secondBackground">#151515</item>
+        <item name="roundButton">@drawable/round_button_dark</item>
     </style>
 
     <style name="AppThemeDark.NoActionBar">
