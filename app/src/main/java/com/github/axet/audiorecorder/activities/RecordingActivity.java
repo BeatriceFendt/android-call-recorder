@@ -26,6 +26,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -268,11 +269,10 @@ public class RecordingActivity extends AppCompatActivity {
         RawSamples rs = new RawSamples(storage.getTempRecording());
         samplesTime = rs.getSamples();
 
-        Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-        int count = pitch.getMaxPitchCount(size.x);
+        int count = pitch.getMaxPitchCount(metrics.widthPixels);
 
         short[] buf = new short[count * samplesUpdate];
         long cut = samplesTime - buf.length;

@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -484,7 +485,12 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         handler = new Handler();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setBackground(new ColorDrawable(MainApplication.getActionbarColor(this)));
+
+        if (Build.VERSION.SDK_INT >= 16)
+            toolbar.setBackground(new ColorDrawable(MainApplication.getActionbarColor(this)));
+        else
+            toolbar.setBackgroundDrawable(new ColorDrawable(MainApplication.getActionbarColor(this)));
+
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
