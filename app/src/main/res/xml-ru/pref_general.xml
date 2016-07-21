@@ -1,10 +1,10 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <com.github.axet.androidlibrary.widgets.StoragePathPreference
-        android:defaultValue="Audio Recorder"
+        android:defaultValue="Аудио Рекордер"
         android:key="storage_path"
         android:summary="/sdcard/some/"
-        android:title="Storage Path" />
+        android:title="Папка для хранения" />
 
     <ListPreference
         android:defaultValue="16000"
@@ -14,7 +14,7 @@
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:summary="44100"
-        android:title="Sample Rate" />
+        android:title="Частота записи" />
 
     <ListPreference
         android:defaultValue="wav"
@@ -23,20 +23,20 @@
         android:key="encoding"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="Output file formats (.wav, .m4a, ...)"
-        android:title="Encoding" />
+        android:summary="Формат выходного файла (.wav, .m4a, ...)"
+        android:title="Кодировка" />
 
     <SwitchPreference
         android:defaultValue="true"
         android:key="call"
-        android:summary="Stop recording on answering and continue on hangup"
-        android:title="Pause recording during calls" />
+        android:summary="Останавливать запись на время разговора по телефону"
+        android:title="Пауза на время разговора" />
 
     <SwitchPreference
         android:defaultValue="true"
         android:key="silence"
-        android:summary="Put phone in 'silence mode' during recording"
-        android:title="Silence mode" />
+        android:summary="Включать беззвучный режим на время записи"
+        android:title="Режим тишины" />
 
     <ListPreference
         android:defaultValue="Theme_White"
@@ -45,7 +45,7 @@
         android:key="theme"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="Set application theme (dark / light)"
-        android:title="Application Theme" />
+        android:summary="Установить тему приложения (темная / светлая)"
+        android:title="Тема приложения" />
 
 </PreferenceScreen>

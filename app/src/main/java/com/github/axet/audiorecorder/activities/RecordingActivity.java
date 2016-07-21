@@ -132,7 +132,7 @@ public class RecordingActivity extends AppCompatActivity {
                 case TelephonyManager.CALL_STATE_OFFHOOK:
                     wasRinging = true;
                     if (thread != null) {
-                        stopRecording("pause (hold by call)");
+                        stopRecording(getString(R.string.hold_by_call));
                         pausedByCall = true;
                     }
                     break;
@@ -230,7 +230,7 @@ public class RecordingActivity extends AppCompatActivity {
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopRecording("encoding");
+                stopRecording(getString(R.string.encoding));
                 encoding(new Runnable() {
                     @Override
                     public void run() {
@@ -244,7 +244,7 @@ public class RecordingActivity extends AppCompatActivity {
         if (a != null && a.equals(START_PAUSE)) {
             // pretend we already start it
             start = false;
-            stopRecording("pause");
+            stopRecording(getString(R.string.pause));
         }
 
         receiver = new RecordingReceiver();
@@ -298,7 +298,7 @@ public class RecordingActivity extends AppCompatActivity {
 
     void pauseButton() {
         if (thread != null) {
-            stopRecording("pause");
+            stopRecording(getString(R.string.pause));
         } else {
             editCut();
 
@@ -374,7 +374,7 @@ public class RecordingActivity extends AppCompatActivity {
 
     void edit(boolean show, boolean animate) {
         if (show) {
-            setState("edit");
+            setState(getString(R.string.edit));
             editPlay(false);
 
             View box = findViewById(R.id.recording_edit_box);
@@ -409,7 +409,7 @@ public class RecordingActivity extends AppCompatActivity {
             });
         } else {
             editSample = -1;
-            setState("pause");
+            setState(getString(R.string.pause));
             editPlay(false);
             pitch.edit(-1);
             pitch.stop();
@@ -431,7 +431,7 @@ public class RecordingActivity extends AppCompatActivity {
         long perSec = (c * m * rate);
         long sec = free / perSec * 1000;
 
-        state.setText(s + " (" + ((MainApplication) getApplication()).formatFree(free, sec) + ")");
+        state.setText(s + "\n(" + ((MainApplication) getApplication()).formatFree(free, sec) + ")");
     }
 
     void editPlay(boolean show) {
@@ -509,15 +509,15 @@ public class RecordingActivity extends AppCompatActivity {
 
     void cancelDialog(final Runnable run) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Confirm cancel");
-        builder.setMessage("Are you sure you want to cancel?");
-        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        builder.setTitle(R.string.confirm_cancel);
+        builder.setMessage(R.string.are_you_sure_cancel);
+        builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 run.run();
             }
         });
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
@@ -551,7 +551,7 @@ public class RecordingActivity extends AppCompatActivity {
         edit(false, true);
         pitch.setOnTouchListener(null);
 
-        setState("recording");
+        setState(getString(R.string.recording));
 
         sound.silent();
 
@@ -712,7 +712,7 @@ public class RecordingActivity extends AppCompatActivity {
     void updateSamples(long samplesTime) {
         long ms = samplesTime / sampleRate * 1000;
 
-        time.setText(MainApplication.formatDuration(ms));
+        time.setText(MainApplication.formatDuration(this, ms));
     }
 
     @Override
@@ -724,7 +724,7 @@ public class RecordingActivity extends AppCompatActivity {
                 if (permitted(permissions)) {
                     startRecording();
                 } else {
-                    Toast.makeText(this, "Not permitted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.not_permitted, Toast.LENGTH_SHORT).show();
                     finish();
                 }
         }
@@ -784,7 +784,7 @@ public class RecordingActivity extends AppCompatActivity {
         encoder = new FileEncoder(this, in, e);
 
         final ProgressDialog d = new ProgressDialog(this);
-        d.setTitle("Encoding...");
+        d.setTitle(getString(R.string.encoding_title));
         d.setMessage(".../" + targetFile.getName());
         d.setMax(100);
         d.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
