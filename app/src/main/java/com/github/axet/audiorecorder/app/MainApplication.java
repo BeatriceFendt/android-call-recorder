@@ -74,23 +74,23 @@ public class MainApplication extends Application {
             str = getResources().getQuantityString(R.plurals.seconds, diffSeconds, diffSeconds);
         }
 
-        return String.format("%s free ~ %s left", MainApplication.formatSize(free), str);
+        return getString(R.string.title_header, MainApplication.formatSize(this, free), str);
     }
 
-    public static String formatSize(long s) {
+    public static String formatSize(Context context, long s) {
         if (s > 0.1 * 1024 * 1024 * 1024) {
             float f = s / 1024f / 1024f / 1024f;
-            return String.format("%.1f GB", f);
+            return context.getString(R.string.size_gb, f);
         } else if (s > 0.1 * 1024 * 1024) {
             float f = s / 1024f / 1024f;
-            return String.format("%.1f MB", f);
+            return context.getString(R.string.size_mb, f);
         } else {
             float f = s / 1024f;
-            return String.format("%.1f kb", f);
+            return context.getString(R.string.size_kb, f);
         }
     }
 
-    static public String formatDuration(long diff) {
+    static public String formatDuration(Context context, long diff) {
         int diffMilliseconds = (int) (diff % 1000);
         int diffSeconds = (int) (diff / 1000 % 60);
         int diffMinutes = (int) (diff / (60 * 1000) % 60);
@@ -100,7 +100,7 @@ public class MainApplication extends Application {
         String str = "";
 
         if (diffDays > 0)
-            str = diffDays + "d " + formatTime(diffHours) + ":" + formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
+            str = diffDays + context.getString(R.string.days_symbol) + " " + formatTime(diffHours) + ":" + formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
         else if (diffHours > 0)
             str = formatTime(diffHours) + ":" + formatTime(diffMinutes) + ":" + formatTime(diffSeconds);
         else

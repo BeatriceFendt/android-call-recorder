@@ -177,10 +177,10 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             time.setText(s.format(new Date(f.lastModified())));
 
             TextView dur = (TextView) convertView.findViewById(R.id.recording_duration);
-            dur.setText(MainApplication.formatDuration(durations.get(f)));
+            dur.setText(MainApplication.formatDuration(getContext(), durations.get(f)));
 
             TextView size = (TextView) convertView.findViewById(R.id.recording_size);
-            size.setText(MainApplication.formatSize(f.length()));
+            size.setText(MainApplication.formatSize(getContext(), f.length()));
 
             final View playerBase = convertView.findViewById(R.id.recording_player);
             playerBase.setOnClickListener(new View.OnClickListener() {
@@ -193,9 +193,9 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 @Override
                 public void run() {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                    builder.setTitle("Delete Recording");
-                    builder.setMessage("...\\" + f.getName() + "\n\n" + "Are you sure ? ");
-                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    builder.setTitle(R.string.delete_recording);
+                    builder.setMessage("...\\" + f.getName() + "\n\n" + getString(R.string.are_you_sure));
+                    builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             playerStop();
@@ -211,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                             });
                         }
                     });
-                    builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.cancel();
@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 @Override
                 public void run() {
                     final OpenFileDialog.EditTextDialog e = new OpenFileDialog.EditTextDialog(getContext());
-                    e.setTitle("Rename Recording");
+                    e.setTitle(getString(R.string.rename_recording));
                     e.setText(Storage.getNameNoExt(f));
                     e.setPositiveButton(new DialogInterface.OnClickListener() {
                         @Override
@@ -281,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                         emailIntent.putExtra(Intent.EXTRA_EMAIL, "");
                         emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(f));
                         emailIntent.putExtra(Intent.EXTRA_SUBJECT, f.getName());
-                        emailIntent.putExtra(Intent.EXTRA_TEXT, "Shared via Audio Recorder");
+                        emailIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.shared_via, getString(R.string.app_name)));
 
                         shareProvider.setShareIntent(emailIntent);
 
@@ -347,7 +347,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             if (player == null)
                 player = MediaPlayer.create(getContext(), Uri.fromFile(f));
             if (player == null) {
-                Toast.makeText(MainActivity.this, "File not found", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, R.string.file_not_found, Toast.LENGTH_SHORT).show();
                 return;
             }
             player.start();
@@ -443,11 +443,11 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                 }
             });
 
-            start.setText(MainApplication.formatDuration(c));
+            start.setText(MainApplication.formatDuration(getContext(), c));
             bar.setMax(d);
             bar.setKeyProgressIncrement(1);
             bar.setProgress(c);
-            end.setText("-" + MainApplication.formatDuration(d - c));
+            end.setText("-" + MainApplication.formatDuration(getContext(), d - c));
 
             return playing;
         }
@@ -557,7 +557,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             if (intent.resolveActivityInfo(getPackageManager(), 0) != null) {
                 startActivity(intent);
             } else {
-                Toast.makeText(this, "No folder view application installed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.no_folder_app, Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -630,7 +630,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                     load();
                     checkPending();
                 } else {
-                    Toast.makeText(this, "Not permitted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.not_permitted, Toast.LENGTH_SHORT).show();
                 }
         }
     }

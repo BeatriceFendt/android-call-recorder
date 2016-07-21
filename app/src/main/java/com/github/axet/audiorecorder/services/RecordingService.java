@@ -149,7 +149,7 @@ public class RecordingService extends Service {
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                     .setOngoing(true)
-                    .setContentTitle("Recording")
+                    .setContentTitle(getString(R.string.recording_title))
                     .setSmallIcon(R.drawable.ic_mic_24dp)
                     .setContent(view);
 

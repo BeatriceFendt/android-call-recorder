@@ -5,7 +5,7 @@
     <item
         android:id="@+id/action_show_folder"
         android:orderInCategory="100"
-        android:title="Open Recording Folder"
+        android:title="@string/open_recording_folder"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_settings"

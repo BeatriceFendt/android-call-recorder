@@ -192,7 +192,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 if (permitted(this, permissions))
                     ;
                 else
-                    Toast.makeText(this, "Not permitted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.not_permitted, Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -273,7 +273,7 @@ public class PitchView extends ViewGroup {
         public PitchCurrentView(Context context, AttributeSet attrs, int defStyleAttr) {
             super(context, attrs, defStyleAttr);
 
-            text = "100 dB";
+            text = "100 " + getContext().getString(R.string.db);
             textBounds = new Rect();
 
             textPaint = new Paint();
@@ -314,7 +314,7 @@ public class PitchView extends ViewGroup {
 
             String str = "";
 
-            str = Integer.toString((int) getDB(end)) + " dB";
+            str = Integer.toString((int) getDB(end)) + " " + getContext().getString(R.string.db);
 
             setText(str);
         }
