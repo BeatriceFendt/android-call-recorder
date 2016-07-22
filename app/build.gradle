@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
         applicationId "com.github.axet.audiorecorder"
@@ -44,5 +44,5 @@ dependencies {
     compile 'com.android.support:design:23.2.1'
     compile 'com.google.android.gms:play-services-appindexing:8.1.0'
     compile 'org.apache.commons:commons-math3:3.6.1'
-    compile project(":android-library")
+    compile 'com.github.axet:android-library:1.1.0' // project(':android-library')
 }
