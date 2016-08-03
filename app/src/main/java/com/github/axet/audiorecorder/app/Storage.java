@@ -86,6 +86,9 @@ public class Storage {
 
         File l = getLocalStorage();
         File t = new File(path);
+
+        t.mkdirs();
+
         File[] ff = l.listFiles();
 
         if (ff == null)
