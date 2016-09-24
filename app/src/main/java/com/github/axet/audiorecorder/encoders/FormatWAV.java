@@ -111,10 +111,17 @@ public class FormatWAV implements Encoder {
         }
     }
 
-    public void close() {
+    public void flush() {
         try {
             outFile.seek(0);
             save();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void close() {
+        try {
             outFile.close();
         } catch (IOException e) {
             throw new RuntimeException(e);

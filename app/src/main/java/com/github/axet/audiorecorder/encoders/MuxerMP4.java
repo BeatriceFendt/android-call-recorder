@@ -87,14 +87,16 @@ public class MuxerMP4 implements Encoder {
         return true;
     }
 
-    public void close() {
+    public void flush() {
         end();
         encode();
 
         encoder.stop();
-        encoder.release();
-
         muxer.stop();
+    }
+
+    public void close() {
+        encoder.release();
         muxer.release();
     }
 
