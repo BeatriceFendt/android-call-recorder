@@ -810,8 +810,23 @@ public class RecordingActivity extends AppCompatActivity {
         }, new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(RecordingActivity.this, encoder.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                finish();
+                d.cancel();
+                AlertDialog.Builder builder = new AlertDialog.Builder(RecordingActivity.this);
+                builder.setTitle("Error");
+                builder.setMessage(encoder.getException().getMessage());
+                builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        finish();
+                    }
+                });
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
+                builder.show();
             }
         });
     }

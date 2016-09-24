@@ -1,7 +1,9 @@
 package com.github.axet.audiorecorder.encoders;
 
 public interface Encoder {
-    public void encode(short[] buf);
+    void encode(short[] buf);
 
-    public void close();
+    void flush();
+
+    void close();
 }
