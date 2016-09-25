@@ -3,13 +3,13 @@ package com.github.axet.audiorecorder.activities;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
+import android.media.MediaCodecInfo;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -21,20 +21,17 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.IntentCompat;
 import android.support.v7.app.ActionBar;
-import android.util.Log;
 import android.view.MenuItem;
-import android.widget.ListView;
 import android.widget.Toast;
 
-import com.github.axet.androidlibrary.widgets.ThemeUtils;
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.app.MainApplication;
+import com.github.axet.audiorecorder.encoders.MuxerMP4;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -226,7 +223,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     @Override
     public void onBackPressed() {
-            super.onBackPressed();
+        super.onBackPressed();
     }
 
     /**
@@ -253,7 +250,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
             Preference rate = findPreference(MainApplication.PREFERENCE_ENCODING);
 
-            if (Build.VERSION.SDK_INT < 21) {
+            Map<String, MediaCodecInfo> mime = MuxerMP4.findEncoder("audio/mp4");
+
+            if (Build.VERSION.SDK_INT < 21 || mime.isEmpty()) {
                 getPreferenceScreen().removePreference(rate);
             } else {
                 bindPreferenceSummaryToValue(rate);
