@@ -814,7 +814,7 @@ public class RecordingActivity extends AppCompatActivity {
                 AlertDialog.Builder builder = new AlertDialog.Builder(RecordingActivity.this);
                 builder.setTitle("Error");
                 String msg = encoder.getException().getMessage();
-                if (msg.isEmpty()) {
+                if (msg == null || msg.isEmpty()) {
                     Throwable t = encoder.getException();
                     while (t.getCause() != null)
                         t = t.getCause();
