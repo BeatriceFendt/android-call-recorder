@@ -815,7 +815,10 @@ public class RecordingActivity extends AppCompatActivity {
                 builder.setTitle("Error");
                 String msg = encoder.getException().getMessage();
                 if (msg.isEmpty()) {
-                    msg = encoder.getException().getClass().getSimpleName();
+                    Throwable t = encoder.getException();
+                    while (t.getCause() != null)
+                        t = t.getCause();
+                    msg = t.getClass().getSimpleName();
                 }
                 builder.setMessage(msg);
                 builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
