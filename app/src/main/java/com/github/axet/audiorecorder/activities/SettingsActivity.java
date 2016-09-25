@@ -250,12 +250,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
             Preference rate = findPreference(MainApplication.PREFERENCE_ENCODING);
 
-            Map<String, MediaCodecInfo> mime = MuxerMP4.findEncoder("audio/mp4");
-
-            if (Build.VERSION.SDK_INT < 21 || mime.isEmpty()) {
+            if (Build.VERSION.SDK_INT < 21) {
                 getPreferenceScreen().removePreference(rate);
             } else {
-                bindPreferenceSummaryToValue(rate);
+                Map<String, MediaCodecInfo> mime = MuxerMP4.findEncoder("audio/mp4");
+                if (mime.isEmpty())
+                    getPreferenceScreen().removePreference(rate);
+                else
+                    bindPreferenceSummaryToValue(rate);
             }
 
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
