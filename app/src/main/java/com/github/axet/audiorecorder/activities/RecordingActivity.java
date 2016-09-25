@@ -813,7 +813,11 @@ public class RecordingActivity extends AppCompatActivity {
                 d.cancel();
                 AlertDialog.Builder builder = new AlertDialog.Builder(RecordingActivity.this);
                 builder.setTitle("Error");
-                builder.setMessage(encoder.getException().getMessage());
+                String msg = encoder.getException().getMessage();
+                if (msg.isEmpty()) {
+                    msg = encoder.getException().getClass().getSimpleName();
+                }
+                builder.setMessage(msg);
                 builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
