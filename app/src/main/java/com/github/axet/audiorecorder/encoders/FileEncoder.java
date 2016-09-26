@@ -62,6 +62,7 @@ public class FileEncoder {
                     Log.e(TAG, "Exception", e);
                     t = e;
                     handler.post(error);
+                    throw e;
                 } finally {
                     encoder.close();
                     if (rs != null) {
