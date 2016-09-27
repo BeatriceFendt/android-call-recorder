@@ -64,6 +64,12 @@ public class MuxerMP4 implements Encoder {
         return null;
     }
 
+    public static MediaFormat getDefault(String pref, Map<String, MediaCodecInfo> map) {
+        String p = prefered(pref, map);
+        MediaFormat format = map.get(p).getCapabilitiesForType(p).getDefaultFormat();
+        return format;
+    }
+
     public void create(EncoderInfo info, MediaFormat format, File out) {
         this.info = info;
 
