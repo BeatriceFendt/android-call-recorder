@@ -84,9 +84,10 @@ public class MuxerMP4 implements Encoder {
         }
     }
 
-    public void encode(short[] buf) {
-        for (int offset = 0; offset < buf.length; ) {
-            int len = buf.length - offset;
+    @Override
+    public void encode(short[] buf, int buflen) {
+        for (int offset = 0; offset < buflen; ) {
+            int len = buflen - offset;
 
             int inputIndex = encoder.dequeueInputBuffer(-1);
             if (inputIndex < 0)
@@ -98,12 +99,10 @@ public class MuxerMP4 implements Encoder {
             len = Math.min(len, input.limit() / 2);
 
             for (int i = 0; i < len; i++)
-                input.putShort(buf[i]);
-
-            int bytes = len * 2;
+                input.putShort(buf[offset + i]);
 
             long ts = getCurrentTimeStamp();
-            encoder.queueInputBuffer(inputIndex, 0, bytes, ts, 0);
+            encoder.queueInputBuffer(inputIndex, 0, input.position(), ts, 0);
             NumSamples += len / info.channels;
             offset += len;
 

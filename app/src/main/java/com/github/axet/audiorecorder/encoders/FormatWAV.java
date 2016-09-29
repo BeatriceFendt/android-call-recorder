@@ -97,12 +97,12 @@ public class FormatWAV implements Encoder {
         }
     }
 
-    public void encode(short[] buf) {
-        NumSamples += buf.length / info.channels;
+    public void encode(short[] buf, int buflen) {
+        NumSamples += buflen / info.channels;
         try {
-            ByteBuffer bb = ByteBuffer.allocate(buf.length * (Short.SIZE / Byte.SIZE));
+            ByteBuffer bb = ByteBuffer.allocate(buflen * (Short.SIZE / Byte.SIZE));
             bb.order(order);
-            for (int i = 0; i < buf.length; i++)
+            for (int i = 0; i < buflen; i++)
                 bb.putShort(buf[i]);
             bb.flip();
             outFile.write(bb.array());
