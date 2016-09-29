@@ -11,7 +11,7 @@ import java.util.Map;
 public class FormatM4A extends MuxerMP4 {
 
     public FormatM4A(EncoderInfo info, File out) {
-        Map<String, MediaCodecInfo> map = findEncoder("audio/mp4");
+        Map<String, MediaCodecInfo> map = MuxerMP4.findEncoder("audio/mp4");
         if (map.isEmpty())
             throw new RuntimeException("mp4 not supported");
         MediaFormat format = MuxerMP4.getDefault("audio/mp4a-latm", map);

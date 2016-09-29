@@ -39,19 +39,19 @@ public class FileEncoder {
 
                 samples = rs.getSamples();
 
-                short[] buf = new short[1000];
+                short[] buf = new short[2048];
 
                 rs.open(buf.length);
 
                 try {
                     while (!Thread.currentThread().isInterrupted()) {
-                        long len = rs.read(buf);
+                        int len = rs.read(buf);
                         if (len <= 0) {
                             encoder.flush();
                             handler.post(done);
                             return;
                         } else {
-                            encoder.encode(buf);
+                            encoder.encode(buf, len);
                             handler.post(progress);
                             synchronized (thread) {
                                 cur += len;
@@ -62,7 +62,6 @@ public class FileEncoder {
                     Log.e(TAG, "Exception", e);
                     t = e;
                     handler.post(error);
-                    throw e;
                 } finally {
                     encoder.close();
                     if (rs != null) {
