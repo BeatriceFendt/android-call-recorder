@@ -764,8 +764,9 @@ public class RecordingActivity extends AppCompatActivity {
 
     void encoding(final Runnable run) {
         final File in = storage.getTempRecording();
-        in.mkdirs(); // in case if it were manually deleted
         final File out = targetFile;
+
+        targetFile.getParentFile().mkdirs(); // in case if it were manually deleted
 
         EncoderInfo info = getInfo();
 
