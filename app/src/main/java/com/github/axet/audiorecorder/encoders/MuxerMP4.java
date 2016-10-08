@@ -21,7 +21,8 @@ public class MuxerMP4 implements Encoder {
     MediaMuxer muxer;
     int audioTrackIndex;
     long NumSamples;
-
+    ByteBuffer input;
+    int inputIndex;
 
     public static Map<String, MediaCodecInfo> findEncoder(String mime) {
         Map<String, MediaCodecInfo> map = new HashMap<>();
@@ -85,30 +86,33 @@ public class MuxerMP4 implements Encoder {
     }
 
     @Override
-    public void encode(short[] buf, int buflen) {
-        for (int offset = 0; offset < buflen; ) {
-            int len = buflen - offset;
+    public void encode(short[] buf, int len) {
+        for (int offset = 0; offset < len; offset++) {
+            if (input == null) {
+                inputIndex = encoder.dequeueInputBuffer(-1);
+                if (inputIndex < 0)
+                    throw new RuntimeException("unable to open encoder input buffer");
+                input = encoder.getInputBuffer(inputIndex);
+                input.clear();
+            }
 
-            int inputIndex = encoder.dequeueInputBuffer(-1);
-            if (inputIndex < 0)
-                throw new RuntimeException("unable to open encoder input buffer");
+            input.putShort(buf[offset]);
 
-            ByteBuffer input = encoder.getInputBuffer(inputIndex);
-            input.clear();
-
-            len = Math.min(len, input.limit() / 2);
-
-            for (int i = 0; i < len; i++)
-                input.putShort(buf[offset + i]);
-
-            long ts = getCurrentTimeStamp();
-            encoder.queueInputBuffer(inputIndex, 0, input.position(), ts, 0);
-            NumSamples += len / info.channels;
-            offset += len;
-
-            while (encode())
-                ;// do encode()
+            if (!input.hasRemaining()) {
+                queue(0);
+            }
         }
+    }
+
+    void queue(int flags) {
+        if (input == null)
+            return;
+        encoder.queueInputBuffer(inputIndex, 0, input.position(), getCurrentTimeStamp(), flags);
+        NumSamples += input.position() / info.channels;
+        input = null;
+
+        while (encode())
+            ;// do encode()
     }
 
     boolean encode() {
@@ -120,15 +124,14 @@ public class MuxerMP4 implements Encoder {
         if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
             audioTrackIndex = muxer.addTrack(encoder.getOutputFormat());
             muxer.start();
+            return true;
         }
 
         if (outputIndex >= 0) {
             ByteBuffer output = encoder.getOutputBuffer(outputIndex);
             output.position(outputInfo.offset);
             output.limit(outputInfo.offset + outputInfo.size);
-
             muxer.writeSampleData(audioTrackIndex, output, outputInfo);
-
             encoder.releaseOutputBuffer(outputIndex, false);
         }
 
@@ -137,8 +140,6 @@ public class MuxerMP4 implements Encoder {
 
     public void flush() {
         end();
-        encode();
-
         encoder.stop();
         muxer.stop();
     }
@@ -153,11 +154,17 @@ public class MuxerMP4 implements Encoder {
     }
 
     void end() {
-        int inputIndex = encoder.dequeueInputBuffer(-1);
-        if (inputIndex >= 0) {
-            ByteBuffer input = encoder.getInputBuffer(inputIndex);
-            input.clear();
-            encoder.queueInputBuffer(inputIndex, 0, 0, getCurrentTimeStamp(), MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+        if (input != null) {
+            queue(MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+        } else {
+            int inputIndex = encoder.dequeueInputBuffer(-1);
+            if (inputIndex >= 0) {
+                ByteBuffer input = encoder.getInputBuffer(inputIndex);
+                input.clear();
+                encoder.queueInputBuffer(inputIndex, 0, 0, getCurrentTimeStamp(), MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+            }
+            while (encode())
+                ;// do encode()
         }
     }
 
