@@ -766,7 +766,11 @@ public class RecordingActivity extends AppCompatActivity {
         final File in = storage.getTempRecording();
         final File out = targetFile;
 
-        targetFile.getParentFile().mkdirs(); // in case if it were manually deleted
+        File parent = targetFile.getParentFile();
+
+        if(!parent.mkdirs()) { // in case if it were manually deleted
+            throw new RuntimeException("Unable to create: " + parent);
+        }
 
         EncoderInfo info = getInfo();
 
@@ -830,7 +834,11 @@ public class RecordingActivity extends AppCompatActivity {
                 t = t.getCause();
             msg = t.getClass().getSimpleName();
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(RecordingActivity.this);
+        Error(msg);
+    }
+
+    void Error(String msg) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Error");
         builder.setMessage(msg);
         builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
