@@ -768,8 +768,10 @@ public class RecordingActivity extends AppCompatActivity {
 
         File parent = targetFile.getParentFile();
 
-        if(!parent.mkdirs()) { // in case if it were manually deleted
-            throw new RuntimeException("Unable to create: " + parent);
+        if(!parent.exists()) {
+            if (!parent.mkdirs()) { // in case if it were manually deleted
+                throw new RuntimeException("Unable to create: " + parent);
+            }
         }
 
         EncoderInfo info = getInfo();
