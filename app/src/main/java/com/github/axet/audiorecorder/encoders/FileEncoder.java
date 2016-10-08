@@ -39,7 +39,7 @@ public class FileEncoder {
 
                 samples = rs.getSamples();
 
-                short[] buf = new short[2048];
+                short[] buf = new short[1000];
 
                 rs.open(buf.length);
 
