@@ -229,12 +229,16 @@ public class RecordingActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 stopRecording(getString(R.string.encoding));
-                encoding(new Runnable() {
-                    @Override
-                    public void run() {
-                        finish();
-                    }
-                });
+                try {
+                    encoding(new Runnable() {
+                        @Override
+                        public void run() {
+                            finish();
+                        }
+                    });
+                } catch (RuntimeException e) {
+                    Error(e);
+                }
             }
         });
 
@@ -760,6 +764,7 @@ public class RecordingActivity extends AppCompatActivity {
 
     void encoding(final Runnable run) {
         final File in = storage.getTempRecording();
+        in.mkdirs(); // in case if it were manually deleted
         final File out = targetFile;
 
         EncoderInfo info = getInfo();
@@ -811,31 +816,35 @@ public class RecordingActivity extends AppCompatActivity {
             @Override
             public void run() {
                 d.cancel();
-                AlertDialog.Builder builder = new AlertDialog.Builder(RecordingActivity.this);
-                builder.setTitle("Error");
-                String msg = encoder.getException().getMessage();
-                if (msg == null || msg.isEmpty()) {
-                    Throwable t = encoder.getException();
-                    while (t.getCause() != null)
-                        t = t.getCause();
-                    msg = t.getClass().getSimpleName();
-                }
-                builder.setMessage(msg);
-                builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        finish();
-                    }
-                });
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });
-                builder.show();
+                Error(encoder.getException());
             }
         });
+    }
+
+    void Error(Throwable e) {
+        String msg = e.getMessage();
+        if (msg == null || msg.isEmpty()) {
+            Throwable t = encoder.getException();
+            while (t.getCause() != null)
+                t = t.getCause();
+            msg = t.getClass().getSimpleName();
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(RecordingActivity.this);
+        builder.setTitle("Error");
+        builder.setMessage(msg);
+        builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                finish();
+            }
+        });
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        });
+        builder.show();
     }
 
     @Override
