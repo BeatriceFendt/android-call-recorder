@@ -47,7 +47,7 @@ public class FileEncoder {
                     while (!Thread.currentThread().isInterrupted()) {
                         int len = rs.read(buf);
                         if (len <= 0) {
-                            encoder.flush();
+                            encoder.end();
                             handler.post(done);
                             return;
                         } else {

@@ -427,7 +427,7 @@ public class RecordingActivity extends AppCompatActivity {
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 
         int rate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
-        int m = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2;
+        int m = MainApplication.getChannels(this);
         int c = RawSamples.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1;
 
         long perSec = (c * m * rate);
@@ -582,15 +582,15 @@ public class RecordingActivity extends AppCompatActivity {
 
                     rs.open(samplesTime);
 
-                    int min = AudioRecord.getMinBufferSize(sampleRate, RawSamples.CHANNEL_CONFIG, RawSamples.AUDIO_FORMAT);
+                    int min = AudioRecord.getMinBufferSize(sampleRate, MainApplication.getMode(RecordingActivity.this), RawSamples.AUDIO_FORMAT);
                     if (min <= 0) {
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
                     }
 
                     // min = 1 sec
-                    min = Math.max(sampleRate * (RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2), min);
+                    min = Math.max(sampleRate * (MainApplication.getChannels(RecordingActivity.this)), min);
 
-                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, RawSamples.CHANNEL_CONFIG, RawSamples.AUDIO_FORMAT, min);
+                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, MainApplication.getMode(RecordingActivity.this), RawSamples.AUDIO_FORMAT, min);
                     if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
                         throw new RuntimeException("Unable to initialize AudioRecord");
                     }
@@ -600,7 +600,7 @@ public class RecordingActivity extends AppCompatActivity {
 
                     int samplesTimeCount = 0;
                     // how many samples we need to update 'samples'. time clock. every 1000ms.
-                    int samplesTimeUpdate = 1000 / 1000 * sampleRate * (RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2);
+                    int samplesTimeUpdate = 1000 / 1000 * sampleRate * MainApplication.getChannels(RecordingActivity.this);
 
                     short[] buffer = null;
 
@@ -622,15 +622,16 @@ public class RecordingActivity extends AppCompatActivity {
 
                         start = end;
 
-                        int s = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? readSize : readSize / 2;
+                        int s = readSize / MainApplication.getChannels(RecordingActivity.this);
 
                         if (stableRefresh || diff >= s) {
                             stableRefresh = true;
 
                             rs.write(buffer);
 
-                            for (int i = 0; i < readSize; i += samplesUpdate) {
-                                final double dB = RawSamples.getDB(buffer, i, samplesUpdate);
+                            int ps = samplesUpdate * MainApplication.getChannels(RecordingActivity.this);
+                            for (int i = 0; i < readSize; i += ps) {
+                                final double dB = RawSamples.getDB(buffer, i, ps);
                                 handle.post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -707,7 +708,7 @@ public class RecordingActivity extends AppCompatActivity {
                 samplesUpdate = this.samplesUpdate;
             }
 
-            bufferSize = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? samplesUpdate : samplesUpdate * 2;
+            bufferSize = samplesUpdate * MainApplication.getChannels(this);
         }
     }
 
@@ -756,7 +757,7 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     EncoderInfo getInfo() {
-        final int channels = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO ? 2 : 1;
+        final int channels = MainApplication.getChannels(this);
         final int bps = RawSamples.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
 
         return new EncoderInfo(channels, sampleRate, bps);
@@ -768,7 +769,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         File parent = targetFile.getParentFile();
 
-        if(!parent.exists()) {
+        if (!parent.exists()) {
             if (!parent.mkdirs()) { // in case if it were manually deleted
                 throw new RuntimeException("Unable to create: " + parent);
             }

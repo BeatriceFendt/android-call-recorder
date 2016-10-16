@@ -138,12 +138,6 @@ public class MuxerMP4 implements Encoder {
         return true;
     }
 
-    public void flush() {
-        end();
-        encoder.stop();
-        muxer.stop();
-    }
-
     public void close() {
         encoder.release();
         muxer.release();
@@ -153,7 +147,7 @@ public class MuxerMP4 implements Encoder {
         return NumSamples * 1000 * 1000 / info.sampleRate;
     }
 
-    void end() {
+    public void end() {
         if (input != null) {
             queue();
         }
@@ -165,6 +159,8 @@ public class MuxerMP4 implements Encoder {
         }
         while (encode())
             ;// do encode()
+        encoder.stop();
+        muxer.stop();
     }
 
     public EncoderInfo getInfo() {

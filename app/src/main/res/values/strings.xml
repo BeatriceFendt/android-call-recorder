@@ -41,6 +41,16 @@
         <item>Theme_Dark</item>
     </string-array>
 
+    <string-array name="channels_text">
+        <item>Mono (default)</item>
+        <item>Stereo</item>
+    </string-array>
+
+    <string-array name="channels_values" translatable="false">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
     <string name="title_activity_main">Audio Recorder</string>
     <string name="action_settings">Settings</string>
     <string name="not_permitted">Not permitted</string>

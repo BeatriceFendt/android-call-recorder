@@ -209,13 +209,13 @@ public class Storage {
             long x = rate;
             long y = (x - x1) * (y2 - y1) / (x2 - x1) + y1;
 
-            int m = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2;
+            int m = MainApplication.getChannels(context);
             long perSec = (y / 60) * m;
             return free / perSec * 1000;
         }
 
         // default raw
-        int m = RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO ? 1 : 2;
+        int m = MainApplication.getChannels(context);
         int c = RawSamples.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1;
         long perSec = (c * m * rate);
         return free / perSec * 1000;

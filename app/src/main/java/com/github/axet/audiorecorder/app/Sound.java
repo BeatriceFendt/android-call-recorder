@@ -7,8 +7,6 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.preference.PreferenceManager;
 
-import com.github.axet.audiorecorder.activities.RecordingActivity;
-
 public class Sound {
     Context context;
 
@@ -56,11 +54,16 @@ public class Sound {
 
         int c = 0;
 
-        if (RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_MONO)
-            c = AudioFormat.CHANNEL_OUT_MONO;
-
-        if (RawSamples.CHANNEL_CONFIG == AudioFormat.CHANNEL_IN_STEREO)
-            c = AudioFormat.CHANNEL_OUT_STEREO;
+        switch (MainApplication.getChannels(context)) {
+            case 1:
+                c = AudioFormat.CHANNEL_OUT_MONO;
+                break;
+            case 2:
+                c = AudioFormat.CHANNEL_OUT_STEREO;
+                break;
+            default:
+                throw new RuntimeException("unknown mode");
+        }
 
         // old phones bug.
         // http://stackoverflow.com/questions/27602492
