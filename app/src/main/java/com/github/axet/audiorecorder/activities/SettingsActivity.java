@@ -262,6 +262,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_THEME));
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_CHANNELS));
         }
 
         @Override

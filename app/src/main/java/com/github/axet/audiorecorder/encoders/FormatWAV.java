@@ -111,7 +111,7 @@ public class FormatWAV implements Encoder {
         }
     }
 
-    public void flush() {
+    public void end() {
         try {
             outFile.seek(0);
             save();

@@ -26,6 +26,16 @@
         android:summary="Output file formats (.wav, .m4a, ...)"
         android:title="Encoding" />
 
+    <ListPreference
+        android:defaultValue="1"
+        android:entries="@array/channels_text"
+        android:entryValues="@array/channels_values"
+        android:key="channels"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:summary="Recording channels"
+        android:title="Mode" />
+
     <SwitchPreference
         android:defaultValue="true"
         android:key="call"

@@ -3,10 +3,8 @@ package com.github.axet.audiorecorder.app;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.TypedArray;
+import android.media.AudioFormat;
 import android.preference.PreferenceManager;
-import android.util.Log;
-import android.util.TypedValue;
 
 import com.github.axet.androidlibrary.widgets.ThemeUtils;
 import com.github.axet.audiorecorder.R;
@@ -19,6 +17,7 @@ public class MainApplication extends Application {
     public static final String PREFERENCE_ENCODING = "encoding";
     public static final String PREFERENCE_LAST = "last_recording";
     public static final String PREFERENCE_THEME = "theme";
+    public static final String PREFERENCE_CHANNELS = "channels";
 
     @Override
     public void onCreate() {
@@ -109,4 +108,20 @@ public class MainApplication extends Application {
         return str;
     }
 
+    public static int getChannels(Context context) {
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
+        int i = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_CHANNELS, "1"));
+        return i;
+    }
+
+    public static int getMode(Context context) {
+        switch (getChannels(context)) {
+            case 1:
+                return AudioFormat.CHANNEL_IN_MONO;
+            case 2:
+                return AudioFormat.CHANNEL_IN_STEREO;
+            default:
+                throw new RuntimeException("unknown mode");
+        }
+    }
 }

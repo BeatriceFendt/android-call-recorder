@@ -24,7 +24,6 @@ import java.nio.channels.FileChannel;
 
 public class RawSamples {
     public static int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
-    public static int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
 
     // quite root gives me 20db
     public static int NOISE_DB = 20;
