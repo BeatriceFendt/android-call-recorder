@@ -26,6 +26,16 @@
         android:summary="Формат выходного файла (.wav, .m4a, ...)"
         android:title="Кодировка" />
 
+    <ListPreference
+        android:defaultValue="1"
+        android:entries="@array/channels_text"
+        android:entryValues="@array/channels_values"
+        android:key="channels"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:summary="Режим записи"
+        android:title="Режим" />
+
     <SwitchPreference
         android:defaultValue="true"
         android:key="call"
