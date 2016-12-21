@@ -36,13 +36,13 @@
         android:summary="Режим записи"
         android:title="Режим" />
 
-    <CheckBoxPreference
+    <SwitchPreference
         android:defaultValue="true"
         android:key="call"
         android:summary="Останавливать запись на время разговора по телефону"
         android:title="Пауза на время разговора" />
 
-    <CheckBoxPreference
+    <SwitchPreference
         android:defaultValue="true"
         android:key="silence"
         android:summary="Включать беззвучный режим на время записи"

@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.github.axet.audiorecorder"
-        minSdkVersion 16
+        minSdkVersion 9
         targetSdkVersion 23
         versionCode 89
         versionName "1.2.1"
@@ -38,11 +38,10 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:25.0.1'
-    compile 'com.android.support:support-v4:25.0.1'
-    compile 'com.android.support:preference-v14:25.0.1'
-    compile 'com.android.support:design:25.0.1'
+    compile 'com.android.support:appcompat-v7:25.1.0'
+    compile 'com.android.support:support-v4:25.1.0'
+    compile 'com.android.support:design:25.1.0'
     compile 'com.google.android.gms:play-services-appindexing:9.8.0'
     compile 'org.apache.commons:commons-math3:3.6.1'
-    compile 'com.github.axet:android-library:1.6.7' // project(':android-library')
+    compile 'com.github.axet:android-library:1.6.8' // compile project(':android-library')
 }

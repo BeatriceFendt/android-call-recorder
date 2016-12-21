@@ -4,7 +4,7 @@
         android:defaultValue="Audio Recorder"
         android:key="storage_path"
         android:summary="/sdcard/some/"
-        android:title="Папка для хранения" />
+        android:title="Storage Path" />
 
     <ListPreference
         android:defaultValue="16000"
@@ -14,7 +14,7 @@
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:summary="44100"
-        android:title="Частота записи" />
+        android:title="Sample Rate" />
 
     <ListPreference
         android:defaultValue="wav"
@@ -23,8 +23,8 @@
         android:key="encoding"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="Формат выходного файла (.wav, .m4a, ...)"
-        android:title="Кодировка" />
+        android:summary="Output file formats (.wav, .m4a, ...)"
+        android:title="Encoding" />
 
     <ListPreference
         android:defaultValue="1"
@@ -33,20 +33,20 @@
         android:key="channels"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="Режим записи"
-        android:title="Режим" />
+        android:summary="Recording channels"
+        android:title="Mode" />
 
-    <CheckBoxPreference
+    <SwitchPreference
         android:defaultValue="true"
         android:key="call"
-        android:summary="Останавливать запись на время разговора по телефону"
-        android:title="Пауза на время разговора" />
+        android:summary="Stop recording on answering and continue on hangup"
+        android:title="Pause recording during calls" />
 
-    <CheckBoxPreference
+    <SwitchPreference
         android:defaultValue="true"
         android:key="silence"
-        android:summary="Включать беззвучный режим на время записи"
-        android:title="Режим тишины" />
+        android:summary="Put phone in 'silence mode' during recording"
+        android:title="Silence mode" />
 
     <ListPreference
         android:defaultValue="Theme_White"
@@ -55,7 +55,7 @@
         android:key="theme"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="Установить тему приложения (темная / светлая)"
-        android:title="Тема приложения" />
+        android:summary="Set application theme (dark / light)"
+        android:title="Application Theme" />
 
 </PreferenceScreen>
