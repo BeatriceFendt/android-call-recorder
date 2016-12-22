@@ -5,11 +5,8 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -152,6 +149,10 @@ public class RecordingService extends Service {
                     .setContentTitle(getString(R.string.recording_title))
                     .setSmallIcon(R.drawable.ic_mic_24dp)
                     .setContent(view);
+
+            if (Build.VERSION.SDK_INT < 11) {
+                builder.setContentIntent(main);
+            }
 
             if (Build.VERSION.SDK_INT >= 21)
                 builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);

@@ -130,7 +130,19 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         shared.registerOnSharedPreferenceChangeListener(this);
 
-        getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
+        if (Build.VERSION.SDK_INT < 11) {
+            addPreferencesFromResource(R.xml.pref_general);
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_STORAGE));
+
+            Preference rate = findPreference(MainApplication.PREFERENCE_ENCODING);
+            getPreferenceScreen().removePreference(rate);
+
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_THEME));
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_CHANNELS));
+        } else {
+            getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
+        }
     }
 
     /**
@@ -196,6 +208,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     public static boolean permitted(Context context, String[] ss) {
+        if (Build.VERSION.SDK_INT < 11)
+            return true;
         for (String s : ss) {
             if (ContextCompat.checkSelfPermission(context, s) != PackageManager.PERMISSION_GRANTED) {
                 return false;
@@ -230,7 +244,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    @TargetApi(11)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
         public GeneralPreferenceFragment() {
         }

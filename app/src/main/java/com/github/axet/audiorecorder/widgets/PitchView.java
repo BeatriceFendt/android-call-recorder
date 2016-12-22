@@ -1,24 +1,18 @@
 package com.github.axet.audiorecorder.widgets;
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.github.axet.androidlibrary.widgets.ThemeUtils;
 import com.github.axet.audiorecorder.R;
-import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.app.RawSamples;
 
 import java.util.LinkedList;
@@ -83,8 +77,7 @@ public class PitchView extends ViewGroup {
         Handler handler;
         Runnable run;
 
-        public static HandlerUpdate start(Handler handler, Runnable run, long updateSpeed) {
-            HandlerUpdate r = new HandlerUpdate();
+        public static HandlerUpdate start(HandlerUpdate r, Handler handler, Runnable run, long updateSpeed) {
             r.run = run;
             r.start = System.currentTimeMillis();
             r.updateSpeed = updateSpeed;
@@ -94,14 +87,18 @@ public class PitchView extends ViewGroup {
             return r;
         }
 
+        public static HandlerUpdate start(Handler handler, Runnable run, long updateSpeed) {
+            HandlerUpdate r = new HandlerUpdate();
+            return start(r, handler, run, updateSpeed);
+        }
+
+
         public static void stop(Handler handler, Runnable run) {
             handler.removeCallbacks(run);
         }
 
         @Override
         public void run() {
-            this.run.run();
-
             long cur = System.currentTimeMillis();
 
             long diff = cur - start;
@@ -112,6 +109,40 @@ public class PitchView extends ViewGroup {
             if (delay > updateSpeed)
                 delay = updateSpeed;
 
+            post(delay);
+        }
+
+        void post(long delay) {
+            this.run.run();
+
+            if (delay > 0)
+                this.handler.postDelayed(this, delay);
+            else
+                this.handler.post(this);
+        }
+    }
+
+    // if CPU speed not enough skip frames
+    public static class FallbackUpdate extends HandlerUpdate {
+        Runnable fallback;
+        long slow;
+
+        public static FallbackUpdate start(Handler handler, Runnable run, Runnable fallback, long updateSpeed) {
+            FallbackUpdate r = new FallbackUpdate();
+            r.fallback = fallback;
+            r.slow = updateSpeed / 4;
+            return (FallbackUpdate) start(r, handler, run, updateSpeed);
+        }
+
+        @Override
+        void post(long delay) {
+            if (delay < slow) {
+                Log.d(TAG, "fallback " + delay + " " + slow);
+                this.fallback.run();
+            } else {
+                Log.d(TAG, "run " + delay + " " + slow);
+                this.run.run();
+            }
             if (delay > 0)
                 this.handler.postDelayed(this, delay);
             else
@@ -421,11 +452,12 @@ public class PitchView extends ViewGroup {
     }
 
     public void fit(int max) {
+        if (max < 0) // -1
+            return;
         if (data.size() > max) {
             int cut = data.size() - max;
             data.subList(0, cut).clear();
             samples += cut;
-
             int m = data.size() - 1;
             // screen rotate may cause play/edit offsets off screen
             if (editPos > m)
@@ -571,11 +603,16 @@ public class PitchView extends ViewGroup {
     public void edit() {
         if (edit == null) {
             editFlash = true;
-
-            edit = HandlerUpdate.start(handler, new Runnable() {
+            edit = FallbackUpdate.start(handler, new Runnable() {
                 @Override
                 public void run() {
                     draw();
+                    editFlash = !editFlash;
+                }
+            }, new Runnable() {
+                @Override
+                public void run() {
+                    graph.calc();
                     editFlash = !editFlash;
                 }
             }, EDIT_UPDATE_SPEED);
@@ -595,11 +632,15 @@ public class PitchView extends ViewGroup {
 
         if (draw == null) {
             time = System.currentTimeMillis();
-
-            draw = HandlerUpdate.start(handler, new Runnable() {
+            draw = FallbackUpdate.start(handler, new Runnable() {
                 @Override
                 public void run() {
                     drawCalc();
+                }
+            }, new Runnable() {
+                @Override
+                public void run() {
+                    graph.calc();
                 }
             }, UPDATE_SPEED);
         }
@@ -638,10 +679,15 @@ public class PitchView extends ViewGroup {
 
         if (play == null) {
             time = System.currentTimeMillis();
-            play = HandlerUpdate.start(handler, new Runnable() {
+            play = FallbackUpdate.start(handler, new Runnable() {
                 @Override
                 public void run() {
                     draw();
+                }
+            }, new Runnable() {
+                @Override
+                public void run() {
+                    graph.calc();
                 }
             }, UPDATE_SPEED);
         }

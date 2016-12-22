@@ -1,7 +1,6 @@
 package com.github.axet.audiorecorder.app;
 
 import android.Manifest;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -10,13 +9,8 @@ import android.os.Build;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
-import com.github.axet.audiorecorder.activities.RecordingActivity;
-import com.github.axet.audiorecorder.encoders.FormatM4A;
-import com.github.axet.audiorecorder.encoders.FormatWAV;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,6 +36,8 @@ public class Storage {
     public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     public boolean permitted(String[] ss) {
+        if (Build.VERSION.SDK_INT < 11)
+            return true;
         for (String s : ss) {
             if (ContextCompat.checkSelfPermission(context, s) != PackageManager.PERMISSION_GRANTED) {
                 return false;
@@ -227,7 +223,7 @@ public class Storage {
 
         StatFs fsi = new StatFs(f.getPath());
         if (Build.VERSION.SDK_INT < 18)
-            return fsi.getBlockSize() * fsi.getAvailableBlocks();
+            return fsi.getBlockSize() * (long) fsi.getAvailableBlocks();
         else
             return fsi.getBlockSizeLong() * fsi.getAvailableBlocksLong();
     }
