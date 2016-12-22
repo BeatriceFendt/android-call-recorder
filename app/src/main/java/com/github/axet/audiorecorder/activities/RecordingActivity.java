@@ -738,6 +738,8 @@ public class RecordingActivity extends AppCompatActivity {
     };
 
     boolean permitted(String[] ss) {
+        if (Build.VERSION.SDK_INT < 11)
+            return true;
         for (String s : ss) {
             if (ContextCompat.checkSelfPermission(this, s) != PackageManager.PERMISSION_GRANTED) {
                 return false;
@@ -747,6 +749,8 @@ public class RecordingActivity extends AppCompatActivity {
     }
 
     boolean permitted() {
+        if (Build.VERSION.SDK_INT < 11)
+            return true;
         for (String s : PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, s) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, PERMISSIONS, 1);

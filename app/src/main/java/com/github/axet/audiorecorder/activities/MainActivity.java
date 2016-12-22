@@ -1,7 +1,6 @@
 package com.github.axet.audiorecorder.activities;
 
 import android.Manifest;
-import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,8 +8,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.content.res.Resources;
-import android.graphics.Color;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.drawable.ColorDrawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -39,14 +38,15 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.axet.androidlibrary.animations.RemoveItemAnimation;
 import com.github.axet.androidlibrary.widgets.OpenFileDialog;
-import com.github.axet.androidlibrary.widgets.ThemeUtils;
+import com.github.axet.androidlibrary.widgets.PopupShareActionProvider;
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.animations.RecordingAnimation;
-import com.github.axet.androidlibrary.animations.RemoveItemAnimation;
 import com.github.axet.audiorecorder.app.MainApplication;
+import com.github.axet.audiorecorder.app.RawSamples;
 import com.github.axet.audiorecorder.app.Storage;
-import com.github.axet.androidlibrary.widgets.PopupShareActionProvider;
+import com.github.axet.audiorecorder.widgets.PitchView;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -638,6 +638,8 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     boolean permitted(String[] ss) {
+        if (Build.VERSION.SDK_INT < 11)
+            return true;
         for (String s : ss) {
             if (ContextCompat.checkSelfPermission(this, s) != PackageManager.PERMISSION_GRANTED) {
                 return false;
@@ -647,6 +649,8 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
     }
 
     boolean permitted() {
+        if (Build.VERSION.SDK_INT < 11)
+            return true;
         for (String s : PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, s) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
