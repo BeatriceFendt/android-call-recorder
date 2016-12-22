@@ -241,7 +241,11 @@ public class Storage {
                 return internal;
         }
 
-        File external = new File(context.getExternalCacheDir(), TMP_REC);
+        File c = context.getExternalCacheDir();
+        if (c == null) // some old phones 11 with disabled sdcard return null
+            return internal;
+
+        File external = new File(c, TMP_REC);
 
         if (external.exists())
             return external;
