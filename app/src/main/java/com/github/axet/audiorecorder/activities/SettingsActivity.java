@@ -153,7 +153,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         if (actionBar != null) {
             // Show the Up button in the action bar.
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setBackgroundDrawable(new ColorDrawable(MainApplication.getActionbarColor(this)));
+//            actionBar.setBackgroundDrawable(new ColorDrawable(MainApplication.getActionbarColor(this)));
         }
     }
 

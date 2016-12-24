@@ -1,10 +1,10 @@
 <resources>
 
     <style name="AppThemeLight" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="titleColor">@color/colorPrimary</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccentLight</item>
+        <item name="titleColor">@color/colorPrimary</item>
         <item name="secondBackground">#c2c2c2</item>
         <item name="roundButton">@drawable/round_button_light</item>
         <item name="alertDialogTheme">@style/AppThemeDialogLight</item>
@@ -19,15 +19,18 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppThemeLight.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="AppThemeLight.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:textColorPrimary">@android:color/white</item>
+    </style>
 
-    <style name="AppThemeLight.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="AppThemeLight.PopupOverlay" parent="ThemeOverlay.AppCompat.Light">
+    </style>
 
     <style name="AppThemeDark" parent="Theme.AppCompat">
-        <item name="titleColor">@android:color/primary_text_dark</item>
         <item name="colorPrimaryDark">@color/primary_dark_material_dark</item>
         <item name="colorPrimary">@color/primary_material_dark</item>
         <item name="colorAccent">@color/colorAccentDark</item>
+        <item name="titleColor">@android:color/primary_text_dark</item>
         <item name="secondBackground">#151515</item>
         <item name="roundButton">@drawable/round_button_dark</item>
         <item name="alertDialogTheme">@style/AppThemeDialogDark</item>

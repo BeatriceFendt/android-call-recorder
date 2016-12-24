@@ -147,9 +147,8 @@ public class RecordingActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
         setTheme(((MainApplication) getApplication()).getUserTheme());
+        super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_recording);
 
@@ -258,7 +257,7 @@ public class RecordingActivity extends AppCompatActivity {
     private void setupActionBar() {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setBackgroundDrawable(new ColorDrawable(MainApplication.getActionbarColor(this)));
+//            actionBar.setBackgroundDrawable(new ColorDrawable(MainApplication.getActionbarColor(this)));
         }
     }
 

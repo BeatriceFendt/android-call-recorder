@@ -461,7 +461,6 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
     public void setAppTheme(int id) {
         super.setTheme(id);
-
         themeId = id;
     }
 
@@ -471,9 +470,8 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
         setAppTheme(getAppTheme());
+        super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
 
@@ -485,12 +483,10 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         handler = new Handler();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
-        if (Build.VERSION.SDK_INT >= 16)
-            toolbar.setBackground(new ColorDrawable(MainApplication.getActionbarColor(this)));
-        else
-            toolbar.setBackgroundDrawable(new ColorDrawable(MainApplication.getActionbarColor(this)));
-
+//        if (Build.VERSION.SDK_INT >= 16)
+//            toolbar.setBackground(new ColorDrawable(MainApplication.getActionbarColor(this)));
+//        else
+//            toolbar.setBackgroundDrawable(new ColorDrawable(MainApplication.getActionbarColor(this)));
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
