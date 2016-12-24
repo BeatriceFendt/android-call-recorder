@@ -34,7 +34,6 @@
 
     </LinearLayout>
 
-
     <com.github.axet.audiorecorder.widgets.PitchView
         android:id="@+id/recording_pitch"
         android:layout_width="match_parent"
