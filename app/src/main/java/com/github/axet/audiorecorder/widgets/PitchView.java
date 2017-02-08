@@ -137,10 +137,8 @@ public class PitchView extends ViewGroup {
         @Override
         void post(long delay) {
             if (delay < slow) {
-                Log.d(TAG, "fallback " + delay + " " + slow);
                 this.fallback.run();
             } else {
-                Log.d(TAG, "run " + delay + " " + slow);
                 this.run.run();
             }
             if (delay > 0)
