@@ -631,7 +631,9 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         }
     }
 
-    public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    public static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE"; // Manifest.permission.READ_EXTERNAL_STORAGE
+
+    public static final String[] PERMISSIONS = new String[]{READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     boolean permitted(String[] ss) {
         if (Build.VERSION.SDK_INT < 11)
