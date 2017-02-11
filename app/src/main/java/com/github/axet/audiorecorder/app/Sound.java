@@ -47,6 +47,7 @@ public class Sound {
                 am.setStreamVolume(AudioManager.STREAM_RING, am.getStreamVolume(AudioManager.STREAM_RING), AudioManager.FLAG_SHOW_UI);
             }
         }
+        soundMode = -1;
     }
 
     public AudioTrack generateTrack(int sampleRate, short[] buf, int len) {
