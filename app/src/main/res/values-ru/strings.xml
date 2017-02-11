@@ -47,41 +47,9 @@
     <string name="encoding_title">Кодирование...</string>
     <string name="recording_title">Запись</string>
     <string name="db">дБ</string>
-    <string name="days_symbol">д</string>
     <string name="title_header">%1$s свободно ~ %2$s</string>
-    <string name="size_gb">%1$.1f ГБ</string>
-    <string name="size_mb">%1$.1f МБ</string>
-    <string name="size_kb">%1$.1f кб</string>
     <string name="rename">Переименовать</string>
     <string name="delete">Удалить</string>
     <string name="open_recording_folder">Открыть папку с записями</string>
     <string name="recording_list_is_empty">Список записей пуст.\n\nНажмите на \'Микрофон\' чтобы начать запись.</string>
-
-    <plurals name="days">
-        <item quantity="one">%d день</item>
-        <item quantity="few">%d дня </item>
-        <item quantity="many">%d дней</item>
-        <item quantity="other">%d дней</item>
-    </plurals>
-
-    <plurals name="hours">
-        <item quantity="one">%d час</item>
-        <item quantity="few">%d часа</item>
-        <item quantity="many">%d часов</item>
-        <item quantity="other">%d часов</item>
-    </plurals>
-
-    <plurals name="minutes">
-        <item quantity="one">%d минута</item>
-        <item quantity="few">%d минуты</item>
-        <item quantity="many">%d минут</item>
-        <item quantity="other">%d минут</item>
-    </plurals>
-
-    <plurals name="seconds">
-        <item quantity="one">%d секунда</item>
-        <item quantity="few">%d секунды</item>
-        <item quantity="many">%d секунд</item>
-        <item quantity="other">%d секунд</item>
-    </plurals>
 </resources>
