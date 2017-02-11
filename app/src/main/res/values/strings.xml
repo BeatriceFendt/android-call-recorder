@@ -71,35 +71,10 @@
     <string name="recording">recording</string>
     <string name="encoding_title">Encoding...</string>
     <string name="recording_title">Recording</string>
-    <string name="db">dB</string>
-    <string name="days_symbol">"d"</string>
     <string name="title_header">%1$s free ~ %2$s left</string>
-    <string name="size_gb">%1$.1f GB</string>
-    <string name="size_mb">%1$.1f MB</string>
-    <string name="size_kb">%1$.1f kb</string>
+    <string name="db">dB</string>
     <string name="rename">Rename</string>
     <string name="delete">Delete</string>
     <string name="open_recording_folder">Open Recording Folder</string>
     <string name="recording_list_is_empty">Recording List is Empty\n\nClick Record to Start Recording</string>
-
-    <plurals name="days">
-        <item quantity="one">%d day</item>
-        <item quantity="other">%d days</item>
-    </plurals>
-
-    <plurals name="hours">
-        <item quantity="one">%d hour</item>
-        <item quantity="other">%d hours</item>
-    </plurals>
-
-    <plurals name="minutes">
-        <item quantity="one">%d minute</item>
-        <item quantity="other">%d minutes</item>
-    </plurals>
-
-    <plurals name="seconds">
-        <item quantity="one">%d second</item>
-        <item quantity="other">%d seconds</item>
-    </plurals>
-
 </resources>

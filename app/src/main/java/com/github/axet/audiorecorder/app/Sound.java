@@ -7,47 +7,24 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.preference.PreferenceManager;
 
-public class Sound {
-    Context context;
-
-    int soundMode;
+public class Sound extends com.github.axet.androidlibrary.app.Sound {
 
     public Sound(Context context) {
-        this.context = context;
+        super(context);
     }
 
     public void silent() {
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
         if (shared.getBoolean(MainApplication.PREFERENCE_SILENT, false)) {
-            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-            soundMode = am.getRingerMode();
-
-            if (soundMode == AudioManager.RINGER_MODE_SILENT) {
-                // we already in SILENT mode. keep all unchanged.
-                soundMode = -1;
-                return;
-            }
-
-            am.setStreamVolume(AudioManager.STREAM_RING, am.getStreamVolume(AudioManager.STREAM_RING), AudioManager.FLAG_SHOW_UI);
-            am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+            super.silent();
         }
     }
 
     public void unsilent() {
-        // keep unchanged
-        if (soundMode == -1)
-            return;
-
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
         if (shared.getBoolean(MainApplication.PREFERENCE_SILENT, false)) {
-            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-            int soundMode = am.getRingerMode();
-            if (soundMode == AudioManager.RINGER_MODE_SILENT) {
-                am.setRingerMode(this.soundMode);
-                am.setStreamVolume(AudioManager.STREAM_RING, am.getStreamVolume(AudioManager.STREAM_RING), AudioManager.FLAG_SHOW_UI);
-            }
+            super.unsilent();
         }
-        soundMode = -1;
     }
 
     public AudioTrack generateTrack(int sampleRate, short[] buf, int len) {
