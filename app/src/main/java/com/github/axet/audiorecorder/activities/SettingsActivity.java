@@ -262,16 +262,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_STORAGE));
             }
 
-            Preference rate = findPreference(MainApplication.PREFERENCE_ENCODING);
+            Preference enc = findPreference(MainApplication.PREFERENCE_ENCODING);
 
-            if (Build.VERSION.SDK_INT < 21) {
-                getPreferenceScreen().removePreference(rate);
+            if (Build.VERSION.SDK_INT < 18) { // depends on MediaMuxer
+                getPreferenceScreen().removePreference(enc);
             } else {
                 Map<String, MediaCodecInfo> mime = MuxerMP4.findEncoder("audio/mp4");
                 if (mime.isEmpty())
-                    getPreferenceScreen().removePreference(rate);
+                    getPreferenceScreen().removePreference(enc);
                 else
-                    bindPreferenceSummaryToValue(rate);
+                    bindPreferenceSummaryToValue(enc);
             }
 
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
