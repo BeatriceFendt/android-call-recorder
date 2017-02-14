@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.app.MainApplication;
+import com.github.axet.audiorecorder.encoders.Factory;
 import com.github.axet.audiorecorder.encoders.MuxerMP4;
 
 import java.lang.reflect.Array;
@@ -276,24 +277,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             if (Build.VERSION.SDK_INT < 16) { // Android 4.1
                 getPreferenceScreen().removePreference(enc);
             } else {
-                if (Build.VERSION.SDK_INT < 18) { // MediaMuxer
-                    String v = enc.getValue();
-                    int i = enc.findIndexOfValue("m4a");
-                    CharSequence[] ee = enc.getEntries();
-                    CharSequence[] vv = enc.getEntryValues();
-                    ee = removeElement(CharSequence.class, ee, i);
-                    vv = removeElement(CharSequence.class, vv, i);
-                    enc.setEntries(ee);
-                    enc.setEntryValues(vv);
+                String v = enc.getValue();
+                enc.setEntryValues(Factory.getEncodingValues(getActivity()));
+                enc.setEntries(Factory.getEncodingTexts(getActivity()));
+
+                int i = enc.findIndexOfValue(v);
+                if (i == -1) {
                     enc.setValueIndex(0);
-                    i = enc.findIndexOfValue(v);
-                    if (i == -1) {
-                        enc.setValue("wav");
-                        enc.setValueIndex(0);
-                    } else {
-                        enc.setValueIndex(i);
-                        enc.setValue(v);
-                    }
+                } else {
+                    enc.setValueIndex(i);
                 }
 
                 Map<String, MediaCodecInfo> mime = MuxerMP4.findEncoder("audio/mp4");

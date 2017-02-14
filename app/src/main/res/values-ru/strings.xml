@@ -18,8 +18,6 @@
 
     <string-array name="encodings_text">
         <item>.wav (по умолчанию)</item>
-        <item>.m4a</item>
-        <item>.mka</item>
     </string-array>
 
     <string-array name="channels_text">

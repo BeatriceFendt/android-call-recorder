@@ -23,14 +23,10 @@
 
     <string-array name="encodings_text">
         <item>.wav (default)</item>
-        <item>.m4a</item>
-        <item>.mka</item>
     </string-array>
 
     <string-array name="encodings_values" translatable="false">
         <item>wav</item>
-        <item>m4a</item>
-        <item>mka</item>
     </string-array>
 
     <string-array name="themes_text">
