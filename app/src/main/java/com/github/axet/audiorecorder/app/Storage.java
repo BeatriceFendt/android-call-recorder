@@ -4,13 +4,13 @@ import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.media.AudioFormat;
 import android.os.Build;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 
 import com.github.axet.audiorecorder.R;
+import com.github.axet.audiorecorder.encoders.Factory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -197,36 +197,8 @@ public class Storage {
         int rate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
         String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
 
-        if (ext.equals("m4a") || ext.equals("mka")) {
-            long y1 = 365723; // one minute sample 16000Hz
-            long x1 = 16000; // at 16000
-            long y2 = 493743; // one minute sample
-            long x2 = 44000; // at 44000
-            long x = rate;
-            long y = (x - x1) * (y2 - y1) / (x2 - x1) + y1;
-
-            int m = MainApplication.getChannels(context);
-            long perSec = (y / 60) * m;
-            return free / perSec * 1000;
-        }
-
-        if (ext.equals("mka")) {
-            long y1 = 365723; // one minute sample 16000Hz
-            long x1 = 16000; // at 16000
-            long y2 = 493743; // one minute sample
-            long x2 = 44000; // at 44000
-            long x = rate;
-            long y = (x - x1) * (y2 - y1) / (x2 - x1) + y1;
-
-            int m = MainApplication.getChannels(context);
-            long perSec = (y / 60) * m;
-            return free / perSec * 1000;
-        }
-
-        // default raw
         int m = MainApplication.getChannels(context);
-        int c = RawSamples.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1;
-        long perSec = (c * m * rate);
+        long perSec = Factory.getEncoderRate(ext, rate) * m;
         return free / perSec * 1000;
     }
 
