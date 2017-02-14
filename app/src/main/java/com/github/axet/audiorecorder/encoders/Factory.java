@@ -59,7 +59,7 @@ public class Factory {
             return y / 60;
         }
 
-        if (ext.equals("mka")) {
+        if (ext.equals("mka")) { // same codec as m4a, but different container
             long y1 = 365723; // one minute sample 16000Hz
             long x1 = 16000; // at 16000
             long y2 = 493743; // one minute sample
