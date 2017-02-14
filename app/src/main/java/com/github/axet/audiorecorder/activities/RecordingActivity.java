@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.ColorDrawable;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
@@ -44,11 +43,8 @@ import com.github.axet.audiorecorder.app.Sound;
 import com.github.axet.audiorecorder.app.Storage;
 import com.github.axet.audiorecorder.encoders.Encoder;
 import com.github.axet.audiorecorder.encoders.EncoderInfo;
+import com.github.axet.audiorecorder.encoders.Factory;
 import com.github.axet.audiorecorder.encoders.FileEncoder;
-import com.github.axet.audiorecorder.encoders.Format3GP;
-import com.github.axet.audiorecorder.encoders.FormatM4A;
-import com.github.axet.audiorecorder.encoders.FormatMKA;
-import com.github.axet.audiorecorder.encoders.FormatWAV;
 import com.github.axet.audiorecorder.services.RecordingService;
 import com.github.axet.audiorecorder.widgets.PitchView;
 
@@ -786,18 +782,7 @@ public class RecordingActivity extends AppCompatActivity {
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
 
-        if (ext.equals("wav")) {
-            e = new FormatWAV(info, out);
-        }
-        if (ext.equals("m4a")) {
-            e = new FormatM4A(info, out);
-        }
-        if (ext.equals("3gp")) {
-            e = new Format3GP(info, out);
-        }
-        if (ext.equals("mka")) {
-            e = new FormatMKA(info, out);
-        }
+        e = Factory.getEncoder(ext, info, out);
 
         encoder = new FileEncoder(this, in, e);
 
