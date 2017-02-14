@@ -300,7 +300,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 if (mime.isEmpty())
                     getPreferenceScreen().removePreference(enc);
                 else {
-                    //bindPreferenceSummaryToValue(enc);
+                    bindPreferenceSummaryToValue(enc);
                 }
             }
 
