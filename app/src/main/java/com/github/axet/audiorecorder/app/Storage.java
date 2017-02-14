@@ -197,7 +197,20 @@ public class Storage {
         int rate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
         String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
 
-        if (ext.equals("m4a")) {
+        if (ext.equals("m4a") || ext.equals("mka")) {
+            long y1 = 365723; // one minute sample 16000Hz
+            long x1 = 16000; // at 16000
+            long y2 = 493743; // one minute sample
+            long x2 = 44000; // at 44000
+            long x = rate;
+            long y = (x - x1) * (y2 - y1) / (x2 - x1) + y1;
+
+            int m = MainApplication.getChannels(context);
+            long perSec = (y / 60) * m;
+            return free / perSec * 1000;
+        }
+
+        if (ext.equals("mka")) {
             long y1 = 365723; // one minute sample 16000Hz
             long x1 = 16000; // at 16000
             long y2 = 493743; // one minute sample

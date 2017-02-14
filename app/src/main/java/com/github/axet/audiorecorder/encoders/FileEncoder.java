@@ -47,9 +47,7 @@ public class FileEncoder {
                     while (!Thread.currentThread().isInterrupted()) {
                         int len = rs.read(buf);
                         if (len <= 0) {
-                            encoder.end();
-                            handler.post(done);
-                            return;
+                            break;
                         } else {
                             encoder.encode(buf, len);
                             handler.post(progress);
@@ -58,15 +56,15 @@ public class FileEncoder {
                             }
                         }
                     }
-                } catch (RuntimeException e) {
-                    Log.e(TAG, "Exception", e);
-                    t = e;
-                    handler.post(error);
-                } finally {
                     encoder.close();
                     if (rs != null) {
                         rs.close();
                     }
+                    handler.post(done);
+                } catch (RuntimeException e) {
+                    Log.e(TAG, "Exception", e);
+                    t = e;
+                    handler.post(error);
                 }
             }
         });

@@ -3,78 +3,40 @@ package com.github.axet.audiorecorder.encoders;
 import android.annotation.TargetApi;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
-import android.media.MediaCodecList;
 import android.media.MediaFormat;
-import android.media.MediaMuxer;
 import android.os.Build;
+
+import org.ebml.io.FileDataWriter;
+import org.ebml.matroska.MatroskaFileFrame;
+import org.ebml.matroska.MatroskaFileTrack;
+import org.ebml.matroska.MatroskaFileWriter;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
-@TargetApi(18) // depends on MediaMuxer
-public class MuxerMP4 implements Encoder {
+@TargetApi(16) // mp4/aac codec
+public class FormatMKA implements Encoder {
     EncoderInfo info;
     MediaCodec encoder;
-    MediaMuxer muxer;
-    int audioTrackIndex;
     long NumSamples;
     ByteBuffer input;
     int inputIndex;
+    MatroskaFileWriter writer;
+    MatroskaFileTrack track;
+    MatroskaFileTrack.MatroskaAudioTrack audio;
 
-    public static Map<String, MediaCodecInfo> findEncoder(String mime) {
-        Map<String, MediaCodecInfo> map = new HashMap<>();
+    MatroskaFileFrame old;
 
-        mime = mime.toLowerCase();
-
-        int numCodecs = MediaCodecList.getCodecCount();
-        for (int i = 0; i < numCodecs; i++) {
-            MediaCodecInfo codecInfo = MediaCodecList.getCodecInfoAt(i);
-
-            if (!codecInfo.isEncoder()) {
-                continue;
-            }
-
-            String[] types = codecInfo.getSupportedTypes();
-            for (int j = 0; j < types.length; j++) {
-                String t = types[j].toLowerCase();
-                if (t.startsWith(mime)) {
-                    map.put(t, codecInfo);
-                }
-            }
-        }
-        return map;
-    }
-
-    public static String prefered(String pref, Map<String, MediaCodecInfo> map) {
-        pref = pref.toLowerCase();
-        Iterator i = map.keySet().iterator();
-        while (i.hasNext()) {
-            String m = (String) i.next();
-            m = m.toLowerCase();
-            if (m.startsWith(pref))
-                return m;
-        }
-        i = map.keySet().iterator();
-        while (i.hasNext()) {
-            String m = (String) i.next();
-            return m;
-        }
-        return null;
-    }
-
-    public static MediaFormat getDefault(String pref, Map<String, MediaCodecInfo> map) {
-        String p = prefered(pref, map);
-        if (Build.VERSION.SDK_INT >= 21) {
-            return map.get(p).getCapabilitiesForType(p).getDefaultFormat();
-        } else {
-            MediaFormat format = new MediaFormat();
-            format.setString(MediaFormat.KEY_MIME, pref);
-            return format;
-        }
+    public FormatMKA(EncoderInfo info, File out) {
+        MediaFormat format = new MediaFormat();
+        format.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
+        format.setInteger(MediaFormat.KEY_SAMPLE_RATE, info.sampleRate);
+        format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, info.channels);
+        format.setInteger(MediaFormat.KEY_BIT_RATE, 64 * 1024);
+        format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectHE);
+        format.setInteger(MediaFormat.KEY_AAC_SBR_MODE, 0);
+        create(info, format, out);
     }
 
     public void create(EncoderInfo info, MediaFormat format, File out) {
@@ -83,7 +45,7 @@ public class MuxerMP4 implements Encoder {
             encoder = MediaCodec.createEncoderByType(format.getString(MediaFormat.KEY_MIME));
             encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
             encoder.start();
-            muxer = new MediaMuxer(out.getAbsolutePath(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            writer = new MatroskaFileWriter(new FileDataWriter(out.getAbsolutePath()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -119,6 +81,15 @@ public class MuxerMP4 implements Encoder {
             ;// do encode()
     }
 
+    public static ByteBuffer clone(ByteBuffer original) {
+        ByteBuffer clone = ByteBuffer.allocate(original.capacity());
+        original.rewind();//copy from the beginning
+        clone.put(original);
+        original.rewind();
+        clone.flip();
+        return clone;
+    }
+
     boolean encode() {
         MediaCodec.BufferInfo outputInfo = new MediaCodec.BufferInfo();
         int outputIndex = encoder.dequeueOutputBuffer(outputInfo, 0);
@@ -126,8 +97,16 @@ public class MuxerMP4 implements Encoder {
             return false;
 
         if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-            audioTrackIndex = muxer.addTrack(encoder.getOutputFormat());
-            muxer.start();
+            audio = new MatroskaFileTrack.MatroskaAudioTrack();
+            audio.setSamplingFrequency(info.sampleRate);
+            audio.setOutputSamplingFrequency(info.sampleRate);
+            audio.setBitDepth(info.bps);
+            audio.setChannels((short) info.channels);
+            track = new MatroskaFileTrack();
+            track.setCodecID("A_AAC");
+            track.setAudio(audio);
+            track.setTrackType(MatroskaFileTrack.TrackType.AUDIO);
+            writer.addTrack(track);
             return true;
         }
 
@@ -139,17 +118,38 @@ public class MuxerMP4 implements Encoder {
                 output = encoder.getOutputBuffers()[outputIndex];
             output.position(outputInfo.offset);
             output.limit(outputInfo.offset + outputInfo.size);
-            muxer.writeSampleData(audioTrackIndex, output, outputInfo);
-            encoder.releaseOutputBuffer(outputIndex, false);
+            old(outputInfo.presentationTimeUs / 1000);
+            if ((outputInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
+                track.setCodecPrivate(clone(output));
+                writer.flush();
+                encoder.releaseOutputBuffer(outputIndex, false);
+            } else {
+                MatroskaFileFrame frame = new MatroskaFileFrame();
+                frame.setKeyFrame((outputInfo.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) == MediaCodec.BUFFER_FLAG_KEY_FRAME);
+                frame.setTimecode(outputInfo.presentationTimeUs / 1000);
+                frame.setTrackNo(track.getTrackNo());
+                frame.setData(clone(output));
+                encoder.releaseOutputBuffer(outputIndex, false);
+                old = frame;
+            }
         }
 
         return true;
     }
 
+    void old(long cur) {
+        if (old != null) {
+            old.setDuration(cur - old.getTimecode());
+            writer.addFrame(old);
+            writer.flush();
+            old = null;
+        }
+    }
+
     public void close() {
         end();
         encoder.release();
-        muxer.release();
+        writer.close();
     }
 
     long getCurrentTimeStamp() {
@@ -172,12 +172,12 @@ public class MuxerMP4 implements Encoder {
         }
         while (encode())
             ;// do encode()
+        old(getCurrentTimeStamp() / 1000);
+        writer.setDuration(getCurrentTimeStamp() / 1000);
         encoder.stop();
-        muxer.stop();
     }
 
     public EncoderInfo getInfo() {
         return info;
     }
-
 }

@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.drawable.ColorDrawable;
 import android.media.MediaCodecInfo;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -30,6 +29,9 @@ import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.encoders.MuxerMP4;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -45,6 +47,13 @@ import java.util.Map;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+
+    public static <T> T[] removeElement(Class<T> c, T[] aa, int i) {
+        List<T> ll = Arrays.asList(aa);
+        ll = new ArrayList<>(ll);
+        ll.remove(i);
+        return ll.toArray((T[]) Array.newInstance(c, ll.size()));
+    }
 
     /**
      * A preference value change listener that updates the preference's summary
@@ -262,16 +271,37 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_STORAGE));
             }
 
-            Preference enc = findPreference(MainApplication.PREFERENCE_ENCODING);
+            ListPreference enc = (ListPreference) findPreference(MainApplication.PREFERENCE_ENCODING);
 
-            if (Build.VERSION.SDK_INT < 18) { // depends on MediaMuxer
+            if (Build.VERSION.SDK_INT < 16) { // Android 4.1
                 getPreferenceScreen().removePreference(enc);
             } else {
+                if (Build.VERSION.SDK_INT < 18) { // MediaMuxer
+                    String v = enc.getValue();
+                    int i = enc.findIndexOfValue("m4a");
+                    CharSequence[] ee = enc.getEntries();
+                    CharSequence[] vv = enc.getEntryValues();
+                    ee = removeElement(CharSequence.class, ee, i);
+                    vv = removeElement(CharSequence.class, vv, i);
+                    enc.setEntries(ee);
+                    enc.setEntryValues(vv);
+                    enc.setValueIndex(0);
+                    i = enc.findIndexOfValue(v);
+                    if (i == -1) {
+                        enc.setValue("wav");
+                        enc.setValueIndex(0);
+                    } else {
+                        enc.setValueIndex(i);
+                        enc.setValue(v);
+                    }
+                }
+
                 Map<String, MediaCodecInfo> mime = MuxerMP4.findEncoder("audio/mp4");
                 if (mime.isEmpty())
                     getPreferenceScreen().removePreference(enc);
-                else
-                    bindPreferenceSummaryToValue(enc);
+                else {
+                    //bindPreferenceSummaryToValue(enc);
+                }
             }
 
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));

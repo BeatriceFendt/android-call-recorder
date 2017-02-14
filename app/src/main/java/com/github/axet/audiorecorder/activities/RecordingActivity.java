@@ -47,6 +47,7 @@ import com.github.axet.audiorecorder.encoders.EncoderInfo;
 import com.github.axet.audiorecorder.encoders.FileEncoder;
 import com.github.axet.audiorecorder.encoders.Format3GP;
 import com.github.axet.audiorecorder.encoders.FormatM4A;
+import com.github.axet.audiorecorder.encoders.FormatMKA;
 import com.github.axet.audiorecorder.encoders.FormatWAV;
 import com.github.axet.audiorecorder.services.RecordingService;
 import com.github.axet.audiorecorder.widgets.PitchView;
@@ -793,6 +794,9 @@ public class RecordingActivity extends AppCompatActivity {
         }
         if (ext.equals("3gp")) {
             e = new Format3GP(info, out);
+        }
+        if (ext.equals("mka")) {
+            e = new FormatMKA(info, out);
         }
 
         encoder = new FileEncoder(this, in, e);
