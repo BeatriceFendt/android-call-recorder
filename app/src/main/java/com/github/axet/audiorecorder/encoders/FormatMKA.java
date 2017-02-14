@@ -30,7 +30,7 @@ public class FormatMKA implements Encoder {
 
     public FormatMKA(EncoderInfo info, File out) {
         MediaFormat format = new MediaFormat();
-        format.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
+        format.setString(MediaFormat.KEY_MIME, Factory.MP4A);
         format.setInteger(MediaFormat.KEY_SAMPLE_RATE, info.sampleRate);
         format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, info.channels);
         format.setInteger(MediaFormat.KEY_BIT_RATE, 64 * 1024);

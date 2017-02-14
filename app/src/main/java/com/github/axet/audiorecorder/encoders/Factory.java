@@ -13,12 +13,16 @@ import java.util.Arrays;
 
 public class Factory {
 
+    public static String MP4 = "audio/mp4";
+    public static String MP4A = "audio/mp4a-latm";
+
     public static CharSequence[] getEncodingTexts(Context context) {
         String[] aa = context.getResources().getStringArray(R.array.encodings_text);
         ArrayList<String> ll = new ArrayList<>(Arrays.asList(aa));
         if (Build.VERSION.SDK_INT >= 18)
             ll.add(".m4a");
-        ll.add(".mka");
+        if (Build.VERSION.SDK_INT >= 16)
+            ll.add(".mka");
         return ll.toArray(new String[]{});
     }
 
@@ -27,7 +31,8 @@ public class Factory {
         ArrayList<String> ll = new ArrayList<>(Arrays.asList(aa));
         if (Build.VERSION.SDK_INT >= 18)
             ll.add("m4a");
-        ll.add("mka");
+        if (Build.VERSION.SDK_INT >= 16)
+            ll.add("mka");
         return ll.toArray(new String[]{});
     }
 

@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.media.MediaCodecInfo;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -28,13 +27,11 @@ import android.widget.Toast;
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.app.MainApplication;
 import com.github.axet.audiorecorder.encoders.Factory;
-import com.github.axet.audiorecorder.encoders.MuxerMP4;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -273,13 +270,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             }
 
             ListPreference enc = (ListPreference) findPreference(MainApplication.PREFERENCE_ENCODING);
-
-            if (Build.VERSION.SDK_INT < 16) { // Android 4.1
-                getPreferenceScreen().removePreference(enc);
-            } else {
-                String v = enc.getValue();
-                enc.setEntryValues(Factory.getEncodingValues(getActivity()));
-                enc.setEntries(Factory.getEncodingTexts(getActivity()));
+            String v = enc.getValue();
+            CharSequence[] ee = Factory.getEncodingTexts(getActivity());
+            CharSequence[] vv = Factory.getEncodingValues(getActivity());
+            if (ee.length > 1) {
+                enc.setEntries(ee);
+                enc.setEntryValues(vv);
 
                 int i = enc.findIndexOfValue(v);
                 if (i == -1) {
@@ -288,12 +284,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     enc.setValueIndex(i);
                 }
 
-                Map<String, MediaCodecInfo> mime = MuxerMP4.findEncoder("audio/mp4");
-                if (mime.isEmpty())
-                    getPreferenceScreen().removePreference(enc);
-                else {
-                    bindPreferenceSummaryToValue(enc);
-                }
+                bindPreferenceSummaryToValue(enc);
+            } else {
+                getPreferenceScreen().removePreference(enc);
             }
 
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
