@@ -19,7 +19,6 @@ public class Factory {
         if (Build.VERSION.SDK_INT >= 18)
             ll.add(".m4a");
         ll.add(".mka");
-        ll.add(".ogg");
         return ll.toArray(new String[]{});
     }
 
@@ -29,7 +28,6 @@ public class Factory {
         if (Build.VERSION.SDK_INT >= 18)
             ll.add("m4a");
         ll.add("mka");
-        ll.add("ogg");
         return ll.toArray(new String[]{});
     }
 
