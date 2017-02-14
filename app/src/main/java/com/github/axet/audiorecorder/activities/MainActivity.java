@@ -388,6 +388,8 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
             }
 
             if (!playing) {
+                playerStop(); // clear player instance
+                updatePlayerText(v, f); // update length
                 return;
             }
 

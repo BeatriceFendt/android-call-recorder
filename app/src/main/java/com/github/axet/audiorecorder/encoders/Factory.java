@@ -19,6 +19,7 @@ public class Factory {
         if (Build.VERSION.SDK_INT >= 18)
             ll.add(".m4a");
         ll.add(".mka");
+        ll.add(".ogg");
         return ll.toArray(new String[]{});
     }
 
@@ -28,6 +29,7 @@ public class Factory {
         if (Build.VERSION.SDK_INT >= 18)
             ll.add("m4a");
         ll.add("mka");
+        ll.add("ogg");
         return ll.toArray(new String[]{});
     }
 
@@ -35,11 +37,11 @@ public class Factory {
         if (ext.equals("wav")) {
             return new FormatWAV(info, out);
         }
-        if (ext.equals("m4a")) {
-            return new FormatM4A(info, out);
-        }
         if (ext.equals("3gp")) {
             return new Format3GP(info, out);
+        }
+        if (ext.equals("m4a")) {
+            return new FormatM4A(info, out);
         }
         if (ext.equals("mka")) {
             return new FormatMKA(info, out);

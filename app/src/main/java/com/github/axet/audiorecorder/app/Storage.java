@@ -179,7 +179,7 @@ public class Storage {
 
         for (File f : ff) {
             if (f.length() > 0) {
-                String[] ee = context.getResources().getStringArray(R.array.encodings_values);
+                String[] ee = Factory.getEncodingValues(context);
                 String n = f.getName().toLowerCase();
                 for (String e : ee) {
                     if (n.endsWith("." + e))

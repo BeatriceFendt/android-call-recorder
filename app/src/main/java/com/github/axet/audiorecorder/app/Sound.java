@@ -7,7 +7,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.preference.PreferenceManager;
 
-public class Sound extends com.github.axet.androidlibrary.app.Sound {
+public class Sound extends com.github.axet.androidlibrary.sound.Sound {
 
     public Sound(Context context) {
         super(context);

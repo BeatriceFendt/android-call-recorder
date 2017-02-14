@@ -90,6 +90,8 @@ public class FormatMKA implements Encoder {
         return clone;
     }
 
+    public static final int BUFFER_FLAG_KEY_FRAME = 1; // MediaCodec.BUFFER_FLAG_KEY_FRAME
+
     boolean encode() {
         MediaCodec.BufferInfo outputInfo = new MediaCodec.BufferInfo();
         int outputIndex = encoder.dequeueOutputBuffer(outputInfo, 0);
@@ -125,7 +127,7 @@ public class FormatMKA implements Encoder {
                 encoder.releaseOutputBuffer(outputIndex, false);
             } else {
                 MatroskaFileFrame frame = new MatroskaFileFrame();
-                frame.setKeyFrame((outputInfo.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) == MediaCodec.BUFFER_FLAG_KEY_FRAME);
+                frame.setKeyFrame((outputInfo.flags & BUFFER_FLAG_KEY_FRAME) == BUFFER_FLAG_KEY_FRAME);
                 frame.setTimecode(outputInfo.presentationTimeUs / 1000);
                 frame.setTrackNo(track.getTrackNo());
                 frame.setData(clone(output));
