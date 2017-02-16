@@ -17,6 +17,8 @@ import java.nio.ByteBuffer;
 
 @TargetApi(16) // mp4/aac codec
 public class FormatMKA implements Encoder {
+    public static final String KEY_AAC_SBR_MODE = "aac-sbr-mode"; // MediaFormat.KEY_AAC_SBR_MODE
+
     EncoderInfo info;
     MediaCodec encoder;
     long NumSamples;
@@ -35,7 +37,7 @@ public class FormatMKA implements Encoder {
         format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, info.channels);
         format.setInteger(MediaFormat.KEY_BIT_RATE, 64 * 1024);
         format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectHE);
-        format.setInteger(MediaFormat.KEY_AAC_SBR_MODE, 0);
+        format.setInteger(KEY_AAC_SBR_MODE, 0);
         create(info, format, out);
     }
 
@@ -46,6 +48,16 @@ public class FormatMKA implements Encoder {
             encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
             encoder.start();
             writer = new MatroskaFileWriter(new FileDataWriter(out.getAbsolutePath()));
+            audio = new MatroskaFileTrack.MatroskaAudioTrack();
+            audio.setSamplingFrequency(info.sampleRate);
+            audio.setOutputSamplingFrequency(info.sampleRate);
+            audio.setBitDepth(info.bps);
+            audio.setChannels((short) info.channels);
+            track = new MatroskaFileTrack();
+            track.setCodecID("A_AAC");
+            track.setAudio(audio);
+            track.setTrackType(MatroskaFileTrack.TrackType.AUDIO);
+            writer.addTrack(track);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -98,17 +110,7 @@ public class FormatMKA implements Encoder {
         if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER)
             return false;
 
-        if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-            audio = new MatroskaFileTrack.MatroskaAudioTrack();
-            audio.setSamplingFrequency(info.sampleRate);
-            audio.setOutputSamplingFrequency(info.sampleRate);
-            audio.setBitDepth(info.bps);
-            audio.setChannels((short) info.channels);
-            track = new MatroskaFileTrack();
-            track.setCodecID("A_AAC");
-            track.setAudio(audio);
-            track.setTrackType(MatroskaFileTrack.TrackType.AUDIO);
-            writer.addTrack(track);
+        if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) { // never get called on API 16
             return true;
         }
 

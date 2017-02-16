@@ -141,8 +141,25 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             addPreferencesFromResource(R.xml.pref_general);
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_STORAGE));
 
-            Preference rate = findPreference(MainApplication.PREFERENCE_ENCODING);
-            getPreferenceScreen().removePreference(rate);
+            ListPreference enc = (ListPreference) findPreference(MainApplication.PREFERENCE_ENCODING);
+            String v = enc.getValue();
+            CharSequence[] ee = Factory.getEncodingTexts(this);
+            CharSequence[] vv = Factory.getEncodingValues(this);
+            if (ee.length > 1) {
+                enc.setEntries(ee);
+                enc.setEntryValues(vv);
+
+                int i = enc.findIndexOfValue(v);
+                if (i == -1) {
+                    enc.setValueIndex(0);
+                } else {
+                    enc.setValueIndex(i);
+                }
+
+                bindPreferenceSummaryToValue(enc);
+            } else {
+                getPreferenceScreen().removePreference(enc);
+            }
 
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_THEME));

@@ -120,7 +120,12 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
             for (File f : ff) {
                 if (f.isFile()) {
-                    MediaPlayer mp = MediaPlayer.create(getContext(), Uri.fromFile(f));
+                    MediaPlayer mp = null;
+                    try {
+                        mp = MediaPlayer.create(getContext(), Uri.fromFile(f));
+                    } catch (IllegalStateException e) {
+                        Log.d(TAG, f.toString(), e);
+                    }
                     if (mp != null) {
                         int d = mp.getDuration();
                         mp.release();

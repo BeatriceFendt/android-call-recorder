@@ -186,8 +186,7 @@ public class RecordingActivity extends AppCompatActivity {
 
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
 
-        if (Build.VERSION.SDK_INT < 23 && isEmulator()) {
-            // old emulators are not going to record on high sample rate.
+        if (Build.VERSION.SDK_INT < 23 && isEmulator()) { // old emulators are not going to record on high sample rate.
             Toast.makeText(this, "Emulator Detected. Reducing Sample Rate to 8000 Hz", Toast.LENGTH_SHORT).show();
             sampleRate = 8000;
         }
@@ -597,7 +596,7 @@ public class RecordingActivity extends AppCompatActivity {
 
                     int samplesTimeCount = 0;
                     // how many samples we need to update 'samples'. time clock. every 1000ms.
-                    int samplesTimeUpdate = 1000 / 1000 * sampleRate * MainApplication.getChannels(RecordingActivity.this);
+                    int samplesTimeUpdate = 1000 / 1000 * sampleRate;
 
                     short[] buffer = null;
 
