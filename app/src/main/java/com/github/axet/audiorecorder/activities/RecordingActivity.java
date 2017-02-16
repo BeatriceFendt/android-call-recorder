@@ -197,16 +197,22 @@ public class RecordingActivity extends AppCompatActivity {
 
         loadSamples();
 
-        View cancel = findViewById(R.id.recording_cancel);
+        final View cancel = findViewById(R.id.recording_cancel);
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                cancel.setClickable(false);
                 cancelDialog(new Runnable() {
                     @Override
                     public void run() {
                         stopRecording();
                         storage.delete(storage.getTempRecording());
                         finish();
+                    }
+                }, new Runnable() {
+                    @Override
+                    public void run() {
+                        cancel.setClickable(true);
                     }
                 });
             }
@@ -220,10 +226,11 @@ public class RecordingActivity extends AppCompatActivity {
             }
         });
 
-        View done = findViewById(R.id.recording_done);
+        final View done = findViewById(R.id.recording_done);
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                done.setClickable(false);
                 stopRecording(getString(R.string.encoding));
                 try {
                     encoding(new Runnable() {
@@ -502,10 +509,10 @@ public class RecordingActivity extends AppCompatActivity {
                 storage.delete(storage.getTempRecording());
                 finish();
             }
-        });
+        }, null);
     }
 
-    void cancelDialog(final Runnable run) {
+    void cancelDialog(final Runnable run, final Runnable cancel) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.confirm_cancel);
         builder.setMessage(R.string.are_you_sure_cancel);
@@ -521,7 +528,15 @@ public class RecordingActivity extends AppCompatActivity {
                 dialog.cancel();
             }
         });
-        builder.show();
+        AlertDialog dialog = builder.create();
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                if (cancel != null)
+                    cancel.run();
+            }
+        });
+        dialog.show();
     }
 
     @Override
