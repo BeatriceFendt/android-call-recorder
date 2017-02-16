@@ -59,9 +59,8 @@ public class MuxerMP4 implements Encoder {
                 return m;
         }
         i = map.keySet().iterator();
-        while (i.hasNext()) {
-            String m = (String) i.next();
-            return m;
+        if (i.hasNext()) {
+            return (String) i.next();
         }
         return null;
     }

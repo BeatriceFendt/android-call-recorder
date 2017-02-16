@@ -8,9 +8,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.ColorDrawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -45,9 +42,8 @@ import com.github.axet.androidlibrary.widgets.PopupShareActionProvider;
 import com.github.axet.audiorecorder.R;
 import com.github.axet.audiorecorder.animations.RecordingAnimation;
 import com.github.axet.audiorecorder.app.MainApplication;
-import com.github.axet.audiorecorder.app.RawSamples;
 import com.github.axet.audiorecorder.app.Storage;
-import com.github.axet.audiorecorder.widgets.PitchView;
+import com.github.axet.audiorecorder.encoders.Factory;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -124,7 +120,12 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 
             for (File f : ff) {
                 if (f.isFile()) {
-                    MediaPlayer mp = MediaPlayer.create(getContext(), Uri.fromFile(f));
+                    MediaPlayer mp = null;
+                    try {
+                        mp = MediaPlayer.create(getContext(), Uri.fromFile(f));
+                    } catch (IllegalStateException e) {
+                        Log.d(TAG, f.toString(), e);
+                    }
                     if (mp != null) {
                         int d = mp.getDuration();
                         mp.release();
@@ -278,7 +279,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
                         shareProvider = new PopupShareActionProvider(getContext(), share);
 
                         Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                        emailIntent.setType("audio/mp4a-latm");
+                        emailIntent.setType(Factory.MP4A);
                         emailIntent.putExtra(Intent.EXTRA_EMAIL, "");
                         emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(f));
                         emailIntent.putExtra(Intent.EXTRA_SUBJECT, f.getName());

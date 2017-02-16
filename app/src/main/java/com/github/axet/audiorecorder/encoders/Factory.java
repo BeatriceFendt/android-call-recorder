@@ -13,12 +13,17 @@ import java.util.Arrays;
 
 public class Factory {
 
+    public static String MP4 = "audio/mp4";
+    public static String MP4A = "audio/mp4a-latm";
+
     public static CharSequence[] getEncodingTexts(Context context) {
         String[] aa = context.getResources().getStringArray(R.array.encodings_text);
         ArrayList<String> ll = new ArrayList<>(Arrays.asList(aa));
         if (Build.VERSION.SDK_INT >= 18)
             ll.add(".m4a");
-        ll.add(".mka");
+        if (Build.VERSION.SDK_INT >= 16)
+            ll.add(".mka");
+        ll.add(".ogg");
         return ll.toArray(new String[]{});
     }
 
@@ -27,7 +32,9 @@ public class Factory {
         ArrayList<String> ll = new ArrayList<>(Arrays.asList(aa));
         if (Build.VERSION.SDK_INT >= 18)
             ll.add("m4a");
-        ll.add("mka");
+        if (Build.VERSION.SDK_INT >= 16)
+            ll.add("mka");
+        ll.add("ogg");
         return ll.toArray(new String[]{});
     }
 
@@ -44,25 +51,37 @@ public class Factory {
         if (ext.equals("mka")) {
             return new FormatMKA(info, out);
         }
+        if (ext.equals("ogg")) {
+            return new FormatOGG(info, out);
+        }
         return null;
     }
 
     public static long getEncoderRate(String ext, int rate) {
-        if (ext.equals("m4a") || ext.equals("mka")) {
+        if (ext.equals("m4a")) {
             long y1 = 365723; // one minute sample 16000Hz
             long x1 = 16000; // at 16000
             long y2 = 493743; // one minute sample
             long x2 = 44000; // at 44000
             long x = rate;
             long y = (x - x1) * (y2 - y1) / (x2 - x1) + y1;
-
             return y / 60;
         }
 
-        if (ext.equals("mka")) {
+        if (ext.equals("mka")) { // same codec as m4a, but different container
             long y1 = 365723; // one minute sample 16000Hz
             long x1 = 16000; // at 16000
             long y2 = 493743; // one minute sample
+            long x2 = 44000; // at 44000
+            long x = rate;
+            long y = (x - x1) * (y2 - y1) / (x2 - x1) + y1;
+            return y / 60;
+        }
+
+        if (ext.equals("ogg")) {
+            long y1 = 174892; // one minute sample 16000Hz
+            long x1 = 16000; // at 16000
+            long y2 = 405565; // one minute sample
             long x2 = 44000; // at 44000
             long x = rate;
             long y = (x - x1) * (y2 - y1) / (x2 - x1) + y1;
