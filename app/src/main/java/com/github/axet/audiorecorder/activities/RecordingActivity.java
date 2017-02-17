@@ -49,7 +49,6 @@ import com.github.axet.audiorecorder.services.RecordingService;
 import com.github.axet.audiorecorder.widgets.PitchView;
 
 import java.io.File;
-import java.util.Arrays;
 
 public class RecordingActivity extends AppCompatActivity {
     public static final String TAG = RecordingActivity.class.getSimpleName();
@@ -186,7 +185,7 @@ public class RecordingActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
-        sampleRate = Sound.getValidRecordRate(sampleRate);
+        sampleRate = Sound.getValidRecordRate(MainApplication.getMode(this), sampleRate);
         samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
 
         updateBufferSize(false);
@@ -594,10 +593,7 @@ public class RecordingActivity extends AppCompatActivity {
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
                     }
 
-                    // min = 1 sec
-                    min = Math.max(sampleRate * (MainApplication.getChannels(RecordingActivity.this)), min);
-
-                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, MainApplication.getMode(RecordingActivity.this), RawSamples.AUDIO_FORMAT, min);
+                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, MainApplication.getMode(RecordingActivity.this), RawSamples.AUDIO_FORMAT, min * 2);
                     if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
                         throw new RuntimeException("Unable to initialize AudioRecord");
                     }
