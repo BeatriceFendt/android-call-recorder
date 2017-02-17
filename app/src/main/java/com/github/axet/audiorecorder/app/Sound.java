@@ -4,8 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.preference.PreferenceManager;
+
+import java.util.Arrays;
 
 public class Sound extends com.github.axet.androidlibrary.sound.Sound {
 

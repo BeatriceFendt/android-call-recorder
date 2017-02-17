@@ -1,1 +1,1 @@
-include ':app', ':android-library', ':jebml', ':vorbis', ':vorbis:libogg', ':vorbis:libvorbis'
+include ':app', ':android-library', ':jebml'

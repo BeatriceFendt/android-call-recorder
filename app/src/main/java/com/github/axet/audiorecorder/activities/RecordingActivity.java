@@ -49,6 +49,7 @@ import com.github.axet.audiorecorder.services.RecordingService;
 import com.github.axet.audiorecorder.widgets.PitchView;
 
 import java.io.File;
+import java.util.Arrays;
 
 public class RecordingActivity extends AppCompatActivity {
     public static final String TAG = RecordingActivity.class.getSimpleName();
@@ -185,12 +186,7 @@ public class RecordingActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
-
-        if (Build.VERSION.SDK_INT < 23 && isEmulator()) { // old emulators are not going to record on high sample rate.
-            Toast.makeText(this, "Emulator Detected. Reducing Sample Rate to 8000 Hz", Toast.LENGTH_SHORT).show();
-            sampleRate = 8000;
-        }
-
+        sampleRate = Sound.getValidRecordRate(sampleRate);
         samplesUpdate = (int) (pitch.getPitchTime() * sampleRate / 1000.0);
 
         updateBufferSize(false);

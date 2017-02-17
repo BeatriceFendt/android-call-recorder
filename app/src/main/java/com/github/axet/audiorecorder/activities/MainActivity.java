@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
     private GoogleApiClient client;
+    FloatingActionButton fab;
 
     final int[] ALL = {TYPE_COLLAPSED, TYPE_EXPANDED};
 
@@ -493,10 +494,11 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
 //            toolbar.setBackgroundDrawable(new ColorDrawable(MainApplication.getActionbarColor(this)));
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                fab.setClickable(false);
                 recordings.select(-1);
                 RecordingActivity.startActivity(MainActivity.this, false);
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
@@ -583,6 +585,8 @@ public class MainActivity extends AppCompatActivity implements AbsListView.OnScr
         checkPending();
 
         updateHeader();
+
+        fab.setClickable(true);
 
         final int selected = getLastRecording();
         handler.post(new Runnable() {
