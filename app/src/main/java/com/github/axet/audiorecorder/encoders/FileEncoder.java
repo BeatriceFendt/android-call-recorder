@@ -25,7 +25,6 @@ public class FileEncoder {
         this.context = context;
         this.in = in;
         this.encoder = encoder;
-
         handler = new Handler();
     }
 
