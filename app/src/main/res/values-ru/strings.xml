@@ -43,5 +43,6 @@
     <string name="recording_title">Запись</string>
     <string name="title_header">%1$s свободно ~ %2$s</string>
     <string name="open_recording_folder">Открыть папку с записями</string>
-    <string name="recording_list_is_empty">Список записей пуст.\n\nНажмите на \'Микрофон\' чтобы начать запись.</string>
+    <string name="recording_list_is_empty">Список записей пуст.\n\nВключите \'Запись звонков\' чтобы начать записывать звонки.</string>
+    <string name="call_recording">Запись Звонков</string>
 </resources>

@@ -65,7 +65,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/roundButton"
-                android:src="@drawable/play" />
+                android:src="@drawable/ic_play_arrow_black_24dp" />
 
             <ImageButton
                 android:id="@+id/recording_edit_done"
@@ -117,7 +117,8 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/roundButton"
-                android:src="@drawable/ic_done" />
+                android:src="@drawable/ic_done_black_24dp"
+                android:tint="@android:color/white" />
 
         </com.github.axet.androidlibrary.widgets.EqualLinearLayout>
     </LinearLayout>

@@ -127,7 +127,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         break;
                     case TelephonyManager.CALL_STATE_IDLE:
                         if (startedByCall) {
-                            if (tm.getCallState() != TelephonyManager.CALL_STATE_OFFHOOK) { // current state maybe differed from queued one
+                            if (tm.getCallState() != TelephonyManager.CALL_STATE_OFFHOOK) { // current state maybe differed from queued (s) one
                                 finish();
                             } else {
                                 return; // fast clicking. new call already stared. keep recording. do not reset startedByCall
@@ -341,14 +341,19 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     R.layout.notifictaion_recording_light,
                     R.layout.notifictaion_recording_dark));
 
+            String title = encoding != null ? getString(R.string.encoding_title) : getString(R.string.recording_title);
+            String text = ".../" + targetFile.getName();
+
             view.setOnClickPendingIntent(R.id.status_bar_latest_event_content, main);
-            view.setTextViewText(R.id.notification_text, ".../" + targetFile.getName());
+            view.setTextViewText(R.id.notification_text, text);
             view.setOnClickPendingIntent(R.id.notification_pause, pe);
-            view.setImageViewResource(R.id.notification_pause, thread == null ? R.drawable.play : R.drawable.pause);
+            view.setImageViewResource(R.id.notification_pause, thread == null ? R.drawable.ic_play_arrow_black_24dp : R.drawable.ic_pause_black_24dp);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                     .setOngoing(true)
-                    .setContentTitle(getString(R.string.recording_title))
+                    .setContentTitle(title)
+                    .setContentText(text)
+                    .setTicker(title) // tooltip status bar message
                     .setSmallIcon(R.drawable.ic_mic_24dp)
                     .setContent(view);
 
@@ -385,7 +390,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                     rs.open(samplesTime);
 
-                    int min = AudioRecord.getMinBufferSize(sampleRate, MainApplication.getMode(RecordingService.this), RawSamples.AUDIO_FORMAT);
+                    int min = AudioRecord.getMinBufferSize(sampleRate, MainApplication.getMode(RecordingService.this), Sound.AUDIO_FORMAT);
                     if (min <= 0) {
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
                     }
@@ -398,7 +403,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         try {
                             if (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED) {
                                 Log.d(TAG, "Recording: " + s);
-                                recorder = new AudioRecord(s, sampleRate, MainApplication.getMode(RecordingService.this), RawSamples.AUDIO_FORMAT, min * 2);
+                                recorder = new AudioRecord(s, sampleRate, MainApplication.getMode(RecordingService.this), Sound.AUDIO_FORMAT, min * 2);
                             }
                             if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
                                 break;
@@ -465,7 +470,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     EncoderInfo getInfo() {
         final int channels = MainApplication.getChannels(this);
-        final int bps = RawSamples.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
+        final int bps = Sound.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
 
         return new EncoderInfo(channels, sampleRate, bps);
     }
@@ -588,22 +593,24 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             if (targetFile == null) { // service restart
                 targetFile = storage.getNewFile();
             }
-            if (encoding == null) { // double finish()? skip
-                encoding = new Runnable() {
-                    @Override
-                    public void run() {
-                        deleteOld();
-                        showNotificationAlarm(false);
-                        encoding = null;
-                    }
-                };
-                encoding(encoding, new Runnable() {
-                    @Override
-                    public void run() {
-                        MainActivity.last(RecordingService.this);
-                    }
-                });
+            if (encoding != null) { // double finish()? skip
+                return;
             }
+            encoding = new Runnable() {
+                @Override
+                public void run() {
+                    deleteOld();
+                    showNotificationAlarm(false);
+                    encoding = null;
+                }
+            };
+            showNotificationAlarm(true); // update status (encoding)
+            encoding(encoding, new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity.last(RecordingService.this);
+                }
+            });
         }
     }
 
