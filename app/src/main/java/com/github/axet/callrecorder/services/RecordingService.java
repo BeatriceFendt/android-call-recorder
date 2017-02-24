@@ -140,6 +140,12 @@ public class RecordingService extends Service {
         context.startService(new Intent(context, RecordingService.class));
     }
 
+    public static void startIfEnabled(Context context) {
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
+        if (shared.getBoolean(MainApplication.PREFERENCE_CALL, false))
+            context.startService(new Intent(context, RecordingService.class));
+    }
+
     public static void stopService(Context context) {
         context.stopService(new Intent(context, RecordingService.class));
     }
@@ -239,6 +245,11 @@ public class RecordingService extends Service {
         if (receiver != null) {
             unregisterReceiver(receiver);
             receiver = null;
+        }
+
+        if (state != null) {
+            unregisterReceiver(state);
+            state = null;
         }
 
         if (pscl != null) {
