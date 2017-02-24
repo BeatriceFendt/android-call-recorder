@@ -45,5 +45,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:25.2.0'
     compile 'com.android.support:support-v4:25.2.0'
-    compile 'com.github.axet:android-audio-library:0.0.1' // compile project(':android-audio-library')
+    compile 'com.github.axet:android-audio-library:0.0.2' // compile project(':android-audio-library')
 }

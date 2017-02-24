@@ -443,7 +443,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         if (stableRefresh || diff >= s) {
                             stableRefresh = true;
 
-                            rs.write(buffer);
+                            rs.write(buffer, readSize);
 
                             samplesTime += s;
                             samplesTimeCount += s;
