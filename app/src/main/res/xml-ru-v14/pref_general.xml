@@ -1,7 +1,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <com.github.axet.androidlibrary.widgets.StoragePathPreference
-        android:defaultValue="Audio Recorder"
+        android:defaultValue="Call Recorder"
         android:key="storage_path"
         android:summary="/sdcard/some/"
         android:title="Папка для хранения" />
@@ -36,17 +36,25 @@
         android:summary="Режим записи"
         android:title="Режим" />
 
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="call"
-        android:summary="Останавливать запись на время разговора по телефону"
-        android:title="Пауза на время разговора" />
+    <ListPreference
+        android:defaultValue="1"
+        android:entries="@array/delete_text"
+        android:entryValues="@array/delete_values"
+        android:key="delete"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:summary="1 month"
+        android:title="Delete Recordings" />
 
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="silence"
-        android:summary="Включать беззвучный режим на время записи"
-        android:title="Режим тишины" />
+    <ListPreference
+        android:defaultValue="1"
+        android:entries="@array/format_text"
+        android:entryValues="@array/format_values"
+        android:key="format"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:summary="2015-11"
+        android:title="Name Format" />
 
     <ListPreference
         android:defaultValue="Theme_White"

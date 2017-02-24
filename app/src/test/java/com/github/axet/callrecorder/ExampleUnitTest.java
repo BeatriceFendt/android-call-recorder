@@ -1,4 +1,4 @@
-package com.github.axet.audiorecorder;
+package com.github.axet.callrecorder;
 
 import org.junit.Test;
 

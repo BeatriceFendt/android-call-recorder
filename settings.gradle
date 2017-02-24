@@ -1,1 +1,1 @@
-include ':app', ':android-library', ':jebml'
+include ':app', ':android-audio-library', ':android-library', ':jebml'

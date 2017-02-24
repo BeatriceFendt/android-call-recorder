@@ -1,4 +1,4 @@
-package com.github.axet.audiorecorder.activities;
+package com.github.axet.callrecorder.activities;
 
 
 import android.Manifest;
@@ -24,9 +24,9 @@ import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.github.axet.audiorecorder.R;
-import com.github.axet.audiorecorder.app.MainApplication;
-import com.github.axet.audiorecorder.encoders.Factory;
+import com.github.axet.audiolibrary.encoders.Factory;
+import com.github.axet.callrecorder.R;
+import com.github.axet.callrecorder.app.MainApplication;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;

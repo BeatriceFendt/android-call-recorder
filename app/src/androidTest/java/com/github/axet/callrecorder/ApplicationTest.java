@@ -1,10 +1,7 @@
-package com.github.axet.audiorecorder;
+package com.github.axet.callrecorder;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
-import android.util.Log;
-
-import com.github.axet.audiorecorder.app.RawSamples;
 
 /**
  * <a href="http://d.android.com/tools/testing/testing_android.html">Testing Fundamentals</a>

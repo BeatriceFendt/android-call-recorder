@@ -23,12 +23,44 @@
 
     <include layout="@layout/content_main" />
 
+    <LinearLayout
+        android:id="@+id/fab_panel"
+        android:layout_width="wrap_content"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginBottom="@dimen/fab_margin"
+        android:layout_marginRight="80dp"
+        android:background="?attr/round_corners"
+        android:elevation="6dp"
+        android:minWidth="250dp"
+        android:orientation="horizontal">
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_stop_black_24dp"
+            android:tint="@android:color/white"
+            app:borderWidth="0dp" />
+
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:text="Test"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
+        android:layout_gravity="bottom|right"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_mic_24dp" />
+        android:src="@drawable/ic_pause_black_24dp"
+        android:tint="@android:color/white" />
 
 </android.support.design.widget.CoordinatorLayout>

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Audio Recorder</string>
+    <string name="app_name">Call Recorder</string>
 
     <string-array name="sample_rate_text">
         <item>48 kHz</item>
@@ -21,12 +21,33 @@
         <item>8000</item>
     </string-array>
 
-    <string-array name="encodings_text">
-        <item>.wav (default)</item>
+    <string-array name="delete_text">
+        <item>Keep all recording</item>
+        <item>older than week</item>
+        <item>older than 1 month</item>
+        <item>older than 3 months</item>
+        <item>older than 6 months</item>
     </string-array>
 
-    <string-array name="encodings_values" translatable="false">
-        <item>wav</item>
+    <string-array name="delete_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+
+    <string-array name="format_text">
+        <item>2017-02-01 09.08.01.wav</item>
+        <item>1487915284 +11 (392) 333-22-11.wav</item>
+    </string-array>
+
+    <string-array name="format_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
     </string-array>
 
     <string-array name="themes_text">
@@ -49,17 +70,9 @@
         <item>2</item>
     </string-array>
 
-    <string name="title_activity_main">Audio Recorder</string>
     <string name="action_settings">Settings</string>
     <string name="not_permitted">Not permitted</string>
     <string name="no_folder_app">No folder view application installed</string>
-    <string name="file_not_found">File not found</string>
-    <string name="shared_via">"Shared via %1$s"</string>
-    <string name="rename_recording">Rename Recording</string>
-    <string name="no">No</string>
-    <string name="yes">Yes</string>
-    <string name="are_you_sure">"Are you sure ? "</string>
-    <string name="delete_recording">Delete Recording</string>
     <string name="hold_by_call">pause (hold by call)</string>
     <string name="encoding">encoding</string>
     <string name="pause">pause</string>
@@ -70,9 +83,6 @@
     <string name="encoding_title">Encoding...</string>
     <string name="recording_title">Recording</string>
     <string name="title_header">%1$s free ~ %2$s left</string>
-    <string name="db">dB</string>
-    <string name="rename">Rename</string>
-    <string name="delete">Delete</string>
     <string name="open_recording_folder">Open Recording Folder</string>
     <string name="recording_list_is_empty">Recording List is Empty\n\nClick Record to Start Recording</string>
 </resources>

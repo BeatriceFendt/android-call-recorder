@@ -1,4 +1,4 @@
-package com.github.axet.audiorecorder.activities;
+package com.github.axet.callrecorder.activities;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -12,7 +12,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.github.axet.audiorecorder.app.MainApplication;
+import com.github.axet.callrecorder.app.MainApplication;
 
 /**
  * A {@link android.preference.PreferenceActivity} which implements and proxies the necessary calls

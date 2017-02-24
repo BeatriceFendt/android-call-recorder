@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Аудио Рекордер</string>
+    <string name="app_name">Запись Звонков</string>
 
     <string-array name="themes_text">
         <item>Тема Светлая (по умолчанию)</item>
@@ -16,26 +16,14 @@
         <item>8 kHz (телефон)</item>
     </string-array>
 
-    <string-array name="encodings_text">
-        <item>.wav (по умолчанию)</item>
-    </string-array>
-
     <string-array name="channels_text">
         <item>Моно (по умолчанию)</item>
         <item>Стерео</item>
     </string-array>
 
-    <string name="title_activity_main">Аудио Рекордер</string>
     <string name="action_settings">Настройки</string>
     <string name="not_permitted">Доступ запрещен</string>
     <string name="no_folder_app">Программа для просмотра папок не установлена</string>
-    <string name="file_not_found">Файл не найден</string>
-    <string name="shared_via">"Создано с помощью: %1$s"</string>
-    <string name="rename_recording">Переименовать запись</string>
-    <string name="no">Нет</string>
-    <string name="yes">Да</string>
-    <string name="are_you_sure">Вы уверены?</string>
-    <string name="delete_recording">Удалить запись</string>
     <string name="hold_by_call">пауза (звонок)</string>
     <string name="encoding">кодировка</string>
     <string name="pause">пауза</string>
