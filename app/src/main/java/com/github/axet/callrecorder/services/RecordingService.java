@@ -1,12 +1,10 @@
 package com.github.axet.callrecorder.services;
 
-import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -70,15 +68,20 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     // how many samples passed for current recording
     long samplesTime;
     FileEncoder encoder;
+    Runnable encoding; // current encoding
 
     class RecordingReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(PAUSE_BUTTON)) {
-                pauseButton();
-            }
-            if (intent.getAction().equals(STOP_BUTTON)) {
-                finish();
+            try {
+                if (intent.getAction().equals(PAUSE_BUTTON)) {
+                    pauseButton();
+                }
+                if (intent.getAction().equals(STOP_BUTTON)) {
+                    finish();
+                }
+            } catch (RuntimeException e) {
+                Error(e);
             }
         }
     }
@@ -101,38 +104,43 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     class PhoneStateChangeListener extends PhoneStateListener {
         public boolean wasRinging;
         public boolean startedByCall;
+        TelephonyManager tm;
+
+        public PhoneStateChangeListener() {
+            tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        }
 
         @Override
         public void onCallStateChanged(int s, String incomingNumber) {
             setPhone(incomingNumber);
-            switch (s) {
-                case TelephonyManager.CALL_STATE_RINGING:
-                    wasRinging = true;
-                    break;
-                case TelephonyManager.CALL_STATE_OFFHOOK:
-                    wasRinging = true;
-                    if (thread == null) { // handling restart while current call
-                        begin();
-                        startedByCall = true;
-                    }
-                    break;
-                case TelephonyManager.CALL_STATE_IDLE:
-                    if (startedByCall) {
-                        finish();
-                    } else {
-                        if (storage.recordingPending()) { // handling restart after call finished
-                            try {
-                                targetFile = storage.getNewFile();
-                            } catch (RuntimeException e) {
-                                Error(e);
-                                return;
-                            }
-                            finish();
+            try {
+                switch (s) {
+                    case TelephonyManager.CALL_STATE_RINGING:
+                        wasRinging = true;
+                        break;
+                    case TelephonyManager.CALL_STATE_OFFHOOK:
+                        wasRinging = true;
+                        if (thread == null) { // handling restart while current call
+                            begin();
+                            startedByCall = true;
                         }
-                    }
-                    wasRinging = false;
-                    startedByCall = false;
-                    break;
+                        break;
+                    case TelephonyManager.CALL_STATE_IDLE:
+                        if (tm.getCallState() != TelephonyManager.CALL_STATE_OFFHOOK) { // current state maybe differed from queued one
+                            if (startedByCall) {
+                                finish();
+                            } else {
+                                if (storage.recordingPending()) { // handling restart after call finished
+                                    finish();
+                                }
+                            }
+                            wasRinging = false;
+                            startedByCall = false;
+                        }
+                        break;
+                }
+            } catch (RuntimeException e) {
+                Error(e);
             }
         }
     }
@@ -439,13 +447,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         }
                     }
                 } catch (final RuntimeException e) {
-                    handle.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.e(TAG, Log.getStackTraceString(e));
-                            Toast.makeText(RecordingService.this, "AudioRecord error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    Post(e);
                 } finally {
                     if (rs != null)
                         rs.close();
@@ -466,7 +468,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         return new EncoderInfo(channels, sampleRate, bps);
     }
 
-    void encoding(final Runnable done) {
+    void encoding(final Runnable done, final Runnable success) {
         final File in = storage.getTempRecording();
         final File out = targetFile;
 
@@ -504,6 +506,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 edit.putString(MainApplication.PREFERENCE_LAST, out.getName());
                 edit.commit();
 
+                success.run();
                 done.run();
             }
         }, new Runnable() {
@@ -511,6 +514,21 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             public void run() {
                 MainActivity.showProgress(RecordingService.this, false, phone, samplesTime / sampleRate, false);
                 Error(encoder.getException());
+                done.run();
+            }
+        });
+    }
+
+    void Post(final Throwable e) {
+        Log.e(TAG, Log.getStackTraceString(e));
+        Post("AudioRecord error: " + e.getMessage());
+    }
+
+    void Post(final String msg) {
+        handle.post(new Runnable() {
+            @Override
+            public void run() {
+                Error(msg);
             }
         });
     }
@@ -527,20 +545,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void Error(String msg) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Error");
-        builder.setMessage(msg);
-        builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-            }
-        });
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-            }
-        });
-        builder.show();
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
     void pauseButton() {
@@ -566,11 +571,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     void begin() {
         targetFile = storage.getNewFile();
-        if (!storage.recordingPending()) {
-            samplesTime = 0;
-        } else {
+        if (storage.recordingPending()) {
             RawSamples rs = new RawSamples(storage.getTempRecording());
             samplesTime = rs.getSamples();
+        } else {
+            samplesTime = 0;
         }
         startRecording();
     }
@@ -578,14 +583,25 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     void finish() {
         stopRecording();
         if (storage.recordingPending()) {
-            encoding(new Runnable() {
-                @Override
-                public void run() {
-                    deleteOld();
-                    showNotificationAlarm(false);
-                    MainActivity.last(RecordingService.this);
-                }
-            });
+            if (targetFile == null) { // service restart
+                targetFile = storage.getNewFile();
+            }
+            if (encoding == null) { // double finish()? skip
+                encoding = new Runnable() {
+                    @Override
+                    public void run() {
+                        deleteOld();
+                        showNotificationAlarm(false);
+                        encoding = null;
+                    }
+                };
+                encoding(encoding, new Runnable() {
+                    @Override
+                    public void run() {
+                        MainActivity.last(RecordingService.this);
+                    }
+                });
+            }
         }
     }
 
