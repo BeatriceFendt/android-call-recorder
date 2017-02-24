@@ -358,7 +358,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         recordings.close();
     }
 
@@ -409,7 +408,7 @@ public class MainActivity extends AppCompatActivity {
         if (play) {
             fab.setImageResource(R.drawable.ic_pause_black_24dp);
         } else {
-            fab.setImageResource(R.drawable.play);
+            fab.setImageResource(R.drawable.ic_play_arrow_black_24dp);
         }
     }
 

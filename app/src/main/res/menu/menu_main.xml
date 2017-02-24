@@ -6,7 +6,7 @@
         android:id="@+id/action_call"
         android:checkable="true"
         android:orderInCategory="100"
-        android:title="Call Recording"
+        android:title="@string/call_recording"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_settings"
