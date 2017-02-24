@@ -164,6 +164,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_THEME));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_CHANNELS));
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_DELETE));
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_FORMAT));
         } else {
             getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
         }
@@ -309,6 +311,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_THEME));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_CHANNELS));
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_DELETE));
+            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_FORMAT));
         }
 
         @Override

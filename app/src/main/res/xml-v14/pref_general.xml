@@ -36,7 +36,7 @@
         android:title="Mode" />
 
     <ListPreference
-        android:defaultValue="1"
+        android:defaultValue="off"
         android:entries="@array/delete_text"
         android:entryValues="@array/delete_values"
         android:key="delete"
@@ -46,7 +46,7 @@
         android:title="Delete Recordings" />
 
     <ListPreference
-        android:defaultValue="1"
+        android:defaultValue="%s"
         android:entries="@array/format_text"
         android:entryValues="@array/format_values"
         android:key="format"

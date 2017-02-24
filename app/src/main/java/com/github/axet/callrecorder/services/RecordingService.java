@@ -27,7 +27,6 @@ import android.widget.Toast;
 
 import com.github.axet.audiolibrary.app.RawSamples;
 import com.github.axet.audiolibrary.app.Sound;
-import com.github.axet.audiolibrary.app.Storage;
 import com.github.axet.audiolibrary.encoders.Encoder;
 import com.github.axet.audiolibrary.encoders.EncoderInfo;
 import com.github.axet.audiolibrary.encoders.Factory;
@@ -35,8 +34,10 @@ import com.github.axet.audiolibrary.encoders.FileEncoder;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.activities.MainActivity;
 import com.github.axet.callrecorder.app.MainApplication;
+import com.github.axet.callrecorder.app.Storage;
 
 import java.io.File;
+import java.util.Calendar;
 
 /**
  * RecordingActivity more likly to be removed from memory when paused then service. Notification button
@@ -46,7 +47,7 @@ import java.io.File;
  * <p/>
  * Maybe later this class will be converted for fully feature recording service with recording thread.
  */
-public class RecordingService extends Service {
+public class RecordingService extends Service implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String TAG = RecordingService.class.getSimpleName();
 
     public static final int NOTIFICATION_RECORDING_ICON = 1;
@@ -187,6 +188,8 @@ public class RecordingService extends Service {
         storage = new Storage(this);
         sound = new Sound(this);
 
+        deleteOld();
+
         pscl = new PhoneStateChangeListener();
         TelephonyManager tm = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
         tm.listen(pscl, PhoneStateListener.LISTEN_CALL_STATE);
@@ -201,6 +204,51 @@ public class RecordingService extends Service {
 
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
         sampleRate = Sound.getValidRecordRate(MainApplication.getMode(this), sampleRate);
+
+        shared.registerOnSharedPreferenceChangeListener(this);
+    }
+
+    void deleteOld() {
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        String d = shared.getString(MainApplication.PREFERENCE_DELETE, "off");
+        if (d.equals("off"))
+            return;
+
+        String[] ee = Factory.getEncodingValues(this);
+        File path = storage.getStoragePath();
+        File[] ff = path.listFiles();
+        for (File f : ff) {
+            String n = f.getName().toLowerCase();
+            for (String e : ee) {
+                e = e.toLowerCase();
+                if (n.endsWith(e)) {
+                    Calendar c = Calendar.getInstance();
+                    c.setTimeInMillis(f.lastModified());
+                    Calendar cur = c;
+
+                    if (d.equals("1week")) {
+                        cur = Calendar.getInstance();
+                        c.add(Calendar.WEEK_OF_YEAR, 1);
+                    }
+                    if (d.equals("1month")) {
+                        cur = Calendar.getInstance();
+                        c.add(Calendar.MONTH, 1);
+                    }
+                    if (d.equals("3month")) {
+                        cur = Calendar.getInstance();
+                        c.add(Calendar.MONTH, 3);
+                    }
+                    if (d.equals("6month")) {
+                        cur = Calendar.getInstance();
+                        c.add(Calendar.MONTH, 6);
+                    }
+
+                    if (c.before(cur)) {
+                        f.delete();
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -241,6 +289,9 @@ public class RecordingService extends Service {
         Log.d(TAG, "onDestory");
 
         showNotificationAlarm(false);
+
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        shared.unregisterOnSharedPreferenceChangeListener(this);
 
         if (receiver != null) {
             unregisterReceiver(receiver);
@@ -514,12 +565,7 @@ public class RecordingService extends Service {
     }
 
     void begin() {
-        try {
-            targetFile = storage.getNewFile();
-        } catch (RuntimeException e) {
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-            return;
-        }
+        targetFile = storage.getNewFile();
         if (!storage.recordingPending()) {
             samplesTime = 0;
         } else {
@@ -535,10 +581,18 @@ public class RecordingService extends Service {
             encoding(new Runnable() {
                 @Override
                 public void run() {
+                    deleteOld();
                     showNotificationAlarm(false);
                     MainActivity.last(RecordingService.this);
                 }
             });
+        }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(MainApplication.PREFERENCE_DELETE)) {
+            deleteOld();
         }
     }
 }

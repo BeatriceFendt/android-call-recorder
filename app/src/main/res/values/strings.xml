@@ -30,24 +30,23 @@
     </string-array>
 
     <string-array name="delete_values" translatable="false">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
+        <item>off</item>
+        <item>1week</item>
+        <item>1month</item>
+        <item>3month</item>
+        <item>6month</item>
     </string-array>
 
     <string-array name="format_text">
         <item>2017-02-01 09.08.01.wav</item>
-        <item>1487915284 +11 (392) 333-22-11.wav</item>
+        <item>1487926249.wav</item>
+        <item>1487926249 - +7(882)923-22-22.wav</item>
     </string-array>
 
-    <string-array name="format_values" translatable="false">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
+    <string-array name="format_values" translatable="false" formatted="false">
+        <item>%s</item>
+        <item>%T</item>
+        <item>%T - %p</item>
     </string-array>
 
     <string-array name="themes_text">
