@@ -28,9 +28,9 @@ import android.widget.Toast;
 
 import com.github.axet.androidlibrary.app.MainLibrary;
 import com.github.axet.audiolibrary.app.Recordings;
-import com.github.axet.audiolibrary.app.Storage;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
+import com.github.axet.callrecorder.app.Storage;
 import com.github.axet.callrecorder.services.RecordingService;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -176,13 +176,18 @@ public class MainActivity extends AppCompatActivity {
             storage.migrateLocalStorage();
         }
 
-        RecordingService.startService(this);
+        RecordingService.startIfEnabled(this);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+
+        MenuItem i = menu.findItem(R.id.action_call);
+        i.setChecked(shared.getBoolean(MainApplication.PREFERENCE_CALL, false));
         return true;
     }
 
@@ -197,6 +202,21 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
+        }
+
+        if (id == R.id.action_call) {
+            item.setChecked(!item.isChecked());
+            final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences.Editor edit = shared.edit();
+            edit.putBoolean(MainApplication.PREFERENCE_CALL, item.isChecked());
+            edit.commit();
+            if (item.isChecked()) {
+                RecordingService.startService(this);
+                Toast.makeText(this, "Recording enabled", Toast.LENGTH_SHORT).show();
+            } else {
+                RecordingService.stopService(this);
+                Toast.makeText(this, "Recording disabled", Toast.LENGTH_SHORT).show();
+            }
         }
 
         if (id == R.id.action_show_folder) {

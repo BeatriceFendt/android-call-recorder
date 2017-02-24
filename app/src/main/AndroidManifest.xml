@@ -18,6 +18,23 @@
         android:theme="@style/AppThemeLight">
         <service android:name="com.github.axet.callrecorder.services.RecordingService" />
 
+        <receiver android:name=".services.OnBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".services.OnUpgradeReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".services.OnExternalReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name="com.github.axet.callrecorder.activities.SettingsActivity"
             android:label="@string/app_name" />
