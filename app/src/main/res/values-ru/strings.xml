@@ -21,6 +21,14 @@
         <item>Стерео</item>
     </string-array>
 
+    <string-array name="delete_text">
+        <item>Не удалять записи</item>
+        <item>старше 1 недели</item>
+        <item>старше 1 месяца</item>
+        <item>старше 3 месяцев</item>
+        <item>старше 6 месяцев</item>
+    </string-array>
+
     <string name="action_settings">Настройки</string>
     <string name="not_permitted">Доступ запрещен</string>
     <string name="no_folder_app">Программа для просмотра папок не установлена</string>
@@ -33,10 +41,7 @@
     <string name="recording">запись</string>
     <string name="encoding_title">Кодирование...</string>
     <string name="recording_title">Запись</string>
-    <string name="db">дБ</string>
     <string name="title_header">%1$s свободно ~ %2$s</string>
-    <string name="rename">Переименовать</string>
-    <string name="delete">Удалить</string>
     <string name="open_recording_folder">Открыть папку с записями</string>
     <string name="recording_list_is_empty">Список записей пуст.\n\nНажмите на \'Микрофон\' чтобы начать запись.</string>
 </resources>
