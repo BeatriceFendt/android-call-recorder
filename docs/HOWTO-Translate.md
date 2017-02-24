@@ -1,6 +1,6 @@
 # How To Translate
 
-To translate 'Audio Recorder' to your language you need to translate following files:
+To translate 'Call Recorder' to your language you need to translate following files:
 
   * [pref_general.xml](/app/src/main/res/xml/pref_general.xml)
   * [strings.xml](/app/src/main/res/values/strings.xml)
