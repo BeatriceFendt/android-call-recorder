@@ -17,6 +17,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.telephony.PhoneNumberUtils;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -179,7 +180,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             return;
         if (s.isEmpty())
             return;
-        phone = s;
+        phone = PhoneNumberUtils.formatNumber(s);
     }
 
     @Override
@@ -577,7 +578,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void begin() {
-        targetFile = storage.getNewFile();
+        targetFile = storage.getNewFile(phone);
         if (storage.recordingPending()) {
             RawSamples rs = new RawSamples(storage.getTempRecording());
             samplesTime = rs.getSamples();
@@ -591,7 +592,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         stopRecording();
         if (storage.recordingPending()) {
             if (targetFile == null) { // service restart
-                targetFile = storage.getNewFile();
+                targetFile = storage.getNewFile(phone);
             }
             if (encoding != null) { // double finish()? skip
                 return;

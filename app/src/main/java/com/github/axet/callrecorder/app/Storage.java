@@ -9,12 +9,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Storage extends com.github.axet.audiolibrary.app.Storage {
+    SimpleDateFormat simple = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
+
     public Storage(Context context) {
         super(context);
     }
 
-    @Override
-    public File getNewFile() {
+    public File getNewFile(String phone) {
         String name = "";
 
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
@@ -22,9 +23,20 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
 
         String format = shared.getString(MainApplication.PREFERENCE_FORMAT, "%s");
 
+        if (format.equals("%T")) {
+            name = "" + System.currentTimeMillis() / 1000;
+        }
+
+        if (format.equals("%T - %p")) {
+            name = System.currentTimeMillis() / 1000 + " - " + phone;
+        }
+
+        if (format.equals("%s - %p")) {
+            name = simple.format(new Date()) + " - " + phone;
+        }
+
         if (format.equals("%s") || name.isEmpty()) {
-            SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
-            name = s.format(new Date());
+            name = simple.format(new Date());
         }
 
         File parent = getStoragePath();
