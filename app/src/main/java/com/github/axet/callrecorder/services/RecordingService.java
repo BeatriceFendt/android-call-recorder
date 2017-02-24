@@ -126,17 +126,19 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         }
                         break;
                     case TelephonyManager.CALL_STATE_IDLE:
-                        if (tm.getCallState() != TelephonyManager.CALL_STATE_OFFHOOK) { // current state maybe differed from queued one
-                            if (startedByCall) {
+                        if (startedByCall) {
+                            if (tm.getCallState() != TelephonyManager.CALL_STATE_OFFHOOK) { // current state maybe differed from queued one
                                 finish();
                             } else {
-                                if (storage.recordingPending()) { // handling restart after call finished
-                                    finish();
-                                }
+                                return; // fast clicking. new call already stared. keep recording. do not reset startedByCall
                             }
-                            wasRinging = false;
-                            startedByCall = false;
+                        } else {
+                            if (storage.recordingPending()) { // handling restart after call finished
+                                finish();
+                            }
                         }
+                        wasRinging = false;
+                        startedByCall = false;
                         break;
                 }
             } catch (RuntimeException e) {
