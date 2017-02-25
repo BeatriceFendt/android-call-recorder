@@ -86,5 +86,5 @@
     <string name="recording_title">Recording</string>
     <string name="title_header">%1$s free ~ %2$s left</string>
     <string name="open_recording_folder">Open Recording Folder</string>
-    <string name="recording_list_is_empty">Recording List is Empty\n\nCheck \'Calls Recording\' to Start Calls Recording</string>
+    <string name="recording_list_is_empty">Recording List is Empty\n\nCheck \'Calls Recording\' to Start Recording Calls</string>
 </resources>
