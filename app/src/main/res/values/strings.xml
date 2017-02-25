@@ -39,16 +39,16 @@
 
     <string-array name="format_text" translatable="false">
         <item>2017-02-01 09.08.01.wav</item>
-        <item>2017-02-01 09.08.01 - +1(123)123-12-12.wav</item>
+        <item>2017-02-01 09.08.01 +1(123)123-12-12.wav</item>
         <item>1487926249.wav</item>
-        <item>1487926249 - +1(123)123-12-12.wav</item>
+        <item>1487926249 +1(123)123-12-12.wav</item>
     </string-array>
 
     <string-array name="format_values" formatted="false" translatable="false">
         <item>%s</item>
-        <item>%s - %p</item>
+        <item>%s %p</item>
         <item>%T</item>
-        <item>%T - %p</item>
+        <item>%T %p</item>
     </string-array>
 
     <string-array name="themes_text">

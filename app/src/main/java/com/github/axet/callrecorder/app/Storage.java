@@ -16,28 +16,14 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
     }
 
     public File getNewFile(String phone) {
-        String name = "";
-
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
         String ext = shared.getString(com.github.axet.audiolibrary.app.MainApplication.PREFERENCE_ENCODING, "");
 
         String format = shared.getString(MainApplication.PREFERENCE_FORMAT, "%s");
 
-        if (format.equals("%T")) {
-            name = "" + System.currentTimeMillis() / 1000;
-        }
-
-        if (format.equals("%T - %p")) {
-            name = System.currentTimeMillis() / 1000 + " - " + phone;
-        }
-
-        if (format.equals("%s - %p")) {
-            name = simple.format(new Date()) + " - " + phone;
-        }
-
-        if (format.equals("%s") || name.isEmpty()) {
-            name = simple.format(new Date());
-        }
+        format = format.replaceAll("%T", "" + System.currentTimeMillis() / 1000);
+        format = format.replaceAll("%p", phone);
+        format = format.replaceAll("%s", simple.format(new Date()));
 
         File parent = getStoragePath();
         if (!parent.exists()) {
@@ -45,6 +31,6 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
                 throw new RuntimeException("Unable to create: " + parent);
         }
 
-        return getNextFile(parent, name, ext);
+        return getNextFile(parent, format, ext);
     }
 }
