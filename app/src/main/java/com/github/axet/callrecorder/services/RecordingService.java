@@ -472,7 +472,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     EncoderInfo getInfo() {
         final int channels = MainApplication.getChannels(this);
         final int bps = Sound.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
-
         return new EncoderInfo(channels, sampleRate, bps);
     }
 
