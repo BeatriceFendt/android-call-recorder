@@ -38,7 +38,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity {
     public final static String TAG = MainActivity.class.getSimpleName();
@@ -53,10 +52,12 @@ public class MainActivity extends AppCompatActivity {
      */
     private GoogleApiClient client;
     FloatingActionButton fab;
+    FloatingActionButton fab_stop;
     View fab_panel;
     TextView status;
     boolean show;
     boolean play;
+    int encoding;
     String phone;
     long sec;
 
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String a = intent.getAction();
             if (a.equals(SHOW_PROGRESS)) {
+                encoding = -1;
                 show = intent.getBooleanExtra("show", false);
                 play = intent.getBooleanExtra("play", false);
                 sec = intent.getLongExtra("sec", 0);
@@ -79,8 +81,8 @@ public class MainActivity extends AppCompatActivity {
                 updatePanel();
             }
             if (a.equals(SET_PROGRESS)) {
-                int i = intent.getIntExtra("set", 0);
-                status.setText("Encoding " + i + "%");
+                encoding = intent.getIntExtra("set", 0);
+                updatePanel();
             }
             if (a.equals(SHOW_LAST)) {
                 last();
@@ -149,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
         fab_panel = findViewById(R.id.fab_panel);
         status = (TextView) fab_panel.findViewById(R.id.status);
 
-        View fab_stop = findViewById(R.id.fab_stop);
+        fab_stop = (FloatingActionButton) findViewById(R.id.fab_stop);
         fab_stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -404,7 +406,15 @@ public class MainActivity extends AppCompatActivity {
     void updatePanel() {
         fab_panel.setVisibility(show ? View.VISIBLE : View.GONE);
         fab.setVisibility(show ? View.VISIBLE : View.GONE);
-        status.setText(phone + " - " + MainLibrary.formatDuration(this, sec * 1000));
+        if (encoding >= 0) {
+            status.setText(getString(R.string.encoding_title) + encoding + "%");
+            fab.setVisibility(View.GONE);
+            fab_stop.setVisibility(View.INVISIBLE);
+        } else {
+            status.setText(phone + " - " + MainLibrary.formatDuration(this, sec * 1000));
+            fab.setVisibility(View.VISIBLE);
+            fab_stop.setVisibility(View.VISIBLE);
+        }
         if (play) {
             fab.setImageResource(R.drawable.ic_pause_black_24dp);
         } else {
