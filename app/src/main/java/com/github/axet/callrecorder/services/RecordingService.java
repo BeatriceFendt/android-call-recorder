@@ -21,6 +21,7 @@ import android.telephony.PhoneNumberUtils;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -346,9 +347,13 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             String text = ".../" + targetFile.getName();
 
             view.setOnClickPendingIntent(R.id.status_bar_latest_event_content, main);
+            view.setTextViewText(R.id.notification_title, title);
             view.setTextViewText(R.id.notification_text, text);
             view.setOnClickPendingIntent(R.id.notification_pause, pe);
             view.setImageViewResource(R.id.notification_pause, thread == null ? R.drawable.ic_play_arrow_black_24dp : R.drawable.ic_pause_black_24dp);
+
+            if (encoding != null)
+                view.setViewVisibility(R.id.notification_pause, View.GONE);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                     .setOngoing(true)
@@ -589,12 +594,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     void finish() {
         stopRecording();
-        if (storage.recordingPending()) {
+        if (storage.recordingPending() && encoding == null) { // double finish()? skip
             if (targetFile == null) { // service restart
                 targetFile = storage.getNewFile(phone);
-            }
-            if (encoding != null) { // double finish()? skip
-                return;
             }
             encoding = new Runnable() {
                 @Override
