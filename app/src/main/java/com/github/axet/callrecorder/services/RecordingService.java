@@ -38,6 +38,7 @@ import com.github.axet.callrecorder.app.Storage;
 
 import java.io.File;
 import java.util.Calendar;
+import java.util.HashMap;
 
 /**
  * RecordingActivity more likly to be removed from memory when paused then service. Notification button
@@ -71,6 +72,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     long samplesTime;
     FileEncoder encoder;
     Runnable encoding; // current encoding
+    HashMap<File, File> map = new HashMap<>();
 
     class RecordingReceiver extends BroadcastReceiver {
         @Override
@@ -88,7 +90,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }
     }
 
-    String phone = "(restarted)";
+    String phone = "";
 
     public class PhoneStateReceiver extends BroadcastReceiver {
         @Override
@@ -121,9 +123,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         wasRinging = true;
                         break;
                     case TelephonyManager.CALL_STATE_OFFHOOK:
-                        wasRinging = true;
                         if (thread == null) { // handling restart while current call
-                            begin();
+                            begin(wasRinging);
                             startedByCall = true;
                         }
                         break;
@@ -137,6 +138,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         } else {
                             if (storage.recordingPending()) { // handling restart after call finished
                                 finish();
+                            } else if (storage.recordingNextPending()) {
+                                if (encoding == null)
+                                    encodingNext();
                             }
                         }
                         wasRinging = false;
@@ -480,8 +484,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         return new EncoderInfo(channels, sampleRate, bps);
     }
 
-    void encoding(final Runnable done, final Runnable success) {
-        final File in = storage.getTempRecording();
+    void encoding(final File in, File targetFile, final Runnable done, final Runnable success) {
         final File out = targetFile;
 
         File parent = targetFile.getParentFile();
@@ -520,6 +523,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                 success.run();
                 done.run();
+                encodingNext();
             }
         }, new Runnable() {
             @Override
@@ -546,6 +550,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void Error(Throwable e) {
+        Log.d(TAG, "Error", e);
         String msg = e.getMessage();
         if (msg == null || msg.isEmpty()) {
             Throwable t = encoder.getException();
@@ -581,8 +586,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }
     }
 
-    void begin() {
+    void begin(boolean wasRinging) {
         targetFile = storage.getNewFile(phone);
+        if (encoding != null) {
+            encoder.pause();
+        }
         if (storage.recordingPending()) {
             RawSamples rs = new RawSamples(storage.getTempRecording());
             samplesTime = rs.getSamples();
@@ -594,26 +602,44 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     void finish() {
         stopRecording();
-        if (storage.recordingPending() && encoding == null) { // double finish()? skip
-            if (targetFile == null) { // service restart
-                targetFile = storage.getNewFile(phone);
+        if (storage.recordingPending()) {
+            File tmp = storage.getTempRecording();
+            File in = Storage.getNextFile(tmp.getParentFile(), Storage.TMP_REC, null);
+            Storage.move(tmp, in);
+            map.put(in, targetFile);
+            if (encoding == null) { // double finish()? skip
+                encodingNext();
+            } else {
+                encoder.resume();
             }
-            encoding = new Runnable() {
-                @Override
-                public void run() {
-                    deleteOld();
-                    showNotificationAlarm(false);
-                    encoding = null;
-                }
-            };
-            showNotificationAlarm(true); // update status (encoding)
-            encoding(encoding, new Runnable() {
-                @Override
-                public void run() {
-                    MainActivity.last(RecordingService.this);
-                }
-            });
         }
+    }
+
+    void encodingNext() {
+        final File inFile = storage.getTempNextRecording();
+        if (!inFile.exists())
+            return;
+        targetFile = map.get(inFile);
+        if (targetFile == null) { // service restart
+            targetFile = storage.getNewFile(phone);
+        }
+        encoding = new Runnable() {
+            @Override
+            public void run() {
+                deleteOld();
+                showNotificationAlarm(false);
+                encoding = null;
+            }
+        };
+        showNotificationAlarm(true); // update status (encoding)
+        Log.d(TAG, "Encode " + inFile.getName() + " to " + targetFile.getName());
+        encoding(inFile, targetFile, encoding, new Runnable() {
+            @Override
+            public void run() { // success
+                map.remove(inFile);
+                MainActivity.last(RecordingService.this);
+            }
+        });
     }
 
     @Override
