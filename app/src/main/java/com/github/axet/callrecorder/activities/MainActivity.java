@@ -405,14 +405,13 @@ public class MainActivity extends AppCompatActivity {
 
     void updatePanel() {
         fab_panel.setVisibility(show ? View.VISIBLE : View.GONE);
-        fab.setVisibility(show ? View.VISIBLE : View.GONE);
         if (encoding >= 0) {
             status.setText(getString(R.string.encoding_title) + encoding + "%");
             fab.setVisibility(View.GONE);
             fab_stop.setVisibility(View.INVISIBLE);
         } else {
             status.setText(phone + " - " + MainLibrary.formatDuration(this, sec * 1000));
-            fab.setVisibility(View.VISIBLE);
+            fab.setVisibility(show ? View.VISIBLE : View.GONE);
             fab_stop.setVisibility(View.VISIBLE);
         }
         if (play) {
