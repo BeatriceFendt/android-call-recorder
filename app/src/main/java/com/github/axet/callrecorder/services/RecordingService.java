@@ -484,10 +484,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         return new EncoderInfo(channels, sampleRate, bps);
     }
 
-    void encoding(final File in, File targetFile, final Runnable done, final Runnable success) {
-        final File out = targetFile;
-
-        File parent = targetFile.getParentFile();
+    void encoding(final File in, final File out, final Runnable done, final Runnable success) {
+        File parent = out.getParentFile();
 
         if (!parent.exists()) {
             if (!parent.mkdirs()) { // in case if it were manually deleted
