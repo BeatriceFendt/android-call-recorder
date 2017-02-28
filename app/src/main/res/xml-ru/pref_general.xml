@@ -17,7 +17,7 @@
         android:title="Частота записи" />
 
     <ListPreference
-        android:defaultValue="wav"
+        android:defaultValue="ogg"
         android:entries="@array/encodings_text"
         android:entryValues="@array/encodings_values"
         android:key="encoding"
