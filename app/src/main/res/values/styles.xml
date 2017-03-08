@@ -4,7 +4,7 @@
         <item name="round_corners">@drawable/round_corners_light</item>
     </style>
 
-    <style name="RecThemeDark" parent="Theme.AppCompat">
+    <style name="RecThemeDark" parent="AppThemeDark">
         <item name="round_corners">@drawable/round_corners_dark</item>
     </style>
 
