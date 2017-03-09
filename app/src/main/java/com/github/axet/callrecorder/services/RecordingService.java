@@ -273,9 +273,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         if (intent != null) {
             String a = intent.getAction();
-
             if (a == null) {
-                ;
+                ; // nothing
             } else if (a.equals(PAUSE_BUTTON)) {
                 Intent i = new Intent(PAUSE_BUTTON);
                 sendBroadcast(i);
@@ -411,14 +410,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     };
                     for (int s : ss) {
                         try {
-                            if (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED) {
-                                Log.d(TAG, "Recording: " + s);
-                                recorder = new AudioRecord(s, sampleRate, MainApplication.getMode(RecordingService.this), Sound.AUDIO_FORMAT, min * 2);
-                            }
+                            recorder = new AudioRecord(s, sampleRate, MainApplication.getMode(RecordingService.this), Sound.AUDIO_FORMAT, min * 2);
                             if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
                                 break;
                         } catch (IllegalArgumentException e) {
-                            recorder = null;
+                            Log.d(TAG, "Recorder Create Failed: " + s, e);
                         }
                     }
                     if (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED) {
@@ -513,7 +509,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             @Override
             public void run() {
                 MainActivity.showProgress(RecordingService.this, false, phone, samplesTime / sampleRate, false);
-                storage.delete(in);
+                Storage.delete(in);
 
                 SharedPreferences.Editor edit = shared.edit();
                 edit.putString(MainApplication.PREFERENCE_LAST, out.getName());
