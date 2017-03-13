@@ -24,6 +24,7 @@ import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.github.axet.audiolibrary.app.Storage;
 import com.github.axet.audiolibrary.encoders.Factory;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
@@ -61,6 +62,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
+            String key = preference.getKey();
 
             if (preference instanceof ListPreference) {
                 // For list preferences, look up the correct display value in
@@ -92,7 +94,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             } else {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
-                preference.setSummary(stringValue);
+                if (key.equals(MainApplication.PREFERENCE_STORAGE)) { // if storage is disabled, show local path
+                    Storage storage = new Storage(preference.getContext());
+                    preference.setSummary(storage.getStoragePath().toString());
+                } else {
+                    preference.setSummary(stringValue);
+                }
             }
             return true;
         }
