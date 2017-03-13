@@ -241,7 +241,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     public static boolean permitted(Context context, String[] ss) {
-        if (Build.VERSION.SDK_INT < 11)
+        if (Build.VERSION.SDK_INT < 16)
             return true;
         for (String s : ss) {
             if (ContextCompat.checkSelfPermission(context, s) != PackageManager.PERMISSION_GRANTED) {

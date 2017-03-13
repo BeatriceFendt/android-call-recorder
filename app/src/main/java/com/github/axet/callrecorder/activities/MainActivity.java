@@ -324,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     boolean permitted(String[] ss) {
-        if (Build.VERSION.SDK_INT < 11)
+        if (Build.VERSION.SDK_INT < 16)
             return true;
         for (String s : ss) {
             if (ContextCompat.checkSelfPermission(this, s) != PackageManager.PERMISSION_GRANTED) {
@@ -335,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     boolean permitted() {
-        if (Build.VERSION.SDK_INT < 11)
+        if (Build.VERSION.SDK_INT < 16)
             return true;
         for (String s : PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, s) != PackageManager.PERMISSION_GRANTED) {
