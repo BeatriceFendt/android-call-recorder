@@ -43,11 +43,6 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-    compile 'com.github.axet:android-audio-library:0.0.10' // compile project(':android-audio-library')
-    debugCompile  'com.github.axet:libogg:1.3.2-2:debug@aar'
-    debugCompile  'com.github.axet:libvorbis:1.3.5-2:debug@aar'
-    debugCompile  'com.github.axet:vorbis:1.0.0-2:debug@aar'
-    releaseCompile  'com.github.axet:libogg:1.3.2-2:release@aar'
-    releaseCompile  'com.github.axet:libvorbis:1.3.5-2:release@aar'
-    releaseCompile  'com.github.axet:vorbis:1.0.0-2:release@aar'
+    //compile 'com.github.axet:android-audio-library:0.0.11'
+    compile project(':android-audio-library')
 }
