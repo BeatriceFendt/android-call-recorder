@@ -269,11 +269,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
-            if (!Storage.permitted(getActivity(), PERMISSIONS)) {
-                Preference p = findPreference(MainApplication.PREFERENCE_STORAGE);
-                getPreferenceScreen().removePreference(p);
-            }
-
             ListPreference enc = (ListPreference) findPreference(MainApplication.PREFERENCE_ENCODING);
             String v = enc.getValue();
             CharSequence[] ee = Factory.getEncodingTexts(getActivity());
