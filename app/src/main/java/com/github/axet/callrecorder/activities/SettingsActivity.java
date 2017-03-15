@@ -92,14 +92,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     preference.setSummary(name);
                 }
             } else {
-                // For all other preferences, set the summary to the value's
-                // simple string representation.
-                if (key.equals(MainApplication.PREFERENCE_STORAGE)) { // if storage is disabled, show local path
-                    Storage storage = new Storage(preference.getContext());
-                    preference.setSummary(storage.getStoragePath().toString());
-                } else {
-                    preference.setSummary(stringValue);
-                }
+                preference.setSummary(stringValue);
             }
             return true;
         }
@@ -146,7 +139,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
         if (Build.VERSION.SDK_INT < 11) {
             addPreferencesFromResource(R.xml.pref_general);
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_STORAGE));
 
             ListPreference enc = (ListPreference) findPreference(MainApplication.PREFERENCE_ENCODING);
             String v = enc.getValue();
@@ -231,7 +223,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 1:
-                if (permitted(this, permissions))
+                if (Storage.permitted(this, permissions))
                     ;
                 else
                     Toast.makeText(this, R.string.not_permitted, Toast.LENGTH_SHORT).show();
@@ -239,17 +231,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     }
 
     public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-
-    public static boolean permitted(Context context, String[] ss) {
-        if (Build.VERSION.SDK_INT < 16)
-            return true;
-        for (String s : ss) {
-            if (ContextCompat.checkSelfPermission(context, s) != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -288,11 +269,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
-            if (!permitted(getActivity(), PERMISSIONS)) {
+            if (!Storage.permitted(getActivity(), PERMISSIONS)) {
                 Preference p = findPreference(MainApplication.PREFERENCE_STORAGE);
                 getPreferenceScreen().removePreference(p);
-            } else {
-                bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_STORAGE));
             }
 
             ListPreference enc = (ListPreference) findPreference(MainApplication.PREFERENCE_ENCODING);
