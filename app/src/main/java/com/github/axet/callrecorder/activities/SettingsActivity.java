@@ -6,20 +6,21 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
-import android.support.v4.content.ContextCompat;
+import android.preference.SwitchPreference;
+import android.provider.Settings;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -160,6 +161,31 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 getPreferenceScreen().removePreference(enc);
             }
 
+            final String n = getPackageName();
+            final PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            Preference optimization = findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
+            if (Build.VERSION.SDK_INT < 23) {
+                getPreferenceScreen().removePreference(optimization);
+            } else {
+                SwitchPreference p = (SwitchPreference) optimization;
+                p.setChecked(pm.isIgnoringBatteryOptimizations(n));
+                p.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                    @Override
+                    @TargetApi(23)
+                    public boolean onPreferenceChange(Preference preference, Object o) {
+                        if (pm.isIgnoringBatteryOptimizations(n)) {
+                            Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                            startActivity(intent);
+                        } else {
+                            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                            intent.setData(Uri.parse("package:" + n));
+                            startActivity(intent);
+                        }
+                        return false;
+                    }
+                });
+            }
+
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_THEME));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_CHANNELS));
@@ -167,6 +193,20 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_FORMAT));
         } else {
             getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
+        }
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        final String n = getPackageName();
+        if (Build.VERSION.SDK_INT >= 23) {
+            SwitchPreference optimization = (SwitchPreference) findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
+            if (optimization != null) {
+                optimization.setChecked(pm.isIgnoringBatteryOptimizations(n));
+            }
         }
     }
 
@@ -289,11 +329,51 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 getPreferenceScreen().removePreference(enc);
             }
 
+            final String n = getActivity().getPackageName();
+            final PowerManager pm = (PowerManager) getActivity().getSystemService(POWER_SERVICE);
+
+            Preference optimization = findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
+
+            if (Build.VERSION.SDK_INT < 23) {
+                getPreferenceScreen().removePreference(optimization);
+            } else {
+                SwitchPreference p = (SwitchPreference) optimization;
+                p.setChecked(pm.isIgnoringBatteryOptimizations(n));
+                p.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                    @Override
+                    @TargetApi(23)
+                    public boolean onPreferenceChange(Preference preference, Object o) {
+                        if (pm.isIgnoringBatteryOptimizations(n)) {
+                            Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                            startActivity(intent);
+                        } else {
+                            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                            intent.setData(Uri.parse("package:" + n));
+                            startActivity(intent);
+                        }
+                        return false;
+                    }
+                });
+            }
+
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_THEME));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_CHANNELS));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_DELETE));
             bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_FORMAT));
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            final PowerManager pm = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
+            final String n = getActivity().getPackageName();
+            if (Build.VERSION.SDK_INT >= 23) {
+                SwitchPreference optimization = (SwitchPreference) findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
+                if (optimization != null) {
+                    optimization.setChecked(pm.isIgnoringBatteryOptimizations(n));
+                }
+            }
         }
 
         @Override
