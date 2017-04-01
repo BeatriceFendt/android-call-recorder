@@ -55,6 +55,13 @@
         android:summary="2015-11"
         android:title="Name Format" />
 
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="optimization"
+        android:persistent="false"
+        android:summary="Disable Battery Optimization"
+        android:title="Battery Optimization" />
+
     <ListPreference
         android:defaultValue="Theme_White"
         android:entries="@array/themes_text"
