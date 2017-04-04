@@ -18,6 +18,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
 import android.preference.SwitchPreference;
 import android.provider.Settings;
@@ -129,6 +130,60 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                         .getString(preference.getKey(), ""));
     }
 
+    static void initPrefs(PreferenceManager manager, PreferenceScreen screen) {
+        final Context context = screen.getContext();
+        ListPreference enc = (ListPreference) manager.findPreference(MainApplication.PREFERENCE_ENCODING);
+        String v = enc.getValue();
+        CharSequence[] ee = Factory.getEncodingTexts(context);
+        CharSequence[] vv = Factory.getEncodingValues(context);
+        if (ee.length > 1) {
+            enc.setEntries(ee);
+            enc.setEntryValues(vv);
+
+            int i = enc.findIndexOfValue(v);
+            if (i == -1) {
+                enc.setValueIndex(0);
+            } else {
+                enc.setValueIndex(i);
+            }
+
+            bindPreferenceSummaryToValue(enc);
+        } else {
+            screen.removePreference(enc);
+        }
+
+        final String n = context.getPackageName();
+        final PowerManager pm = (PowerManager) context.getSystemService(POWER_SERVICE);
+        Preference optimization = manager.findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
+        if (Build.VERSION.SDK_INT < 23) {
+            screen.removePreference(optimization);
+        } else {
+            SwitchPreference p = (SwitchPreference) optimization;
+            p.setChecked(pm.isIgnoringBatteryOptimizations(n));
+            p.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                @TargetApi(23)
+                public boolean onPreferenceChange(Preference preference, Object o) {
+                    if (pm.isIgnoringBatteryOptimizations(n)) {
+                        Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                        context.startActivity(intent);
+                    } else {
+                        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                        intent.setData(Uri.parse("package:" + n));
+                        context.startActivity(intent);
+                    }
+                    return false;
+                }
+            });
+        }
+
+        bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_RATE));
+        bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_THEME));
+        bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_CHANNELS));
+        bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_DELETE));
+        bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_FORMAT));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -140,57 +195,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
         if (Build.VERSION.SDK_INT < 11) {
             addPreferencesFromResource(R.xml.pref_general);
-
-            ListPreference enc = (ListPreference) findPreference(MainApplication.PREFERENCE_ENCODING);
-            String v = enc.getValue();
-            CharSequence[] ee = Factory.getEncodingTexts(this);
-            CharSequence[] vv = Factory.getEncodingValues(this);
-            if (ee.length > 1) {
-                enc.setEntries(ee);
-                enc.setEntryValues(vv);
-
-                int i = enc.findIndexOfValue(v);
-                if (i == -1) {
-                    enc.setValueIndex(0);
-                } else {
-                    enc.setValueIndex(i);
-                }
-
-                bindPreferenceSummaryToValue(enc);
-            } else {
-                getPreferenceScreen().removePreference(enc);
-            }
-
-            final String n = getPackageName();
-            final PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-            Preference optimization = findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
-            if (Build.VERSION.SDK_INT < 23) {
-                getPreferenceScreen().removePreference(optimization);
-            } else {
-                SwitchPreference p = (SwitchPreference) optimization;
-                p.setChecked(pm.isIgnoringBatteryOptimizations(n));
-                p.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                    @Override
-                    @TargetApi(23)
-                    public boolean onPreferenceChange(Preference preference, Object o) {
-                        if (pm.isIgnoringBatteryOptimizations(n)) {
-                            Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                            startActivity(intent);
-                        } else {
-                            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                            intent.setData(Uri.parse("package:" + n));
-                            startActivity(intent);
-                        }
-                        return false;
-                    }
-                });
-            }
-
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_THEME));
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_CHANNELS));
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_DELETE));
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_FORMAT));
+            initPrefs(getPreferenceManager(), getPreferenceScreen());
         } else {
             getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
         }
@@ -253,6 +258,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
      * This method stops fragment injection in malicious applications.
      * Make sure to deny any unknown fragments here.
      */
+    @TargetApi(11)
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName);
@@ -306,61 +312,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
-
-            ListPreference enc = (ListPreference) findPreference(MainApplication.PREFERENCE_ENCODING);
-            String v = enc.getValue();
-            CharSequence[] ee = Factory.getEncodingTexts(getActivity());
-            CharSequence[] vv = Factory.getEncodingValues(getActivity());
-            if (ee.length > 1) {
-                enc.setEntries(ee);
-                enc.setEntryValues(vv);
-
-                int i = enc.findIndexOfValue(v);
-                if (i == -1) {
-                    enc.setValueIndex(0);
-                } else {
-                    enc.setValueIndex(i);
-                }
-
-                bindPreferenceSummaryToValue(enc);
-            } else {
-                getPreferenceScreen().removePreference(enc);
-            }
-
-            final String n = getActivity().getPackageName();
-            final PowerManager pm = (PowerManager) getActivity().getSystemService(POWER_SERVICE);
-
-            Preference optimization = findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
-
-            if (Build.VERSION.SDK_INT < 23) {
-                getPreferenceScreen().removePreference(optimization);
-            } else {
-                SwitchPreference p = (SwitchPreference) optimization;
-                p.setChecked(pm.isIgnoringBatteryOptimizations(n));
-                p.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                    @Override
-                    @TargetApi(23)
-                    public boolean onPreferenceChange(Preference preference, Object o) {
-                        if (pm.isIgnoringBatteryOptimizations(n)) {
-                            Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                            startActivity(intent);
-                        } else {
-                            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                            intent.setData(Uri.parse("package:" + n));
-                            startActivity(intent);
-                        }
-                        return false;
-                    }
-                });
-            }
-
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_RATE));
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_THEME));
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_CHANNELS));
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_DELETE));
-            bindPreferenceSummaryToValue(findPreference(MainApplication.PREFERENCE_FORMAT));
+            addPreferencesFromResource(R.xml.pref_general);
+            initPrefs(getPreferenceManager(), getPreferenceScreen());
         }
 
         @Override
