@@ -4,11 +4,7 @@ Android friendly!
 
 Call Recorder with custom recording folder, nice recording volume indicator, recording notification, recording lock screen activity.
 
-# Install
-
-[![ Google Play](docs/google-play-badge.png)](https://play.google.com/store/apps/details?id=com.github.axet.callrecorder) 
-
-Manual install
+# Manual install
 
     gradle installDebug
 
