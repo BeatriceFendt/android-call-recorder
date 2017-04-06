@@ -2,7 +2,7 @@
 
 Android friendly!
 
-Call Recorder with custom recording folder, nice recording volume indicator, recording notification, recording lock screen activity.
+Call Recorder with custom recording folder.
 
 MOST PHONES DOES NOT SUPPORT CALL RECORDING. Blame Google or your phone manufacturer not me!
 
