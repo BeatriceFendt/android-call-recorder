@@ -80,6 +80,11 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         }
     };
 
+
+    int getAppTheme() {
+        return MainApplication.getTheme(this, R.style.RecThemeLight, R.style.RecThemeDark);
+    }
+
     /**
      * Helper method to determine if the device has an extra-large screen. For
      * example, 10" tablets are extra-large.
@@ -144,6 +149,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(getAppTheme());
         super.onCreate(savedInstanceState);
 
         setupActionBar();

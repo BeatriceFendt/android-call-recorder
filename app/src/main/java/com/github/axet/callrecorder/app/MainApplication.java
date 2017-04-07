@@ -1,6 +1,6 @@
 package com.github.axet.callrecorder.app;
 
-import android.preference.PreferenceManager;
+import android.support.v7.preference.PreferenceManager;
 
 import com.github.axet.callrecorder.R;
 
