@@ -2,13 +2,17 @@
 
 Android friendly!
 
-Call Recorder with custom recording folder, nice recording volume indicator, recording notification, recording lock screen activity.
+Call Recorder with custom recording folder.
 
-# Install
+MOST PHONES DOES NOT SUPPORT CALL RECORDING. Blame Google or your phone manufacturer not me!
 
-[![ Google Play](docs/google-play-badge.png)](https://play.google.com/store/apps/details?id=com.github.axet.callrecorder) 
+If it fails with high quality sound recording (voice line) this app will switch back to the MIC recording, no ads, open-source, GPLv3.
 
-Manual install
+Google knows about issue but do nothing, can read more here:
+
+https://code.google.com/p/android/issues/detail?id=206613#c13
+
+# Manual install
 
     gradle installDebug
 
