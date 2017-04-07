@@ -1,6 +1,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <com.github.axet.androidlibrary.widgets.StoragePathPreference
+    <com.github.axet.androidlibrary.widgets.StoragePathPreferenceCompat
         android:defaultValue="Call Recorder"
         android:key="storage_path"
         android:summary="/sdcard/some/"
@@ -44,7 +44,7 @@
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:summary="1 month"
-        android:title="Delete Recordings" />
+        android:title="Удалять записи" />
 
     <ListPreference
         android:defaultValue="%s"
@@ -54,9 +54,9 @@
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:summary="2015-11"
-        android:title="Name Format" />
+        android:title="Формат имени" />
 
-    <CheckBoxPreference
+    <com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat
         android:defaultValue="true"
         android:key="optimization"
         android:summary="Предотвращать удаление программы из памяти телефона"

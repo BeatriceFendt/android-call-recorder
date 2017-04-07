@@ -1,6 +1,5 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-    <com.github.axet.androidlibrary.widgets.StoragePathPreference
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.github.axet.androidlibrary.widgets.StoragePathPreferenceCompat
         android:defaultValue="Call Recorder"
         android:key="storage_path"
         android:summary="/sdcard/some/"
@@ -56,7 +55,7 @@
         android:summary="2015-11"
         android:title="Name Format" />
 
-    <CheckBoxPreference
+    <com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat
         android:defaultValue="false"
         android:key="optimization"
         android:persistent="false"
