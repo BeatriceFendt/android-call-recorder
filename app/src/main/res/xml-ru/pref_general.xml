@@ -59,7 +59,7 @@
     <CheckBoxPreference
         android:defaultValue="true"
         android:key="optimization"
-        android:summary="Отключить оптимизацию расхода батареи"
+        android:summary="Предотвращать удаление программы из памяти телефона"
         android:title="Оптимизация батареи" />
 
     <ListPreference

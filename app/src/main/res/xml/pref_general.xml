@@ -60,7 +60,7 @@
         android:defaultValue="false"
         android:key="optimization"
         android:persistent="false"
-        android:summary="Disable Battery Optimization"
+        android:summary="Prevent app to be removed from memory"
         android:title="Battery Optimization" />
 
     <ListPreference
