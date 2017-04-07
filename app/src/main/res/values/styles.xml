@@ -2,10 +2,12 @@
 
     <style name="RecThemeLight" parent="AppThemeLight">
         <item name="round_corners">@drawable/round_corners_light</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
     <style name="RecThemeDark" parent="AppThemeDark">
         <item name="round_corners">@drawable/round_corners_dark</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
     <style name="RecThemeLight.NoActionBar">
