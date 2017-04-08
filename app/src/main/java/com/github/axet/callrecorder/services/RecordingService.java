@@ -404,7 +404,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
                     }
 
-                    int[] ss = new int[]{MediaRecorder.AudioSource.VOICE_CALL,
+                    int[] ss = new int[]{MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+                            MediaRecorder.AudioSource.VOICE_CALL,
                             MediaRecorder.AudioSource.MIC,
                             MediaRecorder.AudioSource.DEFAULT,
                     };
