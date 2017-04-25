@@ -26,7 +26,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.github.axet.androidlibrary.app.MainLibrary;
+import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
 import com.github.axet.audiolibrary.app.Recordings;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
@@ -174,6 +174,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         RecordingService.startIfEnabled(this);
+
+        if (OptimizationPreferenceCompat.needWarning(this)) {
+            OptimizationPreferenceCompat.showWarning(this);
+        }
     }
 
     @Override
@@ -345,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
             fab.setVisibility(View.GONE);
             fab_stop.setVisibility(View.INVISIBLE);
         } else {
-            status.setText(phone + " - " + MainLibrary.formatDuration(this, sec * 1000));
+            status.setText(phone + " - " + MainApplication.formatDuration(this, sec * 1000));
             fab.setVisibility(show ? View.VISIBLE : View.GONE);
             fab_stop.setVisibility(View.VISIBLE);
         }
