@@ -61,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
     String phone;
     long sec;
 
+    MenuItem resumeCall;
+
     Recordings recordings;
     Storage storage;
     ListView list;
@@ -177,6 +179,10 @@ public class MainActivity extends AppCompatActivity {
         list.setAdapter(recordings);
         list.setEmptyView(findViewById(R.id.empty_list));
 
+        if (Storage.permitted(MainActivity.this, PERMISSIONS)) {
+            storage.migrateLocalStorage();
+        }
+
         RecordingService.startIfEnabled(this);
 
         final Context context = this;
@@ -192,10 +198,6 @@ public class MainActivity extends AppCompatActivity {
                     SharedPreferences.Editor edit = shared.edit();
                     edit.putBoolean("warning", false);
                     edit.commit();
-
-                    if (Storage.permitted(MainActivity.this, PERMISSIONS, 1)) {
-                        storage.migrateLocalStorage();
-                    }
                 }
             });
             final AlertDialog d = builder.create();
@@ -238,10 +240,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             d.show();
-        } else {
-            if (Storage.permitted(MainActivity.this, PERMISSIONS, 1)) {
-                storage.migrateLocalStorage();
-            }
         }
     }
 
@@ -271,18 +269,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.action_call) {
-            item.setChecked(!item.isChecked());
-            final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor edit = shared.edit();
-            edit.putBoolean(MainApplication.PREFERENCE_CALL, item.isChecked());
-            edit.commit();
-            if (item.isChecked()) {
-                RecordingService.startService(this);
-                Toast.makeText(this, "Recording enabled", Toast.LENGTH_SHORT).show();
-            } else {
-                RecordingService.stopService(this);
-                Toast.makeText(this, "Recording disabled", Toast.LENGTH_SHORT).show();
+            if (!Storage.permitted(MainActivity.this, PERMISSIONS, 1)) {
+                resumeCall = item;
+                return true;
             }
+            call(item);
         }
 
         if (id == R.id.action_show_folder) {
@@ -297,6 +288,21 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    void call(MenuItem item) {
+        item.setChecked(!item.isChecked());
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor edit = shared.edit();
+        edit.putBoolean(MainApplication.PREFERENCE_CALL, item.isChecked());
+        edit.commit();
+        if (item.isChecked()) {
+            RecordingService.startService(this);
+            Toast.makeText(this, "Recording enabled", Toast.LENGTH_SHORT).show();
+        } else {
+            RecordingService.stopService(this);
+            Toast.makeText(this, "Recording disabled", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -365,8 +371,30 @@ public class MainActivity extends AppCompatActivity {
                 if (Storage.permitted(this, permissions)) {
                     storage.migrateLocalStorage();
                     recordings.load();
+                    if (resumeCall != null) {
+                        call(resumeCall);
+                        resumeCall = null;
+                    }
                 } else {
                     Toast.makeText(this, R.string.not_permitted, Toast.LENGTH_SHORT).show();
+                    if (!Storage.permitted(this, MUST)) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setTitle("Permissions");
+                        builder.setMessage("Call permissions must be enabled manually");
+                        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        });
+                        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Storage.showPermissions(MainActivity.this);
+                            }
+                        });
+                        builder.show();
+                        resumeCall = null;
+                    }
                 }
         }
     }
@@ -375,6 +403,12 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String[] PERMISSIONS = new String[]{READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.PROCESS_OUTGOING_CALLS
+    };
+
+    public static final String[] MUST = new String[]{
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.PROCESS_OUTGOING_CALLS

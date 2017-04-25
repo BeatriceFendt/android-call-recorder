@@ -44,6 +44,12 @@ import java.util.List;
  */
 public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+    public static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE"; // Manifest.permission.READ_EXTERNAL_STORAGE
+
+    public static final String[] PERMISSIONS = new String[]{READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    };
+
     public static <T> T[] removeElement(Class<T> c, T[] aa, int i) {
         List<T> ll = Arrays.asList(aa);
         ll = new ArrayList<>(ll);
@@ -137,7 +143,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             screen.removePreference(enc);
         }
 
-        OptimizationPreferenceCompat optimization = (OptimizationPreferenceCompat)manager.findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
+        OptimizationPreferenceCompat optimization = (OptimizationPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
         optimization.onResume();
 
         bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_RATE));
@@ -209,8 +215,6 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         }
     }
 
-    public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(MainApplication.PREFERENCE_THEME)) {
@@ -246,6 +250,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             setHasOptionsMenu(true);
             addPreferencesFromResource(R.xml.pref_general);
             initPrefs(getPreferenceManager(), getPreferenceScreen());
+            Storage.permitted(this, PERMISSIONS, 1);
         }
 
         @Override
