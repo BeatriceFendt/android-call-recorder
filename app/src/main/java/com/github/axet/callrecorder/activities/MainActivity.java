@@ -1,8 +1,10 @@
 package com.github.axet.callrecorder.activities;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -16,13 +18,19 @@ import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -169,14 +177,71 @@ public class MainActivity extends AppCompatActivity {
         list.setAdapter(recordings);
         list.setEmptyView(findViewById(R.id.empty_list));
 
-        if (Storage.permitted(this, PERMISSIONS, 1)) {
-            storage.migrateLocalStorage();
-        }
-
         RecordingService.startIfEnabled(this);
 
-        if (OptimizationPreferenceCompat.needWarning(this)) {
-            OptimizationPreferenceCompat.showWarning(this);
+        final Context context = this;
+
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        if (shared.getBoolean("warning", true)) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setView(R.layout.warning);
+            builder.setCancelable(false);
+            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    SharedPreferences.Editor edit = shared.edit();
+                    edit.putBoolean("warning", false);
+                    edit.commit();
+
+                    if (Storage.permitted(MainActivity.this, PERMISSIONS, 1)) {
+                        storage.migrateLocalStorage();
+                    }
+                }
+            });
+            final AlertDialog d = builder.create();
+            d.setOnShowListener(new DialogInterface.OnShowListener() {
+                Button b;
+                SwitchCompat sw1, sw2, sw3;
+
+                @Override
+                public void onShow(DialogInterface dialog) {
+                    b = d.getButton(DialogInterface.BUTTON_POSITIVE);
+                    b.setEnabled(false);
+                    Window w = d.getWindow();
+                    sw1 = (SwitchCompat) w.findViewById(R.id.recording);
+                    sw1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            update();
+                        }
+                    });
+                    sw2 = (SwitchCompat) w.findViewById(R.id.quality);
+                    sw2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            update();
+                        }
+                    });
+                    sw3 = (SwitchCompat) w.findViewById(R.id.taskmanagers);
+                    sw3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            if (isChecked)
+                                OptimizationPreferenceCompat.showWarning(context);
+                            update();
+                        }
+                    });
+                }
+
+                void update() {
+                    b.setEnabled(sw1.isChecked() && sw2.isChecked() && sw3.isChecked());
+                }
+            });
+            d.show();
+        } else {
+            if (Storage.permitted(MainActivity.this, PERMISSIONS, 1)) {
+                storage.migrateLocalStorage();
+            }
         }
     }
 
