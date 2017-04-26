@@ -228,8 +228,10 @@ public class MainActivity extends AppCompatActivity {
                     sw3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                         @Override
                         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            if (isChecked)
-                                OptimizationPreferenceCompat.showWarning(context);
+                            if (isChecked) {
+                                if (OptimizationPreferenceCompat.needWarning(context)) // upgrade
+                                    OptimizationPreferenceCompat.showWarning(context);
+                            }
                             update();
                         }
                     });
