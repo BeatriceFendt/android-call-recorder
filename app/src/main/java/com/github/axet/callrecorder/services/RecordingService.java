@@ -497,7 +497,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
 
-        e = Factory.getEncoder(ext, info, out);
+        e = Factory.getEncoder(this, ext, info, out);
 
         encoder = new FileEncoder(this, in, e);
 
