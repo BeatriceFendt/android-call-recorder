@@ -25,6 +25,7 @@ import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
 import com.github.axet.audiolibrary.app.RawSamples;
 import com.github.axet.audiolibrary.app.Sound;
 import com.github.axet.audiolibrary.encoders.Encoder;
@@ -73,6 +74,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     FileEncoder encoder;
     Runnable encoding; // current encoding
     HashMap<File, File> map = new HashMap<>();
+    OptimizationPreferenceCompat.ServiceReceiver optimization;
 
     class RecordingReceiver extends BroadcastReceiver {
         @Override
@@ -193,6 +195,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         super.onCreate();
         Log.d(TAG, "onCreate");
 
+        optimization = new OptimizationPreferenceCompat.ServiceReceiver(this, getClass());
+
         receiver = new RecordingReceiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_ON);
@@ -271,6 +275,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand");
 
+        if (optimization.onStartCommand(intent, flags, startId)) {
+            // nothing to restart
+        }
+
         if (intent != null) {
             String a = intent.getAction();
             if (a == null) {
@@ -307,6 +315,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         shared.unregisterOnSharedPreferenceChangeListener(this);
+
+        if (optimization != null) {
+            optimization.close();
+            optimization = null;
+        }
 
         if (receiver != null) {
             unregisterReceiver(receiver);
