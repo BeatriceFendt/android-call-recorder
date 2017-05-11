@@ -25,6 +25,7 @@ import com.github.axet.audiolibrary.app.Storage;
 import com.github.axet.audiolibrary.encoders.Factory;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
+import com.github.axet.callrecorder.services.RecordingService;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -144,7 +145,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         }
 
         OptimizationPreferenceCompat optimization = (OptimizationPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
-        optimization.onResume();
+        optimization.enable(RecordingService.class);
 
         bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_RATE));
         bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_THEME));
