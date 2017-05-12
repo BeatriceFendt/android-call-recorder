@@ -394,7 +394,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (thread != null) {
             thread.interrupt();
         }
-
+        
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -655,5 +655,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (key.equals(MainApplication.PREFERENCE_DELETE)) {
             deleteOld();
         }
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        optimization.onTaskRemoved(rootIntent);
     }
 }
