@@ -570,6 +570,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 t = e;
             } else {
                 t = encoder.getException();
+                if (t == null)
+                    t = e;
             }
             while (t.getCause() != null)
                 t = t.getCause();
@@ -646,6 +648,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 deleteOld();
                 showNotificationAlarm(false);
                 encoding = null;
+                encoder = null;
             }
         };
         showNotificationAlarm(true); // update status (encoding)
