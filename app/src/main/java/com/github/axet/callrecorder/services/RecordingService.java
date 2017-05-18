@@ -398,7 +398,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (thread != null) {
             thread.interrupt();
         }
-        
+
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -565,7 +565,12 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         Log.d(TAG, "Error", e);
         String msg = e.getMessage();
         if (msg == null || msg.isEmpty()) {
-            Throwable t = encoder.getException();
+            Throwable t;
+            if (encoder == null) {
+                t = e;
+            } else {
+                t = encoder.getException();
+            }
             while (t.getCause() != null)
                 t = t.getCause();
             msg = t.getClass().getSimpleName();
