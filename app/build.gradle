@@ -43,5 +43,5 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-    compile 'com.github.axet:android-audio-library:0.0.40' // compile project(':android-audio-library')
+    compile 'com.github.axet:android-audio-library:0.0.41' // compile project(':android-audio-library')
 }
