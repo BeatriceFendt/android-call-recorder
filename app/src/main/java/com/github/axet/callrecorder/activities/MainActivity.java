@@ -319,9 +319,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (Storage.permitted(this, PERMISSIONS))
-            recordings.load();
+            recordings.load(null);
         else
-            recordings.load();
+            recordings.load(null);
 
         updateHeader();
 
@@ -329,9 +329,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void last() {
-        recordings.load();
         final int selected = getLastRecording();
-        handler.post(new Runnable() {
+        Runnable done = new Runnable() {
             @Override
             public void run() {
                 if (selected != -1) {
@@ -345,7 +344,8 @@ public class MainActivity extends AppCompatActivity {
                     });
                 }
             }
-        });
+        };
+        recordings.load(done);
     }
 
     int getLastRecording() {
@@ -372,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
             case 1:
                 if (Storage.permitted(this, permissions)) {
                     storage.migrateLocalStorage();
-                    recordings.load();
+                    recordings.load(null);
                     if (resumeCall != null) {
                         call(resumeCall);
                         resumeCall = null;
