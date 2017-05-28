@@ -61,6 +61,9 @@ public class MainActivity extends AppCompatActivity {
     String phone;
     long sec;
 
+    View progressText;
+    View progressEmpty;
+
     MenuItem resumeCall;
 
     Recordings recordings;
@@ -134,6 +137,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+
+        progressText = findViewById(R.id.progress_text);
+        progressEmpty = findViewById(R.id.progress_empty);
 
         storage = new Storage(this);
 
@@ -318,10 +324,20 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        Runnable done = new Runnable() {
+            @Override
+            public void run() {
+                progressText.setVisibility(View.VISIBLE);
+                progressEmpty.setVisibility(View.GONE);
+            }
+        };
+        progressText.setVisibility(View.GONE);
+        progressEmpty.setVisibility(View.VISIBLE);
+
         if (Storage.permitted(this, PERMISSIONS))
-            recordings.load();
+            recordings.load(done);
         else
-            recordings.load();
+            recordings.load(done);
 
         updateHeader();
 
@@ -329,11 +345,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void last() {
-        recordings.load();
         final int selected = getLastRecording();
-        handler.post(new Runnable() {
+        Runnable done = new Runnable() {
             @Override
             public void run() {
+                progressText.setVisibility(View.VISIBLE);
+                progressEmpty.setVisibility(View.GONE);
                 if (selected != -1) {
                     recordings.select(selected);
                     list.smoothScrollToPosition(selected);
@@ -345,7 +362,10 @@ public class MainActivity extends AppCompatActivity {
                     });
                 }
             }
-        });
+        };
+        progressText.setVisibility(View.GONE);
+        progressEmpty.setVisibility(View.VISIBLE);
+        recordings.load(done);
     }
 
     int getLastRecording() {
@@ -372,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
             case 1:
                 if (Storage.permitted(this, permissions)) {
                     storage.migrateLocalStorage();
-                    recordings.load();
+                    recordings.load(null);
                     if (resumeCall != null) {
                         call(resumeCall);
                         resumeCall = null;
