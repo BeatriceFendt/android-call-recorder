@@ -20,10 +20,10 @@
         android:padding="5dp"
         android:text="32G free ~ 3 hours left" />
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/empty_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
         <View
@@ -31,14 +31,22 @@
             android:layout_height="1dp"
             android:background="@android:color/darker_gray" />
 
+        <ProgressBar
+            android:id="@+id/progress_empty"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:indeterminate="true" />
+
         <TextView
+            android:id="@+id/progress_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="5dp"
             android:text="@string/recording_list_is_empty"
             android:textAlignment="center"></TextView>
 
-    </LinearLayout>
+    </FrameLayout>
 
     <ListView
         android:id="@+id/list"
