@@ -10,7 +10,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Storage extends com.github.axet.audiolibrary.app.Storage {
-    SimpleDateFormat simple = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
 
     public Storage(Context context) {
         super(context);
@@ -56,8 +55,8 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         }
 
         format = format.replaceAll("%T", "" + System.currentTimeMillis() / 1000);
-        format = format.replaceAll("%s", simple.format(new Date()));
-
+        format = format.replaceAll("%s", SIMPLE.format(new Date()));
+        format = format.replaceAll("%I", ISO8601.format(new Date()));
 
         File parent = getStoragePath();
         if (!parent.exists()) {
