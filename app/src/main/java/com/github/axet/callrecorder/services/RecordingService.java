@@ -228,6 +228,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
         sampleRate = Sound.getValidRecordRate(MainApplication.getInMode(this), sampleRate);
+        if (sampleRate == -1)
+            sampleRate = Sound.DEFAULT_RATE;
 
         shared.registerOnSharedPreferenceChangeListener(this);
     }
