@@ -186,7 +186,11 @@ public class MainActivity extends AppCompatActivity {
         list.setEmptyView(findViewById(R.id.empty_list));
 
         if (Storage.permitted(MainActivity.this, PERMISSIONS)) {
-            storage.migrateLocalStorage();
+            try {
+                storage.migrateLocalStorage();
+            } catch (RuntimeException e) {
+                Error(e);
+            }
         }
 
         RecordingService.startIfEnabled(this);
@@ -391,7 +395,11 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case 1:
                 if (Storage.permitted(this, permissions)) {
-                    storage.migrateLocalStorage();
+                    try {
+                        storage.migrateLocalStorage();
+                    } catch (RuntimeException e) {
+                        Error(e);
+                    }
                     recordings.load(null);
                     if (resumeCall != null) {
                         call(resumeCall);
@@ -488,4 +496,21 @@ public class MainActivity extends AppCompatActivity {
         TextView text = (TextView) findViewById(R.id.space_left);
         text.setText(((MainApplication) getApplication()).formatFree(free, sec));
     }
+
+    void Error(Throwable e) {
+        Log.d(TAG, "Error", e);
+        String msg = e.getMessage();
+        if (msg == null || msg.isEmpty()) {
+            Throwable t = e;
+            while (t.getCause() != null)
+                t = t.getCause();
+            msg = t.getClass().getSimpleName();
+        }
+        Error(msg);
+    }
+
+    void Error(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
+
 }

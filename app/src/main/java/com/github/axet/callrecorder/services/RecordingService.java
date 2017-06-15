@@ -227,7 +227,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 
         sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
-        sampleRate = Sound.getValidRecordRate(MainApplication.getMode(this), sampleRate);
+        sampleRate = Sound.getValidRecordRate(MainApplication.getInMode(this), sampleRate);
+        if (sampleRate == -1)
+            sampleRate = Sound.DEFAULT_RATE;
 
         shared.registerOnSharedPreferenceChangeListener(this);
     }
@@ -416,7 +418,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                     rs.open(samplesTime);
 
-                    int min = AudioRecord.getMinBufferSize(sampleRate, MainApplication.getMode(RecordingService.this), Sound.AUDIO_FORMAT);
+                    int min = AudioRecord.getMinBufferSize(sampleRate, MainApplication.getInMode(RecordingService.this), Sound.DEFAULT_AUDIOFORMAT);
                     if (min <= 0) {
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
                     }
@@ -428,7 +430,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     };
                     for (int s : ss) {
                         try {
-                            recorder = new AudioRecord(s, sampleRate, MainApplication.getMode(RecordingService.this), Sound.AUDIO_FORMAT, min * 2);
+                            recorder = new AudioRecord(s, sampleRate, MainApplication.getInMode(RecordingService.this), Sound.DEFAULT_AUDIOFORMAT, min * 2);
                             if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
                                 break;
                         } catch (IllegalArgumentException e) {
@@ -494,7 +496,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     EncoderInfo getInfo() {
         final int channels = MainApplication.getChannels(this);
-        final int bps = Sound.AUDIO_FORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
+        final int bps = Sound.DEFAULT_AUDIOFORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
         return new EncoderInfo(channels, sampleRate, bps);
     }
 
