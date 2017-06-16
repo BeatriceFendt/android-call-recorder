@@ -418,10 +418,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                     rs.open(samplesTime);
 
-                    int min = AudioRecord.getMinBufferSize(sampleRate, MainApplication.getInMode(RecordingService.this), Sound.DEFAULT_AUDIOFORMAT);
-                    if (min <= 0) {
+                    int c = MainApplication.getInMode(RecordingService.this);
+                    int min = AudioRecord.getMinBufferSize(sampleRate, c, Sound.DEFAULT_AUDIOFORMAT);
+                    if (min <= 0)
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
-                    }
 
                     int[] ss = new int[]{MediaRecorder.AudioSource.VOICE_COMMUNICATION,
                             MediaRecorder.AudioSource.VOICE_CALL,
@@ -430,7 +430,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     };
                     for (int s : ss) {
                         try {
-                            recorder = new AudioRecord(s, sampleRate, MainApplication.getInMode(RecordingService.this), Sound.DEFAULT_AUDIOFORMAT, min * 2);
+                            recorder = new AudioRecord(s, sampleRate, c, Sound.DEFAULT_AUDIOFORMAT, min * 2);
                             if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
                                 break;
                         } catch (IllegalArgumentException e) {
