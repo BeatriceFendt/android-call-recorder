@@ -75,6 +75,31 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     Runnable encoding; // current encoding
     HashMap<File, File> map = new HashMap<>();
     OptimizationPreferenceCompat.ServiceReceiver optimization;
+    String phone = "";
+
+    public static void startService(Context context) {
+        context.startService(new Intent(context, RecordingService.class));
+    }
+
+    public static void startIfEnabled(Context context) {
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
+        if (shared.getBoolean(MainApplication.PREFERENCE_CALL, false))
+            context.startService(new Intent(context, RecordingService.class));
+    }
+
+    public static void stopService(Context context) {
+        context.stopService(new Intent(context, RecordingService.class));
+    }
+
+    public static void pauseButton(Context context) {
+        Intent intent = new Intent(PAUSE_BUTTON);
+        context.sendBroadcast(intent);
+    }
+
+    public static void stopButton(Context context) {
+        Intent intent = new Intent(STOP_BUTTON);
+        context.sendBroadcast(intent);
+    }
 
     class RecordingReceiver extends BroadcastReceiver {
         @Override
@@ -92,9 +117,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }
     }
 
-    String phone = "";
-
-    public class PhoneStateReceiver extends BroadcastReceiver {
+    class PhoneStateReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             String a = intent.getAction();
@@ -153,30 +176,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 Error(e);
             }
         }
-    }
-
-    public static void startService(Context context) {
-        context.startService(new Intent(context, RecordingService.class));
-    }
-
-    public static void startIfEnabled(Context context) {
-        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
-        if (shared.getBoolean(MainApplication.PREFERENCE_CALL, false))
-            context.startService(new Intent(context, RecordingService.class));
-    }
-
-    public static void stopService(Context context) {
-        context.stopService(new Intent(context, RecordingService.class));
-    }
-
-    public static void pauseButton(Context context) {
-        Intent intent = new Intent(PAUSE_BUTTON);
-        context.sendBroadcast(intent);
-    }
-
-    public static void stopButton(Context context) {
-        Intent intent = new Intent(STOP_BUTTON);
-        context.sendBroadcast(intent);
     }
 
     public RecordingService() {
@@ -418,10 +417,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                     rs.open(samplesTime);
 
-                    int min = AudioRecord.getMinBufferSize(sampleRate, MainApplication.getInMode(RecordingService.this), Sound.DEFAULT_AUDIOFORMAT);
-                    if (min <= 0) {
+                    int c = MainApplication.getInMode(RecordingService.this);
+                    int min = AudioRecord.getMinBufferSize(sampleRate, c, Sound.DEFAULT_AUDIOFORMAT);
+                    if (min <= 0)
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
-                    }
 
                     int[] ss = new int[]{MediaRecorder.AudioSource.VOICE_COMMUNICATION,
                             MediaRecorder.AudioSource.VOICE_CALL,
@@ -430,7 +429,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     };
                     for (int s : ss) {
                         try {
-                            recorder = new AudioRecord(s, sampleRate, MainApplication.getInMode(RecordingService.this), Sound.DEFAULT_AUDIOFORMAT, min * 2);
+                            recorder = new AudioRecord(s, sampleRate, c, Sound.DEFAULT_AUDIOFORMAT, min * 2);
                             if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
                                 break;
                         } catch (IllegalArgumentException e) {
@@ -463,17 +462,16 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                         start = end;
 
-                        int s = readSize / MainApplication.getChannels(RecordingService.this);
+                        int samples = readSize / MainApplication.getChannels(RecordingService.this);
 
-                        if (stableRefresh || diff >= s) {
+                        if (stableRefresh || diff >= samples) {
                             stableRefresh = true;
 
-                            rs.write(buffer, readSize);
+                            rs.write(buffer, 0, readSize);
 
-                            samplesTime += s;
-                            samplesTimeCount += s;
+                            samplesTime += samples;
+                            samplesTimeCount += samples;
                             if (samplesTimeCount > samplesTimeUpdate) {
-                                final long m = samplesTime;
                                 samplesTimeCount -= samplesTimeUpdate;
                                 MainActivity.showProgress(RecordingService.this, true, phone, samplesTime / sampleRate, true);
                             }
