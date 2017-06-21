@@ -372,6 +372,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             view.setTextViewText(R.id.notification_text, text);
             view.setOnClickPendingIntent(R.id.notification_pause, pe);
             view.setImageViewResource(R.id.notification_pause, thread == null ? R.drawable.ic_play_arrow_black_24dp : R.drawable.ic_pause_black_24dp);
+            view.setViewVisibility(R.id.notification_record, View.GONE);
 
             if (encoding != null)
                 view.setViewVisibility(R.id.notification_pause, View.GONE);

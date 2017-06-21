@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Запись Звонков</string>
+    <string name="app_name">Запись звонков</string>
 
     <string-array name="themes_text">
         <item>Тема Светлая (по умолчанию)</item>
@@ -44,5 +44,5 @@
     <string name="title_header">%1$s свободно ~ %2$s</string>
     <string name="open_recording_folder">Открыть папку с записями</string>
     <string name="recording_list_is_empty">Список записей пуст.\n\nВключите \'Запись звонков\' чтобы начать записывать звонки.</string>
-    <string name="call_recording">Запись Звонков</string>
+    <string name="call_recording">Запись звонков</string>
 </resources>
