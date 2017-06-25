@@ -242,6 +242,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         String[] ee = Factory.getEncodingValues(this);
         File path = storage.getStoragePath();
         File[] ff = path.listFiles();
+        if (ff == null)
+            return;
         for (File f : ff) {
             String n = f.getName().toLowerCase();
             for (String e : ee) {
