@@ -26,6 +26,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -176,14 +177,10 @@ public class MainActivity extends AppCompatActivity {
         updatePanel();
 
         list = (ListView) findViewById(R.id.list);
-        recordings = new Recordings(this, list) {
-            @Override
-            public void sort() {
-                sort(Collections.reverseOrder(new SortFiles()));
-            }
-        };
+        recordings = new Recordings(this, list);
         list.setAdapter(recordings);
         list.setEmptyView(findViewById(R.id.empty_list));
+        recordings.setToolbar((ViewGroup) findViewById(R.id.recording_toolbar));
 
         if (Storage.permitted(MainActivity.this, PERMISSIONS)) {
             try {

@@ -271,7 +271,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     }
 
                     if (c.before(cur)) {
-                        f.delete();
+                        if (!MainApplication.getStar(this, f)) // do not delete favorite recorings
+                            f.delete();
                     }
                 }
             }
@@ -425,8 +426,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     if (min <= 0)
                         throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
 
-                    int[] ss = new int[]{MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+                    int[] ss = new int[]{
                             MediaRecorder.AudioSource.VOICE_CALL,
+                            MediaRecorder.AudioSource.VOICE_COMMUNICATION,
                             MediaRecorder.AudioSource.MIC,
                             MediaRecorder.AudioSource.DEFAULT,
                     };
