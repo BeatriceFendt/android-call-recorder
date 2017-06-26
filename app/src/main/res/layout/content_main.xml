@@ -20,6 +20,8 @@
         android:padding="5dp"
         android:text="32G free ~ 3 hours left" />
 
+    <include layout="@layout/toolbar" />
+
     <FrameLayout
         android:id="@+id/empty_list"
         android:layout_width="match_parent"
@@ -51,7 +53,7 @@
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
         android:paddingBottom="61dp"></ListView>

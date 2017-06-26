@@ -10,6 +10,8 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.ListPreference;
@@ -21,6 +23,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
+import com.github.axet.androidlibrary.widgets.StoragePathPreferenceCompat;
 import com.github.axet.audiolibrary.app.Storage;
 import com.github.axet.audiolibrary.encoders.Factory;
 import com.github.axet.callrecorder.R;
@@ -50,6 +53,8 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
     public static final String[] PERMISSIONS = new String[]{READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
     };
+
+    GeneralPreferenceFragment f;
 
     public static <T> T[] removeElement(Class<T> c, T[] aa, int i) {
         List<T> ll = Arrays.asList(aa);
@@ -122,38 +127,6 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                         .getString(preference.getKey(), ""));
     }
 
-    static void initPrefs(PreferenceManager manager, PreferenceScreen screen) {
-        final Context context = screen.getContext();
-        ListPreference enc = (ListPreference) manager.findPreference(MainApplication.PREFERENCE_ENCODING);
-        String v = enc.getValue();
-        CharSequence[] ee = Factory.getEncodingTexts(context);
-        CharSequence[] vv = Factory.getEncodingValues(context);
-        if (ee.length > 1) {
-            enc.setEntries(ee);
-            enc.setEntryValues(vv);
-
-            int i = enc.findIndexOfValue(v);
-            if (i == -1) {
-                enc.setValueIndex(0);
-            } else {
-                enc.setValueIndex(i);
-            }
-
-            bindPreferenceSummaryToValue(enc);
-        } else {
-            screen.removePreference(enc);
-        }
-
-        OptimizationPreferenceCompat optimization = (OptimizationPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
-        optimization.enable(RecordingService.class);
-
-        bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_RATE));
-        bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_THEME));
-        bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_CHANNELS));
-        bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_DELETE));
-        bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_FORMAT));
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(getAppTheme());
@@ -164,7 +137,8 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         shared.registerOnSharedPreferenceChangeListener(this);
 
-        getSupportFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
+        f = new GeneralPreferenceFragment();
+        getSupportFragmentManager().beginTransaction().replace(android.R.id.content, f).commit();
     }
 
 
@@ -207,13 +181,6 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case 1:
-                if (Storage.permitted(this, permissions))
-                    ;
-                else
-                    Toast.makeText(this, R.string.not_permitted, Toast.LENGTH_SHORT).show();
-        }
     }
 
     @Override
@@ -246,12 +213,46 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         public GeneralPreferenceFragment() {
         }
 
+        void initPrefs(PreferenceManager manager, PreferenceScreen screen) {
+            final Context context = screen.getContext();
+            ListPreference enc = (ListPreference) manager.findPreference(MainApplication.PREFERENCE_ENCODING);
+            String v = enc.getValue();
+            CharSequence[] ee = Factory.getEncodingTexts(context);
+            CharSequence[] vv = Factory.getEncodingValues(context);
+            if (ee.length > 1) {
+                enc.setEntries(ee);
+                enc.setEntryValues(vv);
+
+                int i = enc.findIndexOfValue(v);
+                if (i == -1) {
+                    enc.setValueIndex(0);
+                } else {
+                    enc.setValueIndex(i);
+                }
+
+                bindPreferenceSummaryToValue(enc);
+            } else {
+                screen.removePreference(enc);
+            }
+
+            OptimizationPreferenceCompat optimization = (OptimizationPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
+            optimization.enable(RecordingService.class);
+
+            bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_RATE));
+            bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_THEME));
+            bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_CHANNELS));
+            bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_DELETE));
+            bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_FORMAT));
+
+            StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_STORAGE);
+            s.setPermissionsDialog(this, PERMISSIONS, 1);
+        }
+
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setHasOptionsMenu(true);
             addPreferencesFromResource(R.xml.pref_general);
             initPrefs(getPreferenceManager(), getPreferenceScreen());
-            Storage.permitted(this, PERMISSIONS, 1);
         }
 
         @Override
@@ -259,6 +260,23 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             super.onResume();
             OptimizationPreferenceCompat optimization = (OptimizationPreferenceCompat) findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
             optimization.onResume();
+        }
+
+        @Override
+        public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+            StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) findPreference(MainApplication.PREFERENCE_STORAGE);
+
+            switch (requestCode) {
+                case 1:
+                    if (Storage.permitted(getContext(), permissions))
+                        ;
+                    else
+                        Toast.makeText(getContext(), R.string.not_permitted, Toast.LENGTH_SHORT).show();
+                    s.onRequestPermissionsResult();
+                    break;
+            }
         }
 
         @Override
