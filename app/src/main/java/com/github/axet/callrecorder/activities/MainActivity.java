@@ -286,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.action_show_folder) {
-            Uri selectedUri = Uri.fromFile(storage.getStoragePath());
+            Uri selectedUri = storage.getStoragePath();
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(selectedUri, "resource/folder");
             if (intent.resolveActivityInfo(getPackageManager(), 0) != null) {
@@ -374,8 +374,8 @@ public class MainActivity extends AppCompatActivity {
         String last = shared.getString(MainApplication.PREFERENCE_LAST, "");
         last = last.toLowerCase();
         for (int i = 0; i < recordings.getCount(); i++) {
-            File f = recordings.getItem(i);
-            String n = f.getName().toLowerCase();
+            Uri f = recordings.getItem(i);
+            String n = storage.getDocumentName(f).toLowerCase();
             if (n.equals(last)) {
                 SharedPreferences.Editor edit = shared.edit();
                 edit.putString(MainApplication.PREFERENCE_LAST, "");
@@ -487,8 +487,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void updateHeader() {
-        File f = storage.getStoragePath();
-        long free = Storage.getFree(f);
+        Uri f = storage.getStoragePath();
+        long free = storage.getFree(f);
         long sec = Storage.average(this, free);
         TextView text = (TextView) findViewById(R.id.space_left);
         text.setText(MainApplication.formatFree(this, free, sec));

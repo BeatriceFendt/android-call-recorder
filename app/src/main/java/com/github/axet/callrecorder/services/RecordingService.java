@@ -4,17 +4,21 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.provider.DocumentsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.PhoneNumberUtils;
@@ -22,6 +26,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -37,9 +42,17 @@ import com.github.axet.callrecorder.activities.MainActivity;
 import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * RecordingActivity more likly to be removed from memory when paused then service. Notification button
@@ -64,7 +77,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     RecordingReceiver receiver;
     PhoneStateReceiver state;
     // output target file 2016-01-01 01.01.01.wav
-    File targetFile;
+    Uri targetUri;
     PhoneStateChangeListener pscl;
     Handler handle = new Handler();
     // variable from settings. how may samples per second.
@@ -73,7 +86,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     long samplesTime;
     FileEncoder encoder;
     Runnable encoding; // current encoding
-    HashMap<File, File> map = new HashMap<>();
+    HashMap<File, Uri> map = new HashMap<>();
     OptimizationPreferenceCompat.ServiceReceiver optimization;
     String phone = "";
 
@@ -239,18 +252,39 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (d.equals("off"))
             return;
 
+        List<Uri> list = new ArrayList<>();
+
         String[] ee = Factory.getEncodingValues(this);
-        File path = storage.getStoragePath();
-        File[] ff = path.listFiles();
-        if (ff == null)
-            return;
-        for (File f : ff) {
-            String n = f.getName().toLowerCase();
+        Uri path = storage.getStoragePath();
+        String s = path.getScheme();
+        if (Build.VERSION.SDK_INT >= 21 && s.startsWith(ContentResolver.SCHEME_CONTENT)) {
+            ContentResolver resolver = getContentResolver();
+            Uri childId = DocumentsContract.buildChildDocumentsUriUsingTree(path, DocumentsContract.getTreeDocumentId(path));
+            Cursor c = resolver.query(childId, null, null, null, null);
+            while (c.moveToNext()) {
+                String id = c.getString(c.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID));
+                Uri dd = DocumentsContract.buildDocumentUriUsingTree(path, id);
+                list.add(dd);
+            }
+        } else if (s.startsWith(ContentResolver.SCHEME_FILE)) {
+            File dir = new File(path.getPath());
+            File[] ff = dir.listFiles();
+            if (ff == null)
+                return;
+            for (File f : ff) {
+                list.add(Uri.fromFile(f));
+            }
+        } else {
+            throw new RuntimeException("unknown uri");
+        }
+
+        for (Uri f : list) {
+            String n = Storage.getDocumentName(f).toLowerCase();
             for (String e : ee) {
                 e = e.toLowerCase();
                 if (n.endsWith(e)) {
                     Calendar c = Calendar.getInstance();
-                    c.setTimeInMillis(f.lastModified());
+                    c.setTimeInMillis(storage.getLast(f));
                     Calendar cur = c;
 
                     if (d.equals("1week")) {
@@ -272,7 +306,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                     if (c.before(cur)) {
                         if (!MainApplication.getStar(this, f)) // do not delete favorite recorings
-                            f.delete();
+                            storage.delete(f);
                     }
                 }
             }
@@ -368,7 +402,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     R.layout.notifictaion_recording_dark));
 
             String title = encoding != null ? getString(R.string.encoding_title) : getString(R.string.recording_title);
-            String text = ".../" + targetFile.getName();
+            String text = ".../" + storage.getDocumentName(targetUri);
 
             view.setOnClickPendingIntent(R.id.status_bar_latest_event_content, main);
             view.setTextViewText(R.id.notification_title, title);
@@ -503,13 +537,21 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         return new EncoderInfo(channels, sampleRate, bps);
     }
 
-    void encoding(final File in, final File out, final Runnable done, final Runnable success) {
-        File parent = out.getParentFile();
+    void encoding(final File in, final Uri uri, final Runnable done, final Runnable success) {
+        final File out;
 
-        if (!parent.exists()) {
-            if (!parent.mkdirs()) { // in case if it were manually deleted
+        final String s = uri.getScheme();
+        if (s.startsWith(ContentResolver.SCHEME_CONTENT)) {
+            out = storage.getTempEncoding();
+        } else if (s.startsWith(ContentResolver.SCHEME_FILE)) {
+            File f = new File(uri.getPath());
+            File parent = f.getParentFile();
+            if (!parent.exists() && !parent.mkdirs()) { // in case if it were manually deleted
                 throw new RuntimeException("Unable to create: " + parent);
             }
+            out = f;
+        } else {
+            throw new RuntimeException("unknown uri");
         }
 
         EncoderInfo info = getInfo();
@@ -531,11 +573,39 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }, new Runnable() {
             @Override
             public void run() {
+                if (Build.VERSION.SDK_INT >= 21 && s.startsWith(ContentResolver.SCHEME_CONTENT)) {
+                    ContentResolver resolver = getContentResolver();
+                    try {
+                        String d = storage.getDocumentName(uri);
+                        String ee = storage.getExt(uri);
+                        Uri docUri = DocumentsContract.buildDocumentUriUsingTree(uri, DocumentsContract.getTreeDocumentId(uri));
+                        String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ee);
+                        Uri childrenUri = DocumentsContract.createDocument(resolver, docUri, mime, d);
+
+                        InputStream is = new FileInputStream(out);
+                        OutputStream os = resolver.openOutputStream(childrenUri);
+                        IOUtils.copy(is, os);
+                        is.close();
+                        os.close();
+                        storage.delete(out); // delete tmp encoding file
+                    } catch (IOException e) {
+                        storage.delete(out); // delete tmp encoding file
+                        try {
+                            storage.delete(uri); // delete SAF encoding file
+                        } catch (RuntimeException ee) {
+                            Log.d(TAG, "unable to delete target uri", e); // ignore, not even created?
+                        }
+                        Error(e);
+                        return;
+                    }
+                }
+
+
                 MainActivity.showProgress(RecordingService.this, false, phone, samplesTime / sampleRate, false);
-                Storage.delete(in);
+                Storage.delete(in); // delete raw recording
 
                 SharedPreferences.Editor edit = shared.edit();
-                edit.putString(MainApplication.PREFERENCE_LAST, out.getName());
+                edit.putString(MainApplication.PREFERENCE_LAST, storage.getDocumentName(uri));
                 edit.commit();
 
                 success.run();
@@ -611,7 +681,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void begin(boolean wasRinging) {
-        targetFile = storage.getNewFile(phone);
+        targetUri = storage.getNewFile(phone);
         if (encoding != null) {
             encoder.pause();
         }
@@ -630,7 +700,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             File tmp = storage.getTempRecording();
             File in = Storage.getNextFile(tmp.getParentFile(), Storage.TMP_REC, null);
             Storage.move(tmp, in);
-            map.put(in, targetFile);
+            map.put(in, targetUri);
             if (encoding == null) { // double finish()? skip
                 encodingNext();
             } else {
@@ -643,9 +713,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final File inFile = storage.getTempNextRecording();
         if (!inFile.exists())
             return;
-        targetFile = map.get(inFile);
-        if (targetFile == null) { // service restart
-            targetFile = storage.getNewFile(phone);
+        targetUri = map.get(inFile);
+        if (targetUri == null) { // service restart
+            targetUri = storage.getNewFile(phone);
         }
         encoding = new Runnable() {
             @Override
@@ -657,8 +727,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             }
         };
         showNotificationAlarm(true); // update status (encoding)
-        Log.d(TAG, "Encode " + inFile.getName() + " to " + targetFile.getName());
-        encoding(inFile, targetFile, encoding, new Runnable() {
+        Log.d(TAG, "Encode " + inFile.getName() + " to " + storage.getDocumentName(targetUri));
+        encoding(inFile, targetUri, encoding, new Runnable() {
             @Override
             public void run() { // success
                 map.remove(inFile);
