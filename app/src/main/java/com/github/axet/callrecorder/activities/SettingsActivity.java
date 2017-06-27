@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
@@ -245,8 +246,10 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_FORMAT));
 
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_STORAGE);
-//            s.setPermissionsDialog(this, PERMISSIONS, 1);
-            s.setStorageAccessFramework(this, 2);
+            if (Build.VERSION.SDK_INT >= 21)
+                s.setStorageAccessFramework(this, 2);
+            else
+                s.setPermissionsDialog(this, PERMISSIONS, 1);
         }
 
         @Override
@@ -286,7 +289,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) findPreference(MainApplication.PREFERENCE_STORAGE);
 
-            switch(requestCode) {
+            switch (requestCode) {
                 case 2:
                     s.onActivityResult(resultCode, data);
                     break;
