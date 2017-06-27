@@ -245,7 +245,8 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_FORMAT));
 
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_STORAGE);
-            s.setPermissionsDialog(this, PERMISSIONS, 1);
+//            s.setPermissionsDialog(this, PERMISSIONS, 1);
+            s.setStorageAccessFramework(this, 2);
         }
 
         @Override
@@ -275,6 +276,19 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                     else
                         Toast.makeText(getContext(), R.string.not_permitted, Toast.LENGTH_SHORT).show();
                     s.onRequestPermissionsResult();
+                    break;
+            }
+        }
+
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+
+            StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) findPreference(MainApplication.PREFERENCE_STORAGE);
+
+            switch(requestCode) {
+                case 2:
+                    s.onActivityResult(resultCode, data);
                     break;
             }
         }
