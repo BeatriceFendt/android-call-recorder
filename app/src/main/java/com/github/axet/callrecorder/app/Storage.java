@@ -84,4 +84,24 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         }
         return getNextFile(parent, format, ext);
     }
+
+    @Override
+    public Uri move(File f, Uri t) {
+        Uri u = super.move(f, t);
+        if (u == null)
+            return null;
+        String c = MainApplication.getContact(context, Uri.fromFile(f));
+        MainApplication.setContact(context, u, c); // copy contact to migrated file
+        return u;
+    }
+
+    @Override
+    public Uri rename(Uri f, String t) {
+        Uri u = super.rename(f, t);
+        if (u == null)
+            return null;
+        String c = MainApplication.getContact(context, f);
+        MainApplication.setContact(context, u, c); // copy contact to new name
+        return u;
+    }
 }

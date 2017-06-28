@@ -93,6 +93,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     String phone = "";
     String contact = "";
     String contactId = "";
+    int source = -1; // audiotrecorder source
 
     public static void startService(Context context) {
         context.startService(new Intent(context, RecordingService.class));
@@ -421,6 +422,20 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }
     }
 
+    public String getSource() {
+        switch (source) {
+            case MediaRecorder.AudioSource.VOICE_CALL:
+            case MediaRecorder.AudioSource.VOICE_COMMUNICATION:
+                return getString(R.string.source_line);
+            case MediaRecorder.AudioSource.MIC:
+                return getString(R.string.source_mic);
+            case MediaRecorder.AudioSource.DEFAULT:
+                return getString(R.string.source_default);
+            default:
+                return "";
+        }
+    }
+
     // alarm dismiss button
     public void showNotificationAlarm(boolean show) {
         MainActivity.showProgress(RecordingService.this, show, phone, samplesTime / sampleRate, thread != null);
@@ -442,8 +457,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     R.layout.notifictaion_recording_light,
                     R.layout.notifictaion_recording_dark));
 
-            String title = encoding != null ? getString(R.string.encoding_title) : getString(R.string.recording_title);
+            String title = encoding != null ? getString(R.string.encoding_title) : (getString(R.string.recording_title) + " " + getSource());
             String text = ".../" + storage.getDocumentName(targetUri);
+
+            title = title.trim();
 
             view.setOnClickPendingIntent(R.id.status_bar_latest_event_content, main);
             view.setTextViewText(R.id.notification_title, title);
@@ -475,13 +492,55 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void startRecording() {
-        if (thread != null) {
-            thread.interrupt();
+        final RawSamples rs;
+        AudioRecord r = null;
+
+        rs = new RawSamples(storage.getTempRecording());
+
+        rs.open(samplesTime);
+
+        int c = MainApplication.getInMode(RecordingService.this);
+        final int min = AudioRecord.getMinBufferSize(sampleRate, c, Sound.DEFAULT_AUDIOFORMAT);
+        if (min <= 0)
+            throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
+
+        int[] ss = new int[]{
+                MediaRecorder.AudioSource.VOICE_CALL,
+                MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+                MediaRecorder.AudioSource.MIC,
+                MediaRecorder.AudioSource.DEFAULT,
+        };
+        for (int s : ss) {
+            try {
+                r = new AudioRecord(s, sampleRate, c, Sound.DEFAULT_AUDIOFORMAT, min * 2);
+                if (r.getState() == AudioRecord.STATE_INITIALIZED)
+                    break;
+            } catch (IllegalArgumentException e) {
+                Log.d(TAG, "Recorder Create Failed: " + s, e);
+            }
         }
+        if (r == null || r.getState() != AudioRecord.STATE_INITIALIZED) {
+            throw new RuntimeException("Unable to initialize AudioRecord");
+        }
+        source = r.getAudioSource();
+
+        final AudioRecord recorder = r;
+
+        final Thread old = thread;
 
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                if (old != null) {
+                    old.interrupt();
+                    try {
+                        old.join();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
+
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                 int p = android.os.Process.getThreadPriority(android.os.Process.myTid());
 
@@ -489,37 +548,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     Log.e(TAG, "Unable to set Thread Priority " + android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
                 }
 
-                RawSamples rs = null;
-                AudioRecord recorder = null;
                 try {
-                    rs = new RawSamples(storage.getTempRecording());
-
-                    rs.open(samplesTime);
-
-                    int c = MainApplication.getInMode(RecordingService.this);
-                    int min = AudioRecord.getMinBufferSize(sampleRate, c, Sound.DEFAULT_AUDIOFORMAT);
-                    if (min <= 0)
-                        throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
-
-                    int[] ss = new int[]{
-                            MediaRecorder.AudioSource.VOICE_CALL,
-                            MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                            MediaRecorder.AudioSource.MIC,
-                            MediaRecorder.AudioSource.DEFAULT,
-                    };
-                    for (int s : ss) {
-                        try {
-                            recorder = new AudioRecord(s, sampleRate, c, Sound.DEFAULT_AUDIOFORMAT, min * 2);
-                            if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
-                                break;
-                        } catch (IllegalArgumentException e) {
-                            Log.d(TAG, "Recorder Create Failed: " + s, e);
-                        }
-                    }
-                    if (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED) {
-                        throw new RuntimeException("Unable to initialize AudioRecord");
-                    }
-
                     long start = System.currentTimeMillis();
                     recorder.startRecording();
 

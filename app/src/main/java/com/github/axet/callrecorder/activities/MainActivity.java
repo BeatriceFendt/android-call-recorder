@@ -44,6 +44,7 @@ import com.github.axet.callrecorder.services.RecordingService;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.TreeSet;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     public final static String TAG = MainActivity.class.getSimpleName();
@@ -194,7 +195,14 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         updatePanel();
 
         list = (ListView) findViewById(R.id.list);
-        recordings = new Recordings(this, list);
+        recordings = new Recordings(this, list) {
+            @Override
+            public void cleanDelete(TreeSet<String> delete, Uri f) {
+                super.cleanDelete(delete, f);
+                String p = MainApplication.getFilePref(f);
+                delete.remove(p + MainApplication.PREFERENCE_DETAILS_CONTACT);
+            }
+        };
         list.setAdapter(recordings);
         list.setEmptyView(findViewById(R.id.empty_list));
         recordings.setToolbar((ViewGroup) findViewById(R.id.recording_toolbar));
@@ -472,7 +480,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             fab.setVisibility(View.GONE);
             fab_stop.setVisibility(View.INVISIBLE);
         } else {
-            status.setText(phone + " - " + MainApplication.formatDuration(this, sec * 1000));
+            String text = phone;
+            if (!text.isEmpty())
+                text += " - ";
+            text += MainApplication.formatDuration(this, sec * 1000);
+            text = text.trim();
+            status.setText(text);
             fab.setVisibility(show ? View.VISIBLE : View.GONE);
             fab_stop.setVisibility(View.VISIBLE);
         }

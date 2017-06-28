@@ -45,4 +45,7 @@
     <string name="open_recording_folder">Открыть папку с записями</string>
     <string name="recording_list_is_empty">Список записей пуст.\n\nВключите \'Запись звонков\' чтобы начать записывать звонки.</string>
     <string name="call_recording">Запись звонков</string>
+    <string name="source_default">(По-умолчанию)</string>
+    <string name="source_mic">(Микрофон)</string>
+    <string name="source_line">(Линия)</string>
 </resources>
