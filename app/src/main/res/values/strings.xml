@@ -2,7 +2,7 @@
     <string name="app_name">Call Recorder</string>
 
     <string-array name="source_text">
-        <item>Auto</item>
+        <item>Auto (default)</item>
         <item>Voice Line</item>
         <item>Mic</item>
     </string-array>

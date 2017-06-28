@@ -2,8 +2,8 @@
     <string name="app_name">Запись звонков</string>
 
     <string-array name="source_text">
-        <item>Автоматически</item>
-        <item>Голосовая Линия</item>
+        <item>Автоматически (по умолчанию)</item>
+        <item>Голосовая линия</item>
         <item>Микрофон</item>
     </string-array>
 
