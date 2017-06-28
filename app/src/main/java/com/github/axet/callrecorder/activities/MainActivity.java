@@ -45,7 +45,7 @@ import com.github.axet.callrecorder.services.RecordingService;
 import java.io.File;
 import java.util.Collections;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     public final static String TAG = MainActivity.class.getSimpleName();
 
     public static String SHOW_PROGRESS = MainActivity.class.getCanonicalName() + ".SHOW_PROGRESS";
@@ -182,14 +182,6 @@ public class MainActivity extends AppCompatActivity {
         list.setEmptyView(findViewById(R.id.empty_list));
         recordings.setToolbar((ViewGroup) findViewById(R.id.recording_toolbar));
 
-        if (Storage.permitted(MainActivity.this, PERMISSIONS)) {
-            try {
-                storage.migrateLocalStorage();
-            } catch (RuntimeException e) {
-                Error(e);
-            }
-        }
-
         RecordingService.startIfEnabled(this);
 
         final Context context = this;
@@ -325,6 +317,12 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        try {
+            storage.migrateLocalStorage();
+        } catch (RuntimeException e) {
+            Error(e);
+        }
+
         Runnable done = new Runnable() {
             @Override
             public void run() {
@@ -335,10 +333,7 @@ public class MainActivity extends AppCompatActivity {
         progressText.setVisibility(View.GONE);
         progressEmpty.setVisibility(View.VISIBLE);
 
-        if (Storage.permitted(this, PERMISSIONS))
-            recordings.load(done);
-        else
-            recordings.load(done);
+        recordings.load(false, done);
 
         updateHeader();
 
@@ -346,10 +341,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void last() {
-        final int selected = getLastRecording();
         Runnable done = new Runnable() {
             @Override
             public void run() {
+                final int selected = getLastRecording();
                 progressText.setVisibility(View.VISIBLE);
                 progressEmpty.setVisibility(View.GONE);
                 if (selected != -1) {
@@ -366,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
         };
         progressText.setVisibility(View.GONE);
         progressEmpty.setVisibility(View.VISIBLE);
-        recordings.load(done);
+        recordings.load(false, done);
     }
 
     int getLastRecording() {
@@ -397,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (RuntimeException e) {
                         Error(e);
                     }
-                    recordings.load(null);
+                    recordings.load(false, null);
                     if (resumeCall != null) {
                         call(resumeCall);
                         resumeCall = null;
@@ -510,4 +505,10 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(MainApplication.PREFERENCE_STORAGE)) {
+            recordings.load(true, null);
+        }
+    }
 }
