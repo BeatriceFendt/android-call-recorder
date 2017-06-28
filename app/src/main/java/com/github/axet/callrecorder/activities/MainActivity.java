@@ -52,6 +52,23 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     public static String SET_PROGRESS = MainActivity.class.getCanonicalName() + ".SET_PROGRESS";
     public static String SHOW_LAST = MainActivity.class.getCanonicalName() + ".SHOW_LAST";
 
+    public static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE"; // Manifest.permission.READ_EXTERNAL_STORAGE
+
+    public static final String[] PERMISSIONS = new String[]{
+            READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.PROCESS_OUTGOING_CALLS,
+            Manifest.permission.READ_CONTACTS
+    };
+
+    public static final String[] MUST = new String[]{
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.PROCESS_OUTGOING_CALLS
+    };
+
     FloatingActionButton fab;
     FloatingActionButton fab_stop;
     View fab_panel;
@@ -420,21 +437,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 }
         }
     }
-
-    public static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE"; // Manifest.permission.READ_EXTERNAL_STORAGE
-
-    public static final String[] PERMISSIONS = new String[]{READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.PROCESS_OUTGOING_CALLS
-    };
-
-    public static final String[] MUST = new String[]{
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.PROCESS_OUTGOING_CALLS
-    };
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
