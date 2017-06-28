@@ -25,10 +25,10 @@ import android.widget.Toast;
 
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.StoragePathPreferenceCompat;
-import com.github.axet.audiolibrary.app.Storage;
 import com.github.axet.audiolibrary.encoders.Factory;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
+import com.github.axet.callrecorder.app.Storage;
 import com.github.axet.callrecorder.services.RecordingService;
 
 import java.lang.reflect.Array;
@@ -246,6 +246,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_FORMAT));
 
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_STORAGE);
+            s.setStorage(new Storage(getContext()));
             if (Build.VERSION.SDK_INT >= 21)
                 s.setStorageAccessFramework(this, 2);
             else
