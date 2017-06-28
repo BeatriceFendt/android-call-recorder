@@ -95,4 +95,7 @@
     <string name="title_header">%1$s free ~ %2$s left</string>
     <string name="open_recording_folder">Open Recording Folder</string>
     <string name="recording_list_is_empty">Recording List is Empty\n\nCheck \'Calls Recording\' to Start Recording Calls</string>
+    <string name="source_default">(Default)</string>
+    <string name="source_mic">(Mic)</string>
+    <string name="source_line">(Source Line)</string>
 </resources>

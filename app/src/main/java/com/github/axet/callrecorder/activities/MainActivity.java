@@ -480,7 +480,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             fab.setVisibility(View.GONE);
             fab_stop.setVisibility(View.INVISIBLE);
         } else {
-            status.setText(phone + " - " + MainApplication.formatDuration(this, sec * 1000));
+            String text = phone;
+            if (!text.isEmpty())
+                text += " - ";
+            text += MainApplication.formatDuration(this, sec * 1000);
+            text = text.trim();
+            status.setText(text);
             fab.setVisibility(show ? View.VISIBLE : View.GONE);
             fab_stop.setVisibility(View.VISIBLE);
         }
