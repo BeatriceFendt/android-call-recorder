@@ -18,6 +18,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.provider.BaseColumns;
+import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -86,9 +88,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     long samplesTime;
     FileEncoder encoder;
     Runnable encoding; // current encoding
-    HashMap<File, Uri> map = new HashMap<>();
+    HashMap<File, CallInfo> mapTarget = new HashMap<>();
     OptimizationPreferenceCompat.ServiceReceiver optimization;
     String phone = "";
+    String contact = "";
+    String contactId = "";
 
     public static void startService(Context context) {
         context.startService(new Intent(context, RecordingService.class));
@@ -112,6 +116,23 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     public static void stopButton(Context context) {
         Intent intent = new Intent(STOP_BUTTON);
         context.sendBroadcast(intent);
+    }
+
+    public static class CallInfo {
+        public Uri targetUri;
+        public String phone;
+        public String contact;
+        public String contactId;
+
+        public CallInfo() {
+        }
+
+        public CallInfo(Uri t, String p, String c, String cid) {
+            this.targetUri = t;
+            this.phone = p;
+            this.contact = c;
+            this.contactId = cid;
+        }
     }
 
     class RecordingReceiver extends BroadcastReceiver {
@@ -195,11 +216,28 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     public void setPhone(String s) {
-        if (s == null)
+        if (s == null || s.isEmpty())
             return;
-        if (s.isEmpty())
-            return;
+
         phone = PhoneNumberUtils.formatNumber(s);
+
+        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(s));
+        ContentResolver contentResolver = getContentResolver();
+        try {
+            Cursor contactLookup = contentResolver.query(uri, null, null, null, null);
+            if (contactLookup != null) {
+                try {
+                    if (contactLookup.moveToNext()) {
+                        contact = contactLookup.getString(contactLookup.getColumnIndex(ContactsContract.Data.DISPLAY_NAME));
+                        contactId = contactLookup.getString(contactLookup.getColumnIndex(BaseColumns._ID));
+                    }
+                } finally {
+                    contactLookup.close();
+                }
+            }
+        } catch (RuntimeException e) {
+            Error(e);
+        }
     }
 
     @Override
@@ -261,10 +299,13 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             ContentResolver resolver = getContentResolver();
             Uri childId = DocumentsContract.buildChildDocumentsUriUsingTree(path, DocumentsContract.getTreeDocumentId(path));
             Cursor c = resolver.query(childId, null, null, null, null);
-            while (c.moveToNext()) {
-                String id = c.getString(c.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID));
-                Uri dd = DocumentsContract.buildDocumentUriUsingTree(path, id);
-                list.add(dd);
+            if (c != null) {
+                while (c.moveToNext()) {
+                    String id = c.getString(c.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID));
+                    Uri dd = DocumentsContract.buildDocumentUriUsingTree(path, id);
+                    list.add(dd);
+                }
+                c.close();
             }
         } else if (s.startsWith(ContentResolver.SCHEME_FILE)) {
             File dir = new File(path.getPath());
@@ -681,7 +722,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void begin(boolean wasRinging) {
-        targetUri = storage.getNewFile(phone);
+        targetUri = storage.getNewFile(phone, contact);
         if (encoding != null) {
             encoder.pause();
         }
@@ -700,7 +741,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             File tmp = storage.getTempRecording();
             File in = Storage.getNextFile(tmp.getParentFile(), Storage.TMP_REC, null);
             Storage.move(tmp, in);
-            map.put(in, targetUri);
+            mapTarget.put(in, new CallInfo(targetUri, phone, contact, contactId));
             if (encoding == null) { // double finish()? skip
                 encodingNext();
             } else {
@@ -713,11 +754,16 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final File inFile = storage.getTempNextRecording();
         if (!inFile.exists())
             return;
-        targetUri = map.get(inFile);
+        CallInfo c = mapTarget.get(inFile);
+        targetUri = c.targetUri; // update notification encoding name
+        final String phone = c.phone;
+        final String contact = c.contact;
+        final String contactId = c.contactId;
         if (targetUri == null) { // service restart
-            targetUri = storage.getNewFile(phone);
+            targetUri = storage.getNewFile(phone, contact);
         }
-        encoding = new Runnable() {
+        final Uri targetUri = RecordingService.this.targetUri;
+        encoding = new Runnable() { // calledn when done
             @Override
             public void run() {
                 deleteOld();
@@ -727,11 +773,12 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             }
         };
         showNotificationAlarm(true); // update status (encoding)
-        Log.d(TAG, "Encode " + inFile.getName() + " to " + storage.getDocumentName(targetUri));
+        Log.d(TAG, "Encoded " + inFile.getName() + " to " + storage.getTargetName(targetUri));
         encoding(inFile, targetUri, encoding, new Runnable() {
             @Override
-            public void run() { // success
-                map.remove(inFile);
+            public void run() { // called when success
+                mapTarget.remove(inFile);
+                MainApplication.setContact(RecordingService.this, targetUri, contactId);
                 MainActivity.last(RecordingService.this);
             }
         });
@@ -749,4 +796,5 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         super.onTaskRemoved(rootIntent);
         optimization.onTaskRemoved(rootIntent);
     }
+
 }
