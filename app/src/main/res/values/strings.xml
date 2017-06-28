@@ -1,6 +1,18 @@
 <resources>
     <string name="app_name">Call Recorder</string>
 
+    <string-array name="source_text">
+        <item>Auto</item>
+        <item>Voice Line</item>
+        <item>Mic</item>
+    </string-array>
+
+    <string-array name="source_values" translatable="false">
+        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+
     <string-array name="sample_rate_text">
         <item>48 kHz</item>
         <item>44.1 kHz (CD)</item>
