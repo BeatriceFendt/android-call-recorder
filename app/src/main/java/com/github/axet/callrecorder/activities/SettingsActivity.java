@@ -244,6 +244,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_CHANNELS));
             bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_DELETE));
             bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_FORMAT));
+            bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_SOURCE));
 
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_STORAGE);
             s.setStorage(new Storage(getContext()));

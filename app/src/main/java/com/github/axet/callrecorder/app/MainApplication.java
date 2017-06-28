@@ -13,6 +13,7 @@ public class MainApplication extends com.github.axet.audiolibrary.app.MainApplic
     public static final String PREFERENCE_CALL = "call";
     public static final String PREFERENCE_OPTIMIZATION = "optimization";
     public static final String PREFERENCE_DETAILS_CONTACT = "_contact";
+    public static final String PREFERENCE_SOURCE = "source";
 
     @Override
     public void onCreate() {

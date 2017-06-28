@@ -7,6 +7,16 @@
         android:title="Папка для хранения" />
 
     <ListPreference
+        android:defaultValue="-1"
+        android:entries="@array/source_text"
+        android:entryValues="@array/source_values"
+        android:key="source"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:summary="Источник записи"
+        android:title="Источник" />
+
+    <ListPreference
         android:defaultValue="16000"
         android:entries="@array/sample_rate_text"
         android:entryValues="@array/sample_rate_values"

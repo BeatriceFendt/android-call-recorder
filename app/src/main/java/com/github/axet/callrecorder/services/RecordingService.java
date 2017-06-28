@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -513,13 +514,30 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (min <= 0)
             throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
 
-        int[] ss = new int[]{
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+
+        Integer[] ss = new Integer[]{
                 MediaRecorder.AudioSource.VOICE_CALL,
                 MediaRecorder.AudioSource.VOICE_COMMUNICATION,
                 MediaRecorder.AudioSource.MIC,
                 MediaRecorder.AudioSource.DEFAULT,
         };
-        for (int s : ss) {
+        List<Integer> list = Arrays.asList(ss);
+        int i = Integer.valueOf(shared.getString(MainApplication.PREFERENCE_SOURCE, "-1"));
+        switch (i) {
+            case 0:
+                i = list.indexOf(MediaRecorder.AudioSource.VOICE_CALL);
+                break;
+            case 1:
+                i = list.indexOf(MediaRecorder.AudioSource.MIC);
+                break;
+            case -1:
+            default:
+                i = 0;
+                break;
+        }
+        for (; i < ss.length; i++) {
+            int s = ss[i];
             try {
                 r = new AudioRecord(s, sampleRate, c, Sound.DEFAULT_AUDIOFORMAT, min * 2);
                 if (r.getState() == AudioRecord.STATE_INITIALIZED)

@@ -277,6 +277,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         MenuItem i = menu.findItem(R.id.action_call);
         boolean b = RecordingService.isEnabled(this);
         i.setChecked(b);
+
+        MenuItem m = menu.findItem(R.id.action_show_folder);
+        Intent ii = showFolderIntent();
+        if (ii.resolveActivityInfo(getPackageManager(), 0) == null)
+            m.setVisible(false);
         return true;
     }
 
@@ -302,9 +307,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
 
         if (id == R.id.action_show_folder) {
-            Uri selectedUri = storage.getStoragePath();
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(selectedUri, "resource/folder");
+            Intent intent = showFolderIntent();
             if (intent.resolveActivityInfo(getPackageManager(), 0) != null) {
                 startActivity(intent);
             } else {
@@ -313,6 +316,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    Intent showFolderIntent() {
+        Uri selectedUri = storage.getStoragePath();
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(selectedUri, "resource/folder");
+        return intent;
     }
 
     void call(MenuItem item) {

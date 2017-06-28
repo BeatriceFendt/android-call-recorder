@@ -1,6 +1,12 @@
 <resources>
     <string name="app_name">Запись звонков</string>
 
+    <string-array name="source_text">
+        <item>Автоматически</item>
+        <item>Голосовая Линия</item>
+        <item>Микрофон</item>
+    </string-array>
+
     <string-array name="themes_text">
         <item>Тема Светлая (по умолчанию)</item>
         <item>Тема Темная</item>
