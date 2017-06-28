@@ -274,12 +274,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
-        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-
         MenuItem i = menu.findItem(R.id.action_call);
-        boolean b = shared.getBoolean(MainApplication.PREFERENCE_CALL, false);
-        if (!Storage.permitted(this, MUST))
-            b = false;
+        boolean b = RecordingService.isEnabled(this);
         i.setChecked(b);
         return true;
     }

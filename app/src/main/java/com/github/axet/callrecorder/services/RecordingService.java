@@ -99,12 +99,16 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         context.startService(new Intent(context, RecordingService.class));
     }
 
-    public static void startIfEnabled(Context context) {
+    public static boolean isEnabled(Context context) {
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
         boolean b = shared.getBoolean(MainApplication.PREFERENCE_CALL, false);
         if (!Storage.permitted(context, MainActivity.MUST))
             b = false;
-        if (b)
+        return b;
+    }
+
+    public static void startIfEnabled(Context context) {
+        if (isEnabled(context))
             context.startService(new Intent(context, RecordingService.class));
     }
 
