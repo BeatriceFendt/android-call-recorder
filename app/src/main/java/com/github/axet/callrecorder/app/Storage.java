@@ -58,16 +58,20 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         String format = "%s";
         format = shared.getString(MainApplication.PREFERENCE_FORMAT, format);
 
+        if (contact != null && !contact.isEmpty()) {
+            format = format.replaceAll("%c", contact);
+        } else {
+            if (phone != null && !phone.isEmpty())
+                format = format.replaceAll("%c", phone);
+            else
+                format = format.replaceAll("%c", "");
+        }
+
         if (phone != null && !phone.isEmpty()) {
             format = format.replaceAll("%p", phone);
         } else {
             format = format.replaceAll("%p", "");
         }
-
-        if (contact != null && !contact.isEmpty())
-            format = format.replaceAll("%c", contact);
-        else
-            format = format.replaceAll("%c", "");
 
         format = format.replaceAll("%T", "" + System.currentTimeMillis() / 1000);
         format = format.replaceAll("%s", SIMPLE.format(new Date()));

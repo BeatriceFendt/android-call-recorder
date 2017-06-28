@@ -277,7 +277,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 
         MenuItem i = menu.findItem(R.id.action_call);
-        i.setChecked(shared.getBoolean(MainApplication.PREFERENCE_CALL, false));
+        boolean b = shared.getBoolean(MainApplication.PREFERENCE_CALL, false);
+        if (!Storage.permitted(this, MUST))
+            b = false;
+        i.setChecked(b);
         return true;
     }
 
