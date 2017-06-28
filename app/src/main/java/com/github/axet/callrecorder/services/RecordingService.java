@@ -101,7 +101,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     public static void startIfEnabled(Context context) {
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
-        if (shared.getBoolean(MainApplication.PREFERENCE_CALL, false))
+        boolean b = shared.getBoolean(MainApplication.PREFERENCE_CALL, false);
+        if (!Storage.permitted(context, MainActivity.MUST))
+            b = false;
+        if (b)
             context.startService(new Intent(context, RecordingService.class));
     }
 
@@ -222,6 +225,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         phone = PhoneNumberUtils.formatNumber(s);
 
+        contact = "";
+        contactId = "";
         Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(s));
         ContentResolver contentResolver = getContentResolver();
         try {
