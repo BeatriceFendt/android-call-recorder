@@ -54,4 +54,10 @@
     <string name="source_default">(По-умолчанию)</string>
     <string name="source_mic">(Микрофон)</string>
     <string name="source_line">(Линия)</string>
+    <string name="call_recordings_support">Запись звонков</string>
+    <string name="call_recordings_support_text">Большинство телефонов не поддерживают запись звонков, используйте прошивки с открытым исходным кодом.</string>
+    <string name="recordings_quality">Качество записи</string>
+    <string name="recordings_quality_text">Если программе не удасться записывать в высоком качестве (голосовая линия), программа будет использовать микрофон (в случае ошибки вы можете слышать только свой голос или голос собеседника).</string>
+    <string name="task_managers">Менеджеры памяти</string>
+    <string name="task_managers_text">Если ваш телефон оптимизирует батарею или испольует другие менеджеры памяти включите программу в белый список, чтобы она продолжара работать в фоновом режиме и все звонки были записаны.</string>
 </resources>

@@ -35,6 +35,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.axet.androidlibrary.widgets.AboutPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
 import com.github.axet.audiolibrary.app.Recordings;
 import com.github.axet.callrecorder.R;
@@ -296,6 +297,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
+        }
+
+        if (id == R.id.action_about) {
+            AboutPreferenceCompat.showDialog(this, R.raw.about);
         }
 
         if (id == R.id.action_call) {
