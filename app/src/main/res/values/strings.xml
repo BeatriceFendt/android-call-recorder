@@ -2,7 +2,7 @@
     <string name="app_name">Call Recorder</string>
 
     <string-array name="source_text">
-        <item>Auto</item>
+        <item>Auto (default)</item>
         <item>Voice Line</item>
         <item>Mic</item>
     </string-array>
@@ -110,4 +110,10 @@
     <string name="source_default">(Default)</string>
     <string name="source_mic">(Mic)</string>
     <string name="source_line">(Source Line)</string>
+    <string name="call_recordings_support">Call Recordings support</string>
+    <string name="call_recordings_support_text">Most phones does not support call recording, to enable Call Recording install open-source firmware.</string>
+    <string name="recordings_quality">Recordings Quality</string>
+    <string name="recordings_quality_text">If you phone fails to support high quality call recording, application will ty MIC call recording (you may hear only your or your opponent).</string>
+    <string name="task_managers">Task Managers</string>
+    <string name="task_managers_text">If you phone has Battery Optimization or Task Managers consider disabling them, to keep application running in background.</string>
 </resources>
