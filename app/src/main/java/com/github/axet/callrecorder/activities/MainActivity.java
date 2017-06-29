@@ -1,23 +1,18 @@
 package com.github.axet.callrecorder.activities;
 
 import android.Manifest;
-import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
@@ -31,21 +26,15 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.axet.androidlibrary.widgets.AboutPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
-import com.github.axet.audiolibrary.app.Recordings;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
 import com.github.axet.callrecorder.services.RecordingService;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.TreeSet;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     public final static String TAG = MainActivity.class.getSimpleName();
@@ -196,14 +185,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         updatePanel();
 
         list = (ListView) findViewById(R.id.list);
-        recordings = new Recordings(this, list) {
-            @Override
-            public void cleanDelete(TreeSet<String> delete, Uri f) {
-                super.cleanDelete(delete, f);
-                String p = MainApplication.getFilePref(f);
-                delete.remove(p + MainApplication.PREFERENCE_DETAILS_CONTACT);
-            }
-        };
+        recordings = new Recordings(this, list);
         list.setAdapter(recordings);
         list.setEmptyView(findViewById(R.id.empty_list));
         recordings.setToolbar((ViewGroup) findViewById(R.id.recording_toolbar));

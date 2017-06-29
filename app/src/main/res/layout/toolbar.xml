@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.github.axet.androidlibrary.widgets.EqualLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/recording_toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/toolbar_all"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="?attr/search_rating_bg"
+            android:button="@android:color/transparent"
+            android:clickable="false"
+            android:gravity="center"
+            android:src="@drawable/ic_list_black_24dp"
+            android:tint="?attr/colorAccent" />
+
+        <TextView
+            style="@style/tops_style_light"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/tolbar_all" />
+    </FrameLayout>
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/toolbar_stars"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="?attr/search_rating_bg"
+            android:button="@android:color/transparent"
+            android:clickable="false"
+            android:gravity="center"
+            android:src="@drawable/ic_star_black_24dp"
+            android:tint="?attr/colorAccent" />
+
+        <TextView
+            android:id="@+id/search_header_toolbar_tops_name"
+            style="@style/tops_style_light"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/tolbar_stars" />
+    </FrameLayout>
+
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/toolbar_in"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="?attr/search_rating_bg"
+            android:button="@android:color/transparent"
+            android:clickable="false"
+            android:gravity="center"
+            android:src="@drawable/ic_call_received_black_24dp"
+            android:tint="?attr/colorAccent" />
+
+        <TextView
+            style="@style/tops_style_light"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="In" />
+    </FrameLayout>
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/toolbar_out"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="?attr/search_rating_bg"
+            android:button="@android:color/transparent"
+            android:clickable="false"
+            android:gravity="center"
+            android:src="@drawable/ic_call_made_black_24dp"
+            android:tint="?attr/colorAccent" />
+
+        <TextView
+            style="@style/tops_style_light"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Out" />
+    </FrameLayout>
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/toolbar_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="?attr/search_rating_bg"
+            android:button="@android:color/transparent"
+            android:clickable="false"
+            android:gravity="center"
+            android:src="@drawable/ic_sort_black_24dp"
+            android:tint="?attr/colorAccent" />
+
+        <TextView
+            style="@style/tops_style_light"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/tolbar_sort_name" />
+    </FrameLayout>
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/toolbar_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="?attr/search_rating_bg"
+            android:button="@android:color/transparent"
+            android:clickable="false"
+            android:gravity="center"
+            android:src="@drawable/ic_sort_black_24dp"
+            android:tint="?attr/colorAccent" />
+
+        <TextView
+            style="@style/tops_style_light"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/tolbar_sort_date" />
+    </FrameLayout>
+
+</com.github.axet.androidlibrary.widgets.EqualLinearLayout>

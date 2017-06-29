@@ -13,7 +13,13 @@ public class MainApplication extends com.github.axet.audiolibrary.app.MainApplic
     public static final String PREFERENCE_CALL = "call";
     public static final String PREFERENCE_OPTIMIZATION = "optimization";
     public static final String PREFERENCE_DETAILS_CONTACT = "_contact";
+    public static final String PREFERENCE_DETAILS_CALL = "_call";
     public static final String PREFERENCE_SOURCE = "source";
+    public static final String PREFERENCE_FILTER_IN = "filter_in";
+    public static final String PREFERENCE_FILTER_OUT = "filter_out";
+
+    public static final String CALL_OUT = "out";
+    public static final String CALL_IN = "in";
 
     @Override
     public void onCreate() {
@@ -33,6 +39,20 @@ public class MainApplication extends com.github.axet.audiolibrary.app.MainApplic
     }
 
     public static void setContact(Context context, Uri f, String id) {
+        final SharedPreferences shared = android.preference.PreferenceManager.getDefaultSharedPreferences(context);
+        String p = getFilePref(f) + PREFERENCE_DETAILS_CONTACT;
+        SharedPreferences.Editor editor = shared.edit();
+        editor.putString(p, id);
+        editor.commit();
+    }
+
+    public static String getCall(Context context, Uri f) {
+        final SharedPreferences shared = android.preference.PreferenceManager.getDefaultSharedPreferences(context);
+        String p = getFilePref(f) + PREFERENCE_DETAILS_CONTACT;
+        return shared.getString(p, null);
+    }
+
+    public static void setCall(Context context, Uri f, String id) {
         final SharedPreferences shared = android.preference.PreferenceManager.getDefaultSharedPreferences(context);
         String p = getFilePref(f) + PREFERENCE_DETAILS_CONTACT;
         SharedPreferences.Editor editor = shared.edit();

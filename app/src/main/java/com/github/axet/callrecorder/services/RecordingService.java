@@ -94,6 +94,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     String phone = "";
     String contact = "";
     String contactId = "";
+    String call;
     int source = -1; // audiotrecorder source
 
     public static void startService(Context context) {
@@ -132,15 +133,17 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         public String phone;
         public String contact;
         public String contactId;
+        public String call;
 
         public CallInfo() {
         }
 
-        public CallInfo(Uri t, String p, String c, String cid) {
+        public CallInfo(Uri t, String p, String c, String cid, String call) {
             this.targetUri = t;
             this.phone = p;
             this.contact = c;
             this.contactId = cid;
+            this.call = call;
         }
     }
 
@@ -165,10 +168,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         public void onReceive(Context context, Intent intent) {
             String a = intent.getAction();
             if (a.equals(TelephonyManager.ACTION_PHONE_STATE_CHANGED)) {
-                setPhone(intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER));
+                setPhone(intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER), call);
             }
             if (a.equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
-                setPhone(intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER));
+                setPhone(intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER), MainApplication.CALL_OUT);
             }
         }
     }
@@ -184,13 +187,14 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         @Override
         public void onCallStateChanged(int s, String incomingNumber) {
-            setPhone(incomingNumber);
             try {
                 switch (s) {
                     case TelephonyManager.CALL_STATE_RINGING:
+                        setPhone(incomingNumber, MainApplication.CALL_IN);
                         wasRinging = true;
                         break;
                     case TelephonyManager.CALL_STATE_OFFHOOK:
+                        setPhone(incomingNumber, call);
                         if (thread == null) { // handling restart while current call
                             begin(wasRinging);
                             startedByCall = true;
@@ -213,6 +217,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         }
                         wasRinging = false;
                         startedByCall = false;
+                        phone = "";
+                        contactId = "";
+                        contact = "";
+                        call = "";
                         break;
                 }
             } catch (RuntimeException e) {
@@ -224,7 +232,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     public RecordingService() {
     }
 
-    public void setPhone(String s) {
+    public void setPhone(String s, String c) {
         if (s == null || s.isEmpty())
             return;
 
@@ -249,6 +257,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         } catch (RuntimeException e) {
             Error(e);
         }
+
+        call = c;
     }
 
     @Override
@@ -797,7 +807,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             File tmp = storage.getTempRecording();
             File in = Storage.getNextFile(tmp.getParentFile(), Storage.TMP_REC, null);
             Storage.move(tmp, in);
-            mapTarget.put(in, new CallInfo(targetUri, phone, contact, contactId));
+            mapTarget.put(in, new CallInfo(targetUri, phone, contact, contactId, call));
             if (encoding == null) { // double finish()? skip
                 encodingNext();
             } else {
@@ -815,6 +825,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final String phone = c.phone;
         final String contact = c.contact;
         final String contactId = c.contactId;
+        final String call = c.call;
         if (targetUri == null) { // service restart
             targetUri = storage.getNewFile(phone, contact);
         }
@@ -835,6 +846,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             public void run() { // called when success
                 mapTarget.remove(inFile);
                 MainApplication.setContact(RecordingService.this, targetUri, contactId);
+                MainApplication.setCall(RecordingService.this, targetUri, call);
                 MainActivity.last(RecordingService.this);
             }
         });
