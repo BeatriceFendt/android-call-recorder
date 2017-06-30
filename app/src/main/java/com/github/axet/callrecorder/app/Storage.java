@@ -51,7 +51,7 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         return ff != null && ff.length > 0 ? ff[0] : tmp;
     }
 
-    public Uri getNewFile(String phone, String contact) {
+    public Uri getNewFile(String phone, String contact, String call) {
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
         String ext = shared.getString(com.github.axet.audiolibrary.app.MainApplication.PREFERENCE_ENCODING, "");
 
@@ -77,6 +77,21 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         format = format.replaceAll("%s", SIMPLE.format(new Date()));
         format = format.replaceAll("%I", ISO8601.format(new Date()));
 
+        if (call == null || call.isEmpty()) {
+            format = format.replaceAll("%i", "");
+        } else {
+            switch (call) {
+                case MainApplication.CALL_IN:
+                    format = format.replaceAll("%i", "↓");
+                    break;
+                case MainApplication.CALL_OUT:
+                    format = format.replaceAll("%i", "↑");
+                    break;
+            }
+        }
+
+        format = format.replaceAll("  ", " ");
+
         format = format.trim();
 
         Uri parent = getStoragePath();
@@ -90,22 +105,27 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
     }
 
     @Override
-    public Uri move(File f, Uri t) {
-        Uri u = super.move(f, t);
-        if (u == null)
+    public Uri move(File ff, Uri tt) {
+        Uri t = super.move(ff, tt);
+        if (t == null)
             return null;
-        String c = MainApplication.getContact(context, Uri.fromFile(f));
-        MainApplication.setContact(context, u, c); // copy contact to migrated file
-        return u;
+        Uri f = Uri.fromFile(ff);
+        String c = MainApplication.getContact(context, f);
+        MainApplication.setContact(context, t, c); // copy contact to migrated file
+        String call = MainApplication.getCall(context, f);
+        MainApplication.setCall(context, t, call); // copy call to migrated file
+        return t;
     }
 
     @Override
-    public Uri rename(Uri f, String t) {
-        Uri u = super.rename(f, t);
-        if (u == null)
+    public Uri rename(Uri f, String tt) {
+        Uri t = super.rename(f, tt);
+        if (t == null)
             return null;
         String c = MainApplication.getContact(context, f);
-        MainApplication.setContact(context, u, c); // copy contact to new name
-        return u;
+        MainApplication.setContact(context, t, c); // copy contact to new name
+        String call = MainApplication.getCall(context, f);
+        MainApplication.setCall(context, t, call); // copy call to new name
+        return t;
     }
 }
