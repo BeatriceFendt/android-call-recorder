@@ -788,7 +788,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void begin(boolean wasRinging) {
-        targetUri = storage.getNewFile(phone, contact);
+        targetUri = storage.getNewFile(phone, contact, call);
         if (encoding != null) {
             encoder.pause();
         }
@@ -827,7 +827,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final String contactId = c.contactId;
         final String call = c.call;
         if (targetUri == null) { // service restart
-            targetUri = storage.getNewFile(phone, contact);
+            targetUri = storage.getNewFile(phone, contact, call);
         }
         final Uri targetUri = RecordingService.this.targetUri;
         encoding = new Runnable() { // calledn when done
