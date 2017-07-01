@@ -444,9 +444,13 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     public String getSource() {
         switch (source) {
+            case MediaRecorder.AudioSource.VOICE_UPLINK:
+                return "VOICE_UPLINK";
+            case MediaRecorder.AudioSource.VOICE_DOWNLINK:
+                return "VOICE_DOWNLINK";
             case MediaRecorder.AudioSource.VOICE_CALL:
-            case MediaRecorder.AudioSource.VOICE_COMMUNICATION:
                 return getString(R.string.source_line);
+            case MediaRecorder.AudioSource.VOICE_COMMUNICATION:
             case MediaRecorder.AudioSource.MIC:
                 return getString(R.string.source_mic);
             case MediaRecorder.AudioSource.DEFAULT:
@@ -528,9 +532,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         Integer[] ss = new Integer[]{
                 MediaRecorder.AudioSource.VOICE_CALL,
-                MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                MediaRecorder.AudioSource.MIC,
-                MediaRecorder.AudioSource.DEFAULT,
+                MediaRecorder.AudioSource.VOICE_COMMUNICATION, // mic source VOIP
+                MediaRecorder.AudioSource.MIC, // mic
+                MediaRecorder.AudioSource.DEFAULT, // mic
         };
         List<Integer> list = Arrays.asList(ss);
         int i = Integer.valueOf(shared.getString(MainApplication.PREFERENCE_SOURCE, "-1"));
