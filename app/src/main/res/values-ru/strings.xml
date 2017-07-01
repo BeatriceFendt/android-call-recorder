@@ -5,6 +5,8 @@
         <item>Автоматически (по умолчанию)</item>
         <item>Голосовая линия</item>
         <item>Микрофон</item>
+        <item>Системный выбор</item>
+        <item>Системный необработанный</item>
     </string-array>
 
     <string-array name="themes_text">

@@ -5,12 +5,16 @@
         <item>Auto (default)</item>
         <item>Voice Line</item>
         <item>Mic</item>
+        <item>System Default</item>
+        <item>System RAW</item>
     </string-array>
 
     <string-array name="source_values" translatable="false">
         <item>-1</item>
-        <item>0</item>
+        <item>4</item>
         <item>1</item>
+        <item>0</item>
+        <item>9</item>
     </string-array>
 
     <string-array name="sample_rate_text">
