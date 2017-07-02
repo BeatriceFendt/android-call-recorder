@@ -542,7 +542,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         };
         List<Integer> list = Arrays.asList(ss);
         int i = Integer.valueOf(shared.getString(MainApplication.PREFERENCE_SOURCE, "-1"));
-        i = list.indexOf(i);
+        if (i == -1)
+            i = 0;
+        else
+            i = list.indexOf(i);
         for (; i < ss.length; i++) {
             int s = ss[i];
             try {
