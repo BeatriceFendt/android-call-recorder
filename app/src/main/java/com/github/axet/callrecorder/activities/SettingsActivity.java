@@ -55,6 +55,10 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
     };
 
+    public static final String[] CONTACTS = new String[]{
+            Manifest.permission.READ_CONTACTS,
+    };
+
     GeneralPreferenceFragment f;
 
     public static <T> T[] removeElement(Class<T> c, T[] aa, int i) {
@@ -216,6 +220,14 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
         void initPrefs(PreferenceManager manager, PreferenceScreen screen) {
             final Context context = screen.getContext();
+
+            ListPreference format = (ListPreference) manager.findPreference(MainApplication.PREFERENCE_FORMAT);
+            if(!Storage.permitted(context, CONTACTS)) {
+                CharSequence[] ee = format.getEntries();
+                CharSequence[] vv = format.getEntryValues();
+            }
+            bindPreferenceSummaryToValue(format);
+
             ListPreference enc = (ListPreference) manager.findPreference(MainApplication.PREFERENCE_ENCODING);
             String v = enc.getValue();
             CharSequence[] ee = Factory.getEncodingTexts(context);
@@ -243,7 +255,6 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_THEME));
             bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_CHANNELS));
             bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_DELETE));
-            bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_FORMAT));
             bindPreferenceSummaryToValue(manager.findPreference(MainApplication.PREFERENCE_SOURCE));
 
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_STORAGE);
