@@ -37,6 +37,15 @@
         <item>старше 6 месяцев</item>
     </string-array>
 
+    <string-array name="format_text">
+        <item>2017-02-01 09.08.01.wav</item>
+        <item>20170201T090801.wav</item>
+        <item>2017-02-01 09.08.01 [Входящий номер].wav</item>
+        <item>20170201T090801 [Входящий номер].wav</item>
+        <item>2017-02-01 09.08.01 ↓↑ [Входящий номер].wav</item>
+        <item>20170201T090801 ↓↑ [Входящий номер].wav</item>
+    </string-array>
+
     <string name="action_settings">Настройки</string>
     <string name="not_permitted">Доступ запрещен</string>
     <string name="no_folder_app">Программа для просмотра папок не установлена</string>
@@ -62,4 +71,6 @@
     <string name="recordings_quality_text">Если программе не удасться записывать в высоком качестве (голосовая линия), программа будет использовать микрофон (в случае ошибки вы можете слышать только свой голос или голос собеседника).</string>
     <string name="task_managers">Менеджеры памяти</string>
     <string name="task_managers_text">Если ваш телефон оптимизирует батарею или испольует другие менеджеры памяти включите программу в белый список, чтобы она продолжара работать в фоновом режиме и все звонки были записаны.</string>
+    <string name="recording_enabled">Запись включена</string>
+    <string name="recording_disabled">Запись выключена</string>
 </resources>

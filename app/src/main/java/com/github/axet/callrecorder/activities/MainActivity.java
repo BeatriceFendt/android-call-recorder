@@ -56,7 +56,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     public static final String[] MUST = new String[]{
             Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.PROCESS_OUTGOING_CALLS
     };
 
@@ -283,14 +282,17 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         if (id == R.id.action_about) {
             AboutPreferenceCompat.showDialog(this, R.raw.about);
+            return true;
         }
 
         if (id == R.id.action_call) {
-            if (!Storage.permitted(MainActivity.this, PERMISSIONS, 1)) {
+            item.setChecked(!item.isChecked());
+            if (item.isChecked() && !Storage.permitted(MainActivity.this, PERMISSIONS, 1)) {
                 resumeCall = item;
                 return true;
             }
-            call(item);
+            call(item.isChecked());
+            return true;
         }
 
         if (id == R.id.action_show_folder) {
@@ -300,6 +302,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             } else {
                 Toast.makeText(this, R.string.no_folder_app, Toast.LENGTH_SHORT).show();
             }
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -312,18 +315,17 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         return intent;
     }
 
-    void call(MenuItem item) {
-        item.setChecked(!item.isChecked());
+    void call(boolean b) {
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor edit = shared.edit();
-        edit.putBoolean(MainApplication.PREFERENCE_CALL, item.isChecked());
+        edit.putBoolean(MainApplication.PREFERENCE_CALL, b);
         edit.commit();
-        if (item.isChecked()) {
+        if (b) {
             RecordingService.startService(this);
-            Toast.makeText(this, "Recording enabled", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.recording_enabled, Toast.LENGTH_SHORT).show();
         } else {
             RecordingService.stopService(this);
-            Toast.makeText(this, "Recording disabled", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.recording_disabled, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -407,7 +409,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 1:
-                if (Storage.permitted(this, permissions)) {
+                if (Storage.permitted(this, MUST)) {
                     try {
                         storage.migrateLocalStorage();
                     } catch (RuntimeException e) {
@@ -415,7 +417,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     }
                     recordings.load(false, null);
                     if (resumeCall != null) {
-                        call(resumeCall);
+                        call(resumeCall.isChecked());
                         resumeCall = null;
                     }
                 } else {

@@ -41,6 +41,7 @@ import com.github.axet.audiolibrary.encoders.Factory;
 import com.github.axet.audiolibrary.encoders.FileEncoder;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.activities.MainActivity;
+import com.github.axet.callrecorder.activities.SettingsActivity;
 import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
 
@@ -241,21 +242,23 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         contact = "";
         contactId = "";
         Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(s));
-        ContentResolver contentResolver = getContentResolver();
-        try {
-            Cursor contactLookup = contentResolver.query(uri, null, null, null, null);
-            if (contactLookup != null) {
-                try {
-                    if (contactLookup.moveToNext()) {
-                        contact = contactLookup.getString(contactLookup.getColumnIndex(ContactsContract.Data.DISPLAY_NAME));
-                        contactId = contactLookup.getString(contactLookup.getColumnIndex(BaseColumns._ID));
+        if (Storage.permitted(this, SettingsActivity.CONTACTS)) {
+            try {
+                ContentResolver contentResolver = getContentResolver();
+                Cursor contactLookup = contentResolver.query(uri, null, null, null, null);
+                if (contactLookup != null) {
+                    try {
+                        if (contactLookup.moveToNext()) {
+                            contact = contactLookup.getString(contactLookup.getColumnIndex(ContactsContract.Data.DISPLAY_NAME));
+                            contactId = contactLookup.getString(contactLookup.getColumnIndex(BaseColumns._ID));
+                        }
+                    } finally {
+                        contactLookup.close();
                     }
-                } finally {
-                    contactLookup.close();
                 }
+            } catch (RuntimeException e) {
+                Error(e);
             }
-        } catch (RuntimeException e) {
-            Error(e);
         }
 
         call = c;

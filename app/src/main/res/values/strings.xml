@@ -53,13 +53,13 @@
         <item>6month</item>
     </string-array>
 
-    <string-array name="format_text" translatable="false">
+    <string-array name="format_text">
         <item>2017-02-01 09.08.01.wav</item>
         <item>20170201T090801.wav</item>
-        <item>2017-02-01 09.08.01 Contact Name.wav</item>
-        <item>20170201T090801 Contact Name.wav</item>
-        <item>2017-02-01 09.08.01 ↓↑ Contact Name.wav</item>
-        <item>20170201T090801 ↓↑ Contact Name.wav</item>
+        <item>2017-02-01 09.08.01 [Caller ID].wav</item>
+        <item>20170201T090801 [Caller ID].wav</item>
+        <item>2017-02-01 09.08.01 ↓↑ [Caller ID].wav</item>
+        <item>20170201T090801 ↓↑ [Caller ID].wav</item>
     </string-array>
 
     <string-array name="format_values" formatted="false" translatable="false">
@@ -116,4 +116,6 @@
     <string name="recordings_quality_text">If you phone fails to support high quality call recording, application will ty MIC call recording (you may hear only your or your opponent).</string>
     <string name="task_managers">Task Managers</string>
     <string name="task_managers_text">If you phone has Battery Optimization or Task Managers consider disabling them, to keep application running in background.</string>
+    <string name="recording_enabled">Recording enabled</string>
+    <string name="recording_disabled">Recording disabled</string>
 </resources>
