@@ -457,6 +457,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     protected void onDestroy() {
         super.onDestroy();
         recordings.close();
+        if (receiver != null) {
+            unregisterReceiver(receiver);
+            receiver = null;
+        }
     }
 
     @Override
