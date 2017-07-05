@@ -306,6 +306,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             sampleRate = Sound.DEFAULT_RATE;
 
         shared.registerOnSharedPreferenceChangeListener(this);
+
+        encodingNext();
     }
 
     void deleteOld() {
@@ -697,9 +699,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         IOUtils.copy(is, os);
                         is.close();
                         os.close();
-                        storage.delete(out); // delete tmp encoding file
+                        Storage.delete(out); // delete tmp encoding file
                     } catch (IOException e) {
-                        storage.delete(out); // delete tmp encoding file
+                        Storage.delete(out); // delete tmp encoding file
                         try {
                             storage.delete(uri); // delete SAF encoding file
                         } catch (RuntimeException ee) {
@@ -709,7 +711,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         return;
                     }
                 }
-
 
                 MainActivity.showProgress(RecordingService.this, false, phone, samplesTime / sampleRate, false);
                 Storage.delete(in); // delete raw recording
@@ -859,6 +860,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(MainApplication.PREFERENCE_DELETE)) {
             deleteOld();
+        }
+        if(key.equals(MainApplication.PREFERENCE_STORAGE)) {
+            encodingNext();
         }
     }
 
