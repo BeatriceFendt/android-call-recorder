@@ -334,7 +334,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 c.close();
             }
         } else if (s.startsWith(ContentResolver.SCHEME_FILE)) {
-            File dir = new File(path.getPath());
+            File dir = Storage.getFile(path);
             File[] ff = dir.listFiles();
             if (ff == null)
                 return;
@@ -656,7 +656,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (s.startsWith(ContentResolver.SCHEME_CONTENT)) {
             out = storage.getTempEncoding();
         } else if (s.startsWith(ContentResolver.SCHEME_FILE)) {
-            File f = new File(uri.getPath());
+            File f = Storage.getFile(uri);
             File parent = f.getParentFile();
             if (!parent.exists() && !parent.mkdirs()) { // in case if it were manually deleted
                 throw new RuntimeException("Unable to create: " + parent);

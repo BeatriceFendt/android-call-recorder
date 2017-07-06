@@ -97,7 +97,7 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         Uri parent = getStoragePath();
         String s = parent.getScheme();
         if (s.startsWith(ContentResolver.SCHEME_FILE)) {
-            File f = new File(parent.getPath());
+            File f = getFile(parent);
             if (!f.exists() && !f.mkdirs())
                 throw new RuntimeException("Unable to create: " + f);
         }
