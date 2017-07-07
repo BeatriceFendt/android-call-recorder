@@ -829,26 +829,20 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (!inFile.exists())
             return;
         CallInfo c = mapTarget.get(inFile);
-        if (c == null) { // restarted
+        if (c == null) { // service restarted, additional info not saved
             c = new CallInfo();
-            c.targetUri = null;
             c.phone = "";
             c.contact = "";
             c.contactId = "";
             c.call = "";
             c.now = inFile.lastModified();
+            c.targetUri = storage.getNewFile(c.now, c.phone, c.contact, c.call);
         }
         targetUri = c.targetUri; // update notification encoding name
-        final String phone = c.phone;
-        final String contact = c.contact;
         final String contactId = c.contactId;
         final String call = c.call;
-        long now = c.now;
-        if (targetUri == null) { // service restart
-            targetUri = storage.getNewFile(now, phone, contact, call);
-        }
         final Uri targetUri = RecordingService.this.targetUri;
-        encoding = new Runnable() { // calledn when done
+        encoding = new Runnable() { //  allways called when done
             @Override
             public void run() {
                 deleteOld();
@@ -861,7 +855,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         Log.d(TAG, "Encoded " + inFile.getName() + " to " + storage.getTargetName(targetUri));
         encoding(inFile, targetUri, encoding, new Runnable() {
             @Override
-            public void run() { // called when success
+            public void run() { // called on success
                 mapTarget.remove(inFile);
                 MainApplication.setContact(RecordingService.this, targetUri, contactId);
                 MainApplication.setCall(RecordingService.this, targetUri, call);
