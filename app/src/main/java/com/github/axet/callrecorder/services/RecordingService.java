@@ -96,6 +96,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     String contact = "";
     String contactId = "";
     String call;
+    long now;
     int source = -1; // audiotrecorder source
 
     public static void startService(Context context) {
@@ -135,16 +136,18 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         public String contact;
         public String contactId;
         public String call;
+        public long now;
 
         public CallInfo() {
         }
 
-        public CallInfo(Uri t, String p, String c, String cid, String call) {
+        public CallInfo(Uri t, String p, String c, String cid, String call, long now) {
             this.targetUri = t;
             this.phone = p;
             this.contact = c;
             this.contactId = cid;
             this.call = call;
+            this.now = now;
         }
     }
 
@@ -334,7 +337,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 c.close();
             }
         } else if (s.startsWith(ContentResolver.SCHEME_FILE)) {
-            File dir = new File(path.getPath());
+            File dir = Storage.getFile(path);
             File[] ff = dir.listFiles();
             if (ff == null)
                 return;
@@ -656,7 +659,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (s.startsWith(ContentResolver.SCHEME_CONTENT)) {
             out = storage.getTempEncoding();
         } else if (s.startsWith(ContentResolver.SCHEME_FILE)) {
-            File f = new File(uri.getPath());
+            File f = Storage.getFile(uri);
             File parent = f.getParentFile();
             if (!parent.exists() && !parent.mkdirs()) { // in case if it were manually deleted
                 throw new RuntimeException("Unable to create: " + parent);
@@ -792,7 +795,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void begin(boolean wasRinging) {
-        targetUri = storage.getNewFile(phone, contact, call);
+        now = System.currentTimeMillis();
+        targetUri = storage.getNewFile(now, phone, contact, call);
         if (encoding != null) {
             encoder.pause();
         }
@@ -811,7 +815,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             File tmp = storage.getTempRecording();
             File in = Storage.getNextFile(tmp.getParentFile(), Storage.TMP_REC, null);
             Storage.move(tmp, in);
-            mapTarget.put(in, new CallInfo(targetUri, phone, contact, contactId, call));
+            mapTarget.put(in, new CallInfo(targetUri, phone, contact, contactId, call, now));
             if (encoding == null) { // double finish()? skip
                 encodingNext();
             } else {
@@ -825,13 +829,23 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (!inFile.exists())
             return;
         CallInfo c = mapTarget.get(inFile);
+        if (c == null) { // restarted
+            c = new CallInfo();
+            c.targetUri = null;
+            c.phone = "";
+            c.contact = "";
+            c.contactId = "";
+            c.call = "";
+            c.now = inFile.lastModified();
+        }
         targetUri = c.targetUri; // update notification encoding name
         final String phone = c.phone;
         final String contact = c.contact;
         final String contactId = c.contactId;
         final String call = c.call;
+        long now = c.now;
         if (targetUri == null) { // service restart
-            targetUri = storage.getNewFile(phone, contact, call);
+            targetUri = storage.getNewFile(now, phone, contact, call);
         }
         final Uri targetUri = RecordingService.this.targetUri;
         encoding = new Runnable() { // calledn when done
@@ -861,7 +875,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (key.equals(MainApplication.PREFERENCE_DELETE)) {
             deleteOld();
         }
-        if(key.equals(MainApplication.PREFERENCE_STORAGE)) {
+        if (key.equals(MainApplication.PREFERENCE_STORAGE)) {
             encodingNext();
         }
     }
