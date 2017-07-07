@@ -51,7 +51,7 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         return ff != null && ff.length > 0 ? ff[0] : tmp;
     }
 
-    public Uri getNewFile(String phone, String contact, String call) {
+    public Uri getNewFile(long now, String phone, String contact, String call) {
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
         String ext = shared.getString(com.github.axet.audiolibrary.app.MainApplication.PREFERENCE_ENCODING, "");
 
@@ -73,7 +73,7 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
             format = format.replaceAll("%p", "");
         }
 
-        format = format.replaceAll("%T", "" + System.currentTimeMillis() / 1000);
+        format = format.replaceAll("%T", "" + now / 1000);
         format = format.replaceAll("%s", SIMPLE.format(new Date()));
         format = format.replaceAll("%I", ISO8601.format(new Date()));
 
