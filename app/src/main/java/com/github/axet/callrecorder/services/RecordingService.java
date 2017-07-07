@@ -842,7 +842,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final String contactId = c.contactId;
         final String call = c.call;
         final Uri targetUri = RecordingService.this.targetUri;
-        encoding = new Runnable() { // calledn when done
+        encoding = new Runnable() { //  allways called when done
             @Override
             public void run() {
                 deleteOld();
@@ -855,7 +855,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         Log.d(TAG, "Encoded " + inFile.getName() + " to " + storage.getTargetName(targetUri));
         encoding(inFile, targetUri, encoding, new Runnable() {
             @Override
-            public void run() { // called when success
+            public void run() { // called on success
                 mapTarget.remove(inFile);
                 MainApplication.setContact(RecordingService.this, targetUri, contactId);
                 MainApplication.setCall(RecordingService.this, targetUri, call);
