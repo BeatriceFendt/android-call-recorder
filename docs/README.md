@@ -1,3 +1,7 @@
-# Know bugs
+# Permissions
 
-On Xperia Z (C6603) have bugged implementation or mp4 encoder. The phone puts additional zeros into encoding process producing silinces every recording block (1-2 sec)
+Some devices may require adb command to Call Recorder app to work:
+
+    adb shell pm grant com.github.axet.callrecorder android.permission.CAPTURE_AUDIO_OUTPUT
+
+Some devices need Call Recorder by be signed with system keys and build within system image.
