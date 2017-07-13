@@ -18,7 +18,7 @@ https://code.google.com/p/android/issues/detail?id=206613#c13
 
 # Translate
 
-If you want to translate 'Audio Recorder' to your language  please read this:
+If you want to translate 'Call Recorder' to your language  please read this:
 
   * [HOWTO-Translate.md](/docs/HOWTO-Translate.md)
 
