@@ -1,0 +1,76 @@
+<resources>
+    <string name="app_name">Call Recorder</string>
+
+    <string-array name="source_text">
+        <item>自動 (デフォルト)</item>
+        <item>音声回線</item>
+        <item>マイク</item>
+        <item>システムデフォルト</item>
+        <item>システム RAW</item>
+    </string-array>
+
+    <string-array name="sample_rate_text">
+        <item>48 kHz</item>
+        <item>44.1 kHz (CD)</item>
+        <item>32 kHz</item>
+        <item>22 kHz</item>
+        <item>16 kHz (デフォルト)</item>
+        <item>11 kHz</item>
+        <item>8 kHz (電話)</item>
+    </string-array>
+
+    <string-array name="delete_text">
+        <item>すべての録音を残す</item>
+        <item>1 週間以上前</item>
+        <item>1 ヶ月以上前</item>
+        <item>3 ヶ月以上前</item>
+        <item>6 ヶ月以上前</item>
+    </string-array>
+
+    <string-array name="format_text">
+        <item>2017-02-01 09.08.01.wav</item>
+        <item>20170201T090801.wav</item>
+        <item>2017-02-01 09.08.01 [通話者 ID].wav</item>
+        <item>20170201T090801 [通話者 ID].wav</item>
+        <item>2017-02-01 09.08.01 ↓↑ [通話者 ID].wav</item>
+        <item>20170201T090801 ↓↑ [通話者 ID].wav</item>
+    </string-array>
+
+    <string-array name="themes_text">
+        <item>テーマ ホワイト (デフォルト)</item>
+        <item>テーマ ダーク</item>
+    </string-array>
+
+    <string-array name="channels_text">
+        <item>モノ (デフォルト)</item>
+        <item>ステレオ</item>
+    </string-array>
+
+    <string name="action_settings">設定</string>
+    <string name="call_recording">通話の録音</string>
+    <string name="not_permitted">許可されていません</string>
+    <string name="no_folder_app">フォルダー表示アプリケーションがインストールされていません</string>
+    <string name="hold_by_call">ポーズ (通話で保留)</string>
+    <string name="encoding">エンコーディング</string>
+    <string name="pause">ポーズ</string>
+    <string name="edit">編集</string>
+    <string name="confirm_cancel">キャンセルの確認</string>
+    <string name="are_you_sure_cancel">キャンセルしてもよろしいですか?</string>
+    <string name="recording">録音</string>
+    <string name="encoding_title">エンコーディング...</string>
+    <string name="recording_title">録音</string>
+    <string name="title_header">%1$s 空き ~ %2$s 残り</string>
+    <string name="open_recording_folder">録音フォルダーを開く</string>
+    <string name="recording_list_is_empty">録音リストは空です\n\n\'通話の録音\' をチェックすると通話の録音を開始します</string>
+    <string name="source_default">(デフォルト)</string>
+    <string name="source_mic">(マイク)</string>
+    <string name="source_line">(音源回線)</string>
+    <string name="call_recordings_support">通話録音サポート</string>
+    <string name="call_recordings_support_text">ほとんどの電話は通話の録音をサポートしていません。通話の録音を有効にするにはオープンソースのファームウェアをインストールしてください。</string>
+    <string name="recordings_quality">録音品質</string>
+    <string name="recordings_quality_text">お使いの電話で高品質の通話録音のサポートに失敗する場合、アプリケーションはマイクの録音を試みます (相手の声のみ聞こえる可能性があります)。</string>
+    <string name="task_managers">タスクマネージャー</string>
+    <string name="task_managers_text">お使いの電話にバッテリー最適化があるか、タスクマネージャーがそれらを無効にしていると考えられる場合、アプリケーションはバックグラウンドで実行を続けます。</string>
+    <string name="recording_enabled">録音が有効です</string>
+    <string name="recording_disabled">録音が無効です</string>
+</resources>
