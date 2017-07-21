@@ -30,8 +30,6 @@
     <string-array name="format_text">
         <item>2017-02-01 09.08.01.wav</item>
         <item>20170201T090801.wav</item>
-        <item>2017-02-01 09.08.01 [通話者 ID].wav</item>
-        <item>20170201T090801 [通話者 ID].wav</item>
         <item>2017-02-01 09.08.01 ↓↑ [通話者 ID].wav</item>
         <item>20170201T090801 ↓↑ [通話者 ID].wav</item>
     </string-array>

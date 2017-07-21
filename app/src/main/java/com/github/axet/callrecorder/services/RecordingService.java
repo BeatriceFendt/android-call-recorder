@@ -680,18 +680,13 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         encoder = new FileEncoder(this, in, e);
 
-        encoder.run(new Runnable() {
-            @Override
-            public void run() {
-                MainActivity.setProgress(RecordingService.this, encoder.getProgress());
-            }
-        }, new Runnable() {
+        final Runnable rdone = new Runnable() {
             @Override
             public void run() {
                 if (Build.VERSION.SDK_INT >= 21 && s.startsWith(ContentResolver.SCHEME_CONTENT)) {
                     ContentResolver resolver = getContentResolver();
                     try {
-                        String d = storage.getDocumentName(uri);
+                        String d = Storage.getDocumentName(uri);
                         String ee = storage.getExt(uri);
                         Uri docUri = DocumentsContract.buildDocumentUriUsingTree(uri, DocumentsContract.getTreeDocumentId(uri));
                         String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ee);
@@ -714,17 +709,35 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         return;
                     }
                 }
-
-                MainActivity.showProgress(RecordingService.this, false, phone, samplesTime / sampleRate, false);
                 Storage.delete(in); // delete raw recording
 
-                SharedPreferences.Editor edit = shared.edit();
-                edit.putString(MainApplication.PREFERENCE_LAST, storage.getDocumentName(uri));
-                edit.commit();
+                handle.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        MainActivity.showProgress(RecordingService.this, false, phone, samplesTime / sampleRate, false);
 
-                success.run();
-                done.run();
-                encodingNext();
+                        SharedPreferences.Editor edit = shared.edit();
+                        edit.putString(MainApplication.PREFERENCE_LAST, Storage.getDocumentName(uri));
+                        edit.commit();
+
+                        success.run();
+                        done.run();
+                        encodingNext();
+                    }
+                });
+            }
+        };
+
+        encoder.run(new Runnable() {
+            @Override
+            public void run() {
+                MainActivity.setProgress(RecordingService.this, encoder.getProgress());
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                Thread thread = new Thread(rdone); // network on main thread if SAF is remote
+                thread.start();
             }
         }, new Runnable() {
             @Override
