@@ -705,7 +705,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         } catch (RuntimeException ee) {
                             Log.d(TAG, "unable to delete target uri", e); // ignore, not even created?
                         }
-                        Error(e);
+                        Post(e);
                         return;
                     }
                 }
