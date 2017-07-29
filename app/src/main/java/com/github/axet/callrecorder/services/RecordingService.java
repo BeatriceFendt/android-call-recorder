@@ -215,8 +215,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                             if (storage.recordingPending()) { // handling restart after call finished
                                 finish();
                             } else if (storage.recordingNextPending()) {
-                                if (encoding == null)
-                                    encodingNext();
+                                encodingNext();
                             }
                         }
                         wasRinging = false;
@@ -810,7 +809,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     void begin(boolean wasRinging) {
         now = System.currentTimeMillis();
         targetUri = storage.getNewFile(now, phone, contact, call);
-        if (encoding != null) {
+        if (encoder != null) {
             encoder.pause();
         }
         if (storage.recordingPending()) {
@@ -829,7 +828,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             File in = Storage.getNextFile(tmp.getParentFile(), Storage.TMP_REC, null);
             Storage.move(tmp, in);
             mapTarget.put(in, new CallInfo(targetUri, phone, contact, contactId, call, now));
-            if (encoding == null) { // double finish()? skip
+            if (encoder == null) { // double finish()? skip
                 encodingNext();
             } else {
                 encoder.resume();
@@ -838,6 +837,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void encodingNext() {
+        if (encoder != null) // can be called twice, exit if alreay encoding
+            return;
         final File inFile = storage.getTempNextRecording();
         if (!inFile.exists())
             return;
