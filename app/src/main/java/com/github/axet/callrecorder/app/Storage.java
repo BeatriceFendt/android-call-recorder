@@ -1,7 +1,9 @@
 package com.github.axet.callrecorder.app;
 
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
@@ -9,6 +11,7 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
+import android.provider.DocumentsContract;
 import android.util.Log;
 
 import java.io.File;
@@ -18,6 +21,8 @@ import java.util.Date;
 
 public class Storage extends com.github.axet.audiolibrary.app.Storage {
     public static String TAG = Storage.class.getSimpleName();
+
+    private static final String PATH_TREE = "tree";
 
     public Storage(Context context) {
         super(context);
@@ -127,5 +132,13 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         String call = MainApplication.getCall(context, f);
         MainApplication.setCall(context, t, call); // copy call to new name
         return t;
+    }
+
+    @TargetApi(21)
+    public static Uri buildDocumentTreeRoot(Uri treeUri) {
+        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
+                .authority(treeUri.getAuthority()).appendPath(PATH_TREE)
+                .appendPath(DocumentsContract.getTreeDocumentId(treeUri))
+                .build();
     }
 }
