@@ -492,7 +492,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     R.layout.notifictaion_recording_dark));
 
             String title = encoding != null ? getString(R.string.encoding_title) : (getString(R.string.recording_title) + " " + getSource());
-            String text = ".../" + storage.getDocumentName(targetUri);
+            String text = ".../" + Storage.getDocumentName(targetUri);
 
             title = title.trim();
 
@@ -687,17 +687,20 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     try {
                         String d = Storage.getDocumentName(uri);
                         String ee = storage.getExt(uri);
+                        Uri root = Storage.buildDocumentTreeRoot(uri);
+                        resolver.takePersistableUriPermission(root, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                         Uri docUri = DocumentsContract.buildDocumentUriUsingTree(uri, DocumentsContract.getTreeDocumentId(uri));
                         String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ee);
                         Uri childrenUri = DocumentsContract.createDocument(resolver, docUri, mime, d);
-
+                        if (childrenUri == null)
+                            throw new IOException("Unable create SAF document");
                         InputStream is = new FileInputStream(out);
                         OutputStream os = resolver.openOutputStream(childrenUri);
                         IOUtils.copy(is, os);
                         is.close();
                         os.close();
                         Storage.delete(out); // delete tmp encoding file
-                    } catch (IOException e) {
+                    } catch (IOException | RuntimeException e) {
                         Storage.delete(out); // delete tmp encoding file
                         try {
                             storage.delete(uri); // delete SAF encoding file
@@ -705,6 +708,12 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                             Log.d(TAG, "unable to delete target uri", e); // ignore, not even created?
                         }
                         Post(e);
+                        handle.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                done.run();
+                            }
+                        });
                         return;
                     }
                 }
