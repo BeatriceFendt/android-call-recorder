@@ -679,28 +679,14 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         encoder = new FileEncoder(this, in, e);
 
-        final Runnable rdone = new Runnable() {
+        final Runnable save = new Runnable() {
             @Override
             public void run() {
                 if (Build.VERSION.SDK_INT >= 21 && s.startsWith(ContentResolver.SCHEME_CONTENT)) {
-                    ContentResolver resolver = getContentResolver();
                     try {
-                        String d = Storage.getDocumentName(uri);
-                        String ee = storage.getExt(uri);
-                        Uri root = Storage.buildDocumentTreeRoot(uri);
-                        resolver.takePersistableUriPermission(root, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                        Uri docUri = DocumentsContract.buildDocumentUriUsingTree(uri, DocumentsContract.getTreeDocumentId(uri));
-                        String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ee);
-                        Uri childrenUri = DocumentsContract.createDocument(resolver, docUri, mime, d);
-                        if (childrenUri == null)
-                            throw new IOException("Unable create SAF document");
-                        InputStream is = new FileInputStream(out);
-                        OutputStream os = resolver.openOutputStream(childrenUri);
-                        IOUtils.copy(is, os);
-                        is.close();
-                        os.close();
-                        Storage.delete(out); // delete tmp encoding file
-                    } catch (IOException | RuntimeException e) {
+                        Uri root = Storage.getDocumentTreeUri(uri);
+                        storage.move(out, root, Storage.getDocumentPath(uri));
+                    } catch (RuntimeException e) {
                         Storage.delete(out); // delete tmp encoding file
                         try {
                             storage.delete(uri); // delete SAF encoding file
@@ -744,7 +730,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }, new Runnable() {
             @Override
             public void run() {
-                Thread thread = new Thread(rdone); // network on main thread if SAF is remote
+                Thread thread = new Thread(save); // network on main thread if SAF is remote
                 thread.start();
             }
         }, new Runnable() {

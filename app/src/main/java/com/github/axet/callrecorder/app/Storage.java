@@ -22,8 +22,6 @@ import java.util.Date;
 public class Storage extends com.github.axet.audiolibrary.app.Storage {
     public static String TAG = Storage.class.getSimpleName();
 
-    private static final String PATH_TREE = "tree";
-
     public Storage(Context context) {
         super(context);
     }
@@ -132,13 +130,5 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         String call = MainApplication.getCall(context, f);
         MainApplication.setCall(context, t, call); // copy call to new name
         return t;
-    }
-
-    @TargetApi(21)
-    public static Uri buildDocumentTreeRoot(Uri treeUri) {
-        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
-                .authority(treeUri.getAuthority()).appendPath(PATH_TREE)
-                .appendPath(DocumentsContract.getTreeDocumentId(treeUri))
-                .build();
     }
 }
