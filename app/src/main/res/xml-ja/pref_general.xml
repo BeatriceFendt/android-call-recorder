@@ -70,7 +70,7 @@
         android:key="optimization"
         android:persistent="false"
         android:summary="アプリがメモリーから削除されるのを防止します"
-        android:title="バッテリ最適化を無効にする" />
+        android:title="Disable Battery Optimization" />
 
     <ListPreference
         android:defaultValue="Theme_White"
