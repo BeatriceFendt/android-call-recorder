@@ -70,7 +70,7 @@
         android:defaultValue="true"
         android:key="optimization"
         android:summary="Предотвращать удаление программы из памяти телефона"
-        android:title="Оптимизация батареи" />
+        android:title="Отключить оптимизацию батареи" />
 
     <ListPreference
         android:defaultValue="Theme_White"
