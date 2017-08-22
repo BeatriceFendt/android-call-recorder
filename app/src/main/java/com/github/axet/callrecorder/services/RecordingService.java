@@ -353,7 +353,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 e = e.toLowerCase();
                 if (n.endsWith(e)) {
                     Calendar c = Calendar.getInstance();
-                    c.setTimeInMillis(storage.getLast(f));
+                    c.setTimeInMillis(storage.getLastModified(f));
                     Calendar cur = c;
 
                     if (d.equals("1week")) {
@@ -861,7 +861,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             }
         };
         showNotificationAlarm(true); // update status (encoding)
-        Log.d(TAG, "Encoded " + inFile.getName() + " to " + storage.getTargetName(targetUri));
+        Log.d(TAG, "Encoded " + inFile.getName() + " to " + storage.getDisplayName(targetUri));
         encoding(inFile, targetUri, encoding, new Runnable() {
             @Override
             public void run() { // called on success
