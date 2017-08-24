@@ -861,6 +861,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             }
         };
         showNotificationAlarm(true); // update status (encoding)
+        Log.d(TAG, "Encoded " + inFile.getName() + " to " + storage.getDisplayName(targetUri));
         encoding(inFile, targetUri, encoding, new Runnable() {
             @Override
             public void run() { // called on success
