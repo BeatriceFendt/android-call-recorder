@@ -190,45 +190,50 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }
 
         @Override
-        public void onCallStateChanged(int s, String incomingNumber) {
-            try {
-                switch (s) {
-                    case TelephonyManager.CALL_STATE_RINGING:
-                        setPhone(incomingNumber, MainApplication.CALL_IN);
-                        wasRinging = true;
-                        break;
-                    case TelephonyManager.CALL_STATE_OFFHOOK:
-                        setPhone(incomingNumber, call);
-                        if (thread == null) { // handling restart while current call
-                            begin(wasRinging);
-                            startedByCall = true;
+        public void onCallStateChanged(final int s, final String incomingNumber) {
+            handle.post(new Runnable() { // some Nexus 6P, Android 7.1, crashes seems different threads
+                @Override
+                public void run() {
+                    try {
+                        switch (s) {
+                            case TelephonyManager.CALL_STATE_RINGING:
+                                setPhone(incomingNumber, MainApplication.CALL_IN);
+                                wasRinging = true;
+                                break;
+                            case TelephonyManager.CALL_STATE_OFFHOOK:
+                                setPhone(incomingNumber, call);
+                                if (thread == null) { // handling restart while current call
+                                    begin(wasRinging);
+                                    startedByCall = true;
+                                }
+                                break;
+                            case TelephonyManager.CALL_STATE_IDLE:
+                                if (startedByCall) {
+                                    if (tm.getCallState() != TelephonyManager.CALL_STATE_OFFHOOK) { // current state maybe differed from queued (s) one
+                                        finish();
+                                    } else {
+                                        return; // fast clicking. new call already stared. keep recording. do not reset startedByCall
+                                    }
+                                } else {
+                                    if (storage.recordingPending()) { // handling restart after call finished
+                                        finish();
+                                    } else if (storage.recordingNextPending()) {
+                                        encodingNext();
+                                    }
+                                }
+                                wasRinging = false;
+                                startedByCall = false;
+                                phone = "";
+                                contactId = "";
+                                contact = "";
+                                call = "";
+                                break;
                         }
-                        break;
-                    case TelephonyManager.CALL_STATE_IDLE:
-                        if (startedByCall) {
-                            if (tm.getCallState() != TelephonyManager.CALL_STATE_OFFHOOK) { // current state maybe differed from queued (s) one
-                                finish();
-                            } else {
-                                return; // fast clicking. new call already stared. keep recording. do not reset startedByCall
-                            }
-                        } else {
-                            if (storage.recordingPending()) { // handling restart after call finished
-                                finish();
-                            } else if (storage.recordingNextPending()) {
-                                encodingNext();
-                            }
-                        }
-                        wasRinging = false;
-                        startedByCall = false;
-                        phone = "";
-                        contactId = "";
-                        contact = "";
-                        call = "";
-                        break;
+                    } catch (RuntimeException e) {
+                        Error(e);
+                    }
                 }
-            } catch (RuntimeException e) {
-                Error(e);
-            }
+            });
         }
     }
 
