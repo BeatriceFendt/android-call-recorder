@@ -847,7 +847,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (!inFile.exists())
             return;
         if (inFile.length() == 0) {
-            inFile.delete();
+            mapTarget.remove(inFile);
+            Storage.delete(inFile);
             return;
         }
         CallInfo c = mapTarget.get(inFile);
