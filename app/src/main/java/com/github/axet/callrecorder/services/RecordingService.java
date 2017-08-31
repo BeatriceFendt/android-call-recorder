@@ -314,7 +314,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         shared.registerOnSharedPreferenceChangeListener(this);
 
-        encodingNext();
+        try {
+            encodingNext();
+        } catch (RuntimeException e) {
+            Error(e);
+        }
     }
 
     void deleteOld() {
