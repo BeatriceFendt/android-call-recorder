@@ -692,7 +692,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 if (Build.VERSION.SDK_INT >= 21 && s.equals(ContentResolver.SCHEME_CONTENT)) {
                     try {
                         Uri root = Storage.getDocumentTreeUri(uri);
-                        storage.move(out, root, Storage.getDocumentPath(uri));
+                        storage.move(out, root, Storage.getDocumentChildPath(uri));
                     } catch (RuntimeException e) {
                         Storage.delete(out); // delete tmp encoding file
                         try {
