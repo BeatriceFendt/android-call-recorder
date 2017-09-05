@@ -217,7 +217,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                                 } else {
                                     if (storage.recordingPending()) { // handling restart after call finished
                                         finish();
-                                    } else if (storage.recordingNextPending()) {
+                                    } else if (storage.recordingNextPending()) { // only call encodeNext if we have next encoding
                                         encodingNext();
                                     }
                                 }
@@ -664,9 +664,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final File out;
 
         final String s = uri.getScheme();
-        if (s.startsWith(ContentResolver.SCHEME_CONTENT)) {
+        if (s.equals(ContentResolver.SCHEME_CONTENT)) {
             out = storage.getTempEncoding();
-        } else if (s.startsWith(ContentResolver.SCHEME_FILE)) {
+        } else if (s.equals(ContentResolver.SCHEME_FILE)) {
             File f = Storage.getFile(uri);
             File parent = f.getParentFile();
             if (!parent.exists() && !parent.mkdirs()) { // in case if it were manually deleted
@@ -679,19 +679,17 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         EncoderInfo info = getInfo();
 
-        Encoder e = null;
-
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
 
-        e = Factory.getEncoder(this, ext, info, out);
+        Encoder e = Factory.getEncoder(this, ext, info, out);
 
         encoder = new FileEncoder(this, in, e);
 
         final Runnable save = new Runnable() {
             @Override
             public void run() {
-                if (Build.VERSION.SDK_INT >= 21 && s.startsWith(ContentResolver.SCHEME_CONTENT)) {
+                if (Build.VERSION.SDK_INT >= 21 && s.equals(ContentResolver.SCHEME_CONTENT)) {
                     try {
                         Uri root = Storage.getDocumentTreeUri(uri);
                         storage.move(out, root, Storage.getDocumentPath(uri));
@@ -731,18 +729,18 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             }
         };
 
-        encoder.run(new Runnable() {
+        encoder.run(new Runnable() { // progress
             @Override
             public void run() {
                 MainActivity.setProgress(RecordingService.this, encoder.getProgress());
             }
-        }, new Runnable() {
+        }, new Runnable() { // success only call, done
             @Override
             public void run() {
                 Thread thread = new Thread(save); // network on main thread if SAF is remote
                 thread.start();
             }
-        }, new Runnable() {
+        }, new Runnable() { // error
             @Override
             public void run() {
                 MainActivity.showProgress(RecordingService.this, false, phone, samplesTime / sampleRate, false);
@@ -827,9 +825,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     void finish() {
         stopRecording();
-        if (storage.recordingPending()) {
-            File tmp = storage.getTempRecording();
-            File in = Storage.getNextFile(tmp.getParentFile(), Storage.TMP_REC, null);
+        File tmp = storage.getTempRecording();
+        if (tmp.exists() && tmp.length() > 0) {
+            File parent = tmp.getParentFile();
+            File in = Storage.getNextFile(parent, Storage.TMP_REC, null);
             Storage.move(tmp, in);
             mapTarget.put(in, new CallInfo(targetUri, phone, contact, contactId, call, now));
             if (encoder == null) { // double finish()? skip
@@ -844,6 +843,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (encoder != null) // can be called twice, exit if alreay encoding
             return;
         final File inFile = storage.getTempNextRecording();
+        if (inFile == null)
+            return;
         if (!inFile.exists())
             return;
         if (inFile.length() == 0) {
