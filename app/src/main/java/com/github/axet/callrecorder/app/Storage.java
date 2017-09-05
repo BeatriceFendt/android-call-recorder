@@ -51,7 +51,11 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
                 return pathname.getName().startsWith(TMP_REC);
             }
         });
-        return ff != null && ff.length > 0 ? ff[0] : tmp;
+        if (ff == null)
+            return null;
+        if (ff.length == 0)
+            return null;
+        return ff[0];
     }
 
     public Uri getNewFile(long now, String phone, String contact, String call) {
