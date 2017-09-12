@@ -26,7 +26,8 @@ android {
             minifyEnabled false
         }
         release {
-            minifyEnabled false
+            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
@@ -43,5 +44,5 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-    compile 'com.github.axet:android-audio-library:1.0.42' // compile project(':android-audio-library')
+    compile 'com.github.axet:android-audio-library:1.0.43' // compile project(':android-audio-library')
 }

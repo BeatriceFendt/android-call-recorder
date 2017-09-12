@@ -15,3 +15,10 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-dontobfuscate
+
+-dontwarn org.slf4j.**
+-dontwarn net.sourceforge.javaflacencoder.**
+-dontwarn com.jssrc.resample.**
+-dontwarn org.apache.commons.**
