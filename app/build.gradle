@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+import com.android.build.OutputFile
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -8,8 +10,8 @@ android {
         applicationId "com.github.axet.callrecorder"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 100
-        versionName "1.3.31"
+        versionCode 101
+        versionName "1.3.32"
     }
     signingConfigs {
         release {
@@ -26,7 +28,8 @@ android {
             minifyEnabled false
         }
         release {
-            minifyEnabled false
+            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
@@ -34,8 +37,19 @@ android {
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
             def file = output.packageApplication.outputFile
-            def fileName = org.apache.commons.io.FilenameUtils.getExtension(android.defaultConfig.applicationId) + "-" + android.defaultConfig.versionName + "-" + variant.buildType.name + ".apk"
+            def abi = output.getFilter(OutputFile.ABI)
+            if (abi == null)
+                abi = "universal";
+            def fileName = org.apache.commons.io.FilenameUtils.getExtension(android.defaultConfig.applicationId) + "-" + abi + "-" + android.defaultConfig.versionName + "-" + variant.buildType.name + ".apk"
             output.packageApplication.outputFile = new File(file.parent, fileName)
+        }
+    }
+    splits {
+        abi {
+            enable true
+            reset()
+            include "x86", "armeabi-v7a", "mips"
+            universalApk true
         }
     }
 }
@@ -43,5 +57,5 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-    compile 'com.github.axet:android-audio-library:1.0.42' // compile project(':android-audio-library')
+    compile 'com.github.axet:android-audio-library:1.0.43' // compile project(':android-audio-library')
 }
