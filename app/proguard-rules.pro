@@ -18,6 +18,10 @@
 
 -dontobfuscate
 
+-keep class com.github.axet.vorbisjni.Vorbis {*;}
+-keep class com.github.axet.lamejni.Lame {*;}
+-keep class com.github.axet.opusjni.Opus {*;}
+
 -dontwarn org.slf4j.**
 -dontwarn net.sourceforge.javaflacencoder.**
 -dontwarn com.jssrc.resample.**
