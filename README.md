@@ -29,9 +29,3 @@ If you want to translate 'Call Recorder' to your language  please read this:
 # Contributors
 
   * japaness translation thanks to @naofumi
-
-# Donations
-
-  * [PayPal EUR](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=axet@me.com&amount=&currency_code=EUR&return=&item_name=call+recorder)
-  * [PayPal USD](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=axet@me.com&amount=&currency_code=USD&return=&item_name=call+recorder)
-  * [PayPal RUB](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=axet@me.com&amount=&currency_code=RUB&return=&item_name=call+recorder)
