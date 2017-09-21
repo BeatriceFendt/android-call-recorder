@@ -66,6 +66,12 @@
         android:summary="2015-11"
         android:title="Формат имени" />
 
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="done_notification"
+        android:summary="Show rename / favorite dialog after call ended"
+        android:title="Recent Call Dialog" />
+
     <com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat
         android:defaultValue="true"
         android:key="optimization"

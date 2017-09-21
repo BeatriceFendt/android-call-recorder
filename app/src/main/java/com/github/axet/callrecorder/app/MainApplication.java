@@ -17,6 +17,7 @@ public class MainApplication extends com.github.axet.audiolibrary.app.MainApplic
     public static final String PREFERENCE_SOURCE = "source";
     public static final String PREFERENCE_FILTER_IN = "filter_in";
     public static final String PREFERENCE_FILTER_OUT = "filter_out";
+    public static final String PREFERENCE_DONE_NOTIFICATION = "done_notification";
 
     public static final String CALL_OUT = "out";
     public static final String CALL_IN = "in";
