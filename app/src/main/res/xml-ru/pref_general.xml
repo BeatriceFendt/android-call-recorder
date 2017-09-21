@@ -69,8 +69,8 @@
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="done_notification"
-        android:summary="Show rename / favorite dialog after call ended"
-        android:title="Recent Call Dialog" />
+        android:summary="Показывать диалог для последнего совершенного звонка"
+        android:title="Последний Звонок" />
 
     <com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat
         android:defaultValue="true"
