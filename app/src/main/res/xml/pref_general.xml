@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <com.github.axet.androidlibrary.widgets.StoragePathPreferenceCompat
         android:defaultValue="Call Recorder"
         android:key="storage_path"
@@ -64,6 +65,12 @@
         android:positiveButtonText="@null"
         android:summary="2015-11"
         android:title="Name Format" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="done_notification"
+        android:summary="Show rename / favorite dialog after call ended"
+        android:title="Recent Call Dialog" />
 
     <com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat
         android:defaultValue="false"

@@ -23,6 +23,7 @@ import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.telecom.Call;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -40,6 +41,7 @@ import com.github.axet.audiolibrary.encoders.EncoderInfo;
 import com.github.axet.audiolibrary.encoders.Factory;
 import com.github.axet.audiolibrary.encoders.FileEncoder;
 import com.github.axet.callrecorder.R;
+import com.github.axet.callrecorder.activities.CallActivity;
 import com.github.axet.callrecorder.activities.MainActivity;
 import com.github.axet.callrecorder.activities.SettingsActivity;
 import com.github.axet.callrecorder.app.MainApplication;
@@ -74,6 +76,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     public static String SHOW_ACTIVITY = RecordingService.class.getCanonicalName() + ".SHOW_ACTIVITY";
     public static String PAUSE_BUTTON = RecordingService.class.getCanonicalName() + ".PAUSE_BUTTON";
     public static String STOP_BUTTON = RecordingService.class.getCanonicalName() + ".STOP_BUTTON";
+    public static String FAV_BUTTON = RecordingService.class.getCanonicalName() + ".FAV_BUTTON";
+    public static String RENAME_BUTTON = RecordingService.class.getCanonicalName() + ".RENAME_BUTTON";
+    public static String COUNT_STOP = RecordingService.class.getCanonicalName() + ".COUNT_STOP";
+    public static String DEL = RecordingService.class.getCanonicalName() + ".DEL";
 
     Sound sound;
     Thread thread;
@@ -98,6 +104,13 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     String call;
     long now;
     int source = -1; // audiotrecorder source
+    ArrayList<Done> dones = new ArrayList<>();
+    Runnable updateDones = new Runnable() {
+        @Override
+        public void run() {
+            updateDones();
+        }
+    };
 
     public static void startService(Context context) {
         context.startService(new Intent(context, RecordingService.class));
@@ -130,6 +143,21 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         context.sendBroadcast(intent);
     }
 
+    public interface Success {
+        void run(Uri u);
+    }
+
+    public static class Done {
+        public Uri targetUri;
+        public int count;
+        public boolean stop; // do not count down
+        public boolean stopDel; // user removed notify, we can clear list
+
+        public Done(Uri u) {
+            targetUri = u;
+        }
+    }
+
     public static class CallInfo {
         public Uri targetUri;
         public String phone;
@@ -155,11 +183,39 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                if (intent.getAction().equals(PAUSE_BUTTON)) {
+                String a = intent.getAction();
+                if (a.equals(PAUSE_BUTTON)) {
                     pauseButton();
                 }
-                if (intent.getAction().equals(STOP_BUTTON)) {
+                if (a.equals(STOP_BUTTON)) {
                     finish();
+                }
+                if (a.equals(COUNT_STOP)) {
+                    Uri uri = intent.getParcelableExtra("uri");
+                    Done d = find(uri);
+                    d.stop = true;
+                }
+                if (a.equals(DEL)) {
+                    Uri uri = intent.getParcelableExtra("uri");
+                    Done d = find(uri);
+                    d.stopDel = true;
+                }
+                if (a.equals(RENAME_BUTTON)) {
+                    Uri uri = intent.getParcelableExtra("uri");
+                    CallActivity.startActivity(context, uri, false);
+                    Done d = find(uri);
+                    d.count = CallActivity.COUNT; // cancel notify
+                    d.stop = false; // continue counting and remove notify
+                    Intent closeIntent = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+                    context.sendBroadcast(closeIntent); // close notification bar drawer
+                }
+                if (a.equals(FAV_BUTTON)) {
+                    Uri uri = intent.getParcelableExtra("uri");
+                    boolean b = MainApplication.getStar(context, uri);
+                    MainApplication.setStar(context, uri, !b);
+                    Done d = find(uri);
+                    d.stop = true;
+                    updateDones();
                 }
             } catch (RuntimeException e) {
                 Error(e);
@@ -288,6 +344,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(PAUSE_BUTTON);
         filter.addAction(STOP_BUTTON);
+        filter.addAction(FAV_BUTTON);
+        filter.addAction(RENAME_BUTTON);
+        filter.addAction(COUNT_STOP);
+        filter.addAction(DEL);
         registerReceiver(receiver, filter);
 
         storage = new Storage(this);
@@ -479,7 +539,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }
     }
 
-    // alarm dismiss button
     public void showNotificationAlarm(boolean show) {
         MainActivity.showProgress(RecordingService.this, show, phone, samplesTime / sampleRate, thread != null);
 
@@ -532,6 +591,109 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
             notificationManager.notify(NOTIFICATION_RECORDING_ICON, builder.build());
         }
+    }
+
+    public void showDone(Uri targetUri) {
+        final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        if (!shared.getBoolean(MainApplication.PREFERENCE_DONE_NOTIFICATION, false))
+            return;
+
+        dones.add(new Done(targetUri));
+
+        CallActivity.startActivity(this, targetUri, true);
+
+        updateDones();
+    }
+
+    void updateDones() {
+        boolean done = true;
+        for (int i = 0; i < dones.size(); i++) {
+            Done d = dones.get(i);
+            if (updateDone(i, d)) {
+                done = false;
+            }
+            if (!d.stop)
+                d.count++;
+        }
+        if (done) {
+            dones.clear();
+            return;
+        }
+        handle.postDelayed(updateDones, 1000);
+    }
+
+    // return true - keep updating
+    boolean updateDone(int pos, Done d) {
+        int c = CallActivity.COUNT - d.count;
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        int id = NOTIFICATION_RECORDING_ICON + 1 + pos;
+
+        if (!d.stop) {
+            if (c < 0) {
+                notificationManager.cancel(id);
+                return false;
+            }
+        }
+
+        PendingIntent main = PendingIntent.getBroadcast(this, id,
+                new Intent(COUNT_STOP).putExtra("uri", d.targetUri),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
+
+        PendingIntent del = PendingIntent.getBroadcast(this, id,
+                new Intent(DEL).putExtra("uri", d.targetUri),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
+
+        PendingIntent ren = PendingIntent.getBroadcast(this, id,
+                new Intent(RENAME_BUTTON).putExtra("uri", d.targetUri),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
+
+        PendingIntent fav = PendingIntent.getBroadcast(this, id,
+                new Intent(FAV_BUTTON).putExtra("uri", d.targetUri),
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        RemoteViews view = new RemoteViews(getPackageName(), MainApplication.getTheme(getBaseContext(),
+                R.layout.notifictaion_recording_light,
+                R.layout.notifictaion_recording_dark));
+
+        String title = getString(R.string.call_recording) + (d.stop ? "" : " (" + c + ")");
+        String text = ".../" + Storage.getDocumentName(d.targetUri);
+
+        title = title.trim();
+
+        view.setOnClickPendingIntent(R.id.status_bar_latest_event_content, main);
+        view.setTextViewText(R.id.notification_title, title);
+        view.setTextViewText(R.id.notification_text, text);
+        view.setViewVisibility(R.id.notification_record, View.GONE);
+        view.setViewVisibility(R.id.notification_pause, View.GONE);
+        view.setViewVisibility(R.id.notification_fav, View.VISIBLE);
+        view.setViewVisibility(R.id.notification_rename, View.VISIBLE);
+        view.setOnClickPendingIntent(R.id.notification_rename, ren);
+        view.setOnClickPendingIntent(R.id.notification_fav, fav);
+        view.setImageViewResource(R.id.notification_fav, MainApplication.getStar(this, d.targetUri) ? R.drawable.ic_star_black_24dp : R.drawable.ic_star_border_black_24dp);
+
+        if (encoding != null)
+            view.setViewVisibility(R.id.notification_pause, View.GONE);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setOngoing(!d.stop)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setTicker(title) // tooltip status bar message
+                .setSmallIcon(R.drawable.ic_mic_24dp)
+                .setDeleteIntent(del)
+                .setContent(view);
+
+        if (Build.VERSION.SDK_INT < 11) {
+            builder.setContentIntent(main);
+        }
+
+        if (Build.VERSION.SDK_INT >= 21)
+            builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+        notificationManager.notify(id, builder.build());
+        return !d.stopDel; // removed by user
     }
 
     void startRecording() {
@@ -660,7 +822,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         return new EncoderInfo(channels, sampleRate, bps);
     }
 
-    void encoding(final File in, final Uri uri, final Runnable done, final Runnable success) {
+    void encoding(final File in, final Uri uri, final Runnable done, final Success success) {
         final File out;
 
         final String s = uri.getScheme();
@@ -689,10 +851,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final Runnable save = new Runnable() {
             @Override
             public void run() {
+                final Uri t;
                 if (Build.VERSION.SDK_INT >= 21 && s.equals(ContentResolver.SCHEME_CONTENT)) {
                     try {
                         Uri root = Storage.getDocumentTreeUri(uri);
-                        storage.move(out, root, Storage.getDocumentChildPath(uri));
+                        t = storage.move(out, root, Storage.getDocumentChildPath(uri));
                     } catch (RuntimeException e) {
                         Storage.delete(out); // delete tmp encoding file
                         try {
@@ -709,6 +872,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         });
                         return;
                     }
+                } else {
+                    t = Uri.fromFile(out);
                 }
                 Storage.delete(in); // delete raw recording
 
@@ -721,7 +886,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         edit.putString(MainApplication.PREFERENCE_LAST, Storage.getDocumentName(uri));
                         edit.commit();
 
-                        success.run();
+                        success.run(t);
                         done.run();
                         encodingNext();
                     }
@@ -877,13 +1042,14 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         };
         showNotificationAlarm(true); // update status (encoding)
         Log.d(TAG, "Encoded " + inFile.getName() + " to " + storage.getDisplayName(targetUri));
-        encoding(inFile, targetUri, encoding, new Runnable() {
+        encoding(inFile, targetUri, encoding, new Success() {
             @Override
-            public void run() { // called on success
+            public void run(Uri t) { // called on success
                 mapTarget.remove(inFile);
-                MainApplication.setContact(RecordingService.this, targetUri, contactId);
-                MainApplication.setCall(RecordingService.this, targetUri, call);
+                MainApplication.setContact(RecordingService.this, t, contactId);
+                MainApplication.setCall(RecordingService.this, t, call);
                 MainActivity.last(RecordingService.this);
+                showDone(t);
             }
         });
     }
@@ -904,4 +1070,13 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         optimization.onTaskRemoved(rootIntent);
     }
 
+    Done find(Uri uri) {
+        for (int i = 0; i < dones.size(); i++) {
+            Done d = dones.get(i);
+            if (d.targetUri.equals(uri)) {
+                return d;
+            }
+        }
+        return null;
+    }
 }

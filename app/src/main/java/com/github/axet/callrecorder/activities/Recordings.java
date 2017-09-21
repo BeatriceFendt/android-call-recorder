@@ -34,6 +34,7 @@ public class Recordings extends com.github.axet.audiolibrary.app.Recordings {
         super.cleanDelete(delete, f);
         String p = MainApplication.getFilePref(f);
         delete.remove(p + MainApplication.PREFERENCE_DETAILS_CONTACT);
+        delete.remove(p + MainApplication.PREFERENCE_DETAILS_CALL);
     }
 
     @Override
