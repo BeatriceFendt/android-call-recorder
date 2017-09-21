@@ -48,13 +48,13 @@ public class MainApplication extends com.github.axet.audiolibrary.app.MainApplic
 
     public static String getCall(Context context, Uri f) {
         final SharedPreferences shared = android.preference.PreferenceManager.getDefaultSharedPreferences(context);
-        String p = getFilePref(f) + PREFERENCE_DETAILS_CONTACT;
+        String p = getFilePref(f) + PREFERENCE_DETAILS_CALL;
         return shared.getString(p, null);
     }
 
     public static void setCall(Context context, Uri f, String id) {
         final SharedPreferences shared = android.preference.PreferenceManager.getDefaultSharedPreferences(context);
-        String p = getFilePref(f) + PREFERENCE_DETAILS_CONTACT;
+        String p = getFilePref(f) + PREFERENCE_DETAILS_CALL;
         SharedPreferences.Editor editor = shared.edit();
         editor.putString(p, id);
         editor.commit();

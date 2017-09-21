@@ -130,6 +130,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         context.sendBroadcast(intent);
     }
 
+    public static interface Success {
+        void run(Uri u);
+    }
+
     public static class CallInfo {
         public Uri targetUri;
         public String phone;
@@ -660,7 +664,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         return new EncoderInfo(channels, sampleRate, bps);
     }
 
-    void encoding(final File in, final Uri uri, final Runnable done, final Runnable success) {
+    void encoding(final File in, final Uri uri, final Runnable done, final Success success) {
         final File out;
 
         final String s = uri.getScheme();
@@ -689,10 +693,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final Runnable save = new Runnable() {
             @Override
             public void run() {
+                final Uri t;
                 if (Build.VERSION.SDK_INT >= 21 && s.equals(ContentResolver.SCHEME_CONTENT)) {
                     try {
                         Uri root = Storage.getDocumentTreeUri(uri);
-                        storage.move(out, root, Storage.getDocumentChildPath(uri));
+                        t = storage.move(out, root, Storage.getDocumentChildPath(uri));
                     } catch (RuntimeException e) {
                         Storage.delete(out); // delete tmp encoding file
                         try {
@@ -709,6 +714,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         });
                         return;
                     }
+                } else {
+                    t = Uri.fromFile(out);
                 }
                 Storage.delete(in); // delete raw recording
 
@@ -721,7 +728,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         edit.putString(MainApplication.PREFERENCE_LAST, Storage.getDocumentName(uri));
                         edit.commit();
 
-                        success.run();
+                        success.run(t);
                         done.run();
                         encodingNext();
                     }
@@ -877,12 +884,12 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         };
         showNotificationAlarm(true); // update status (encoding)
         Log.d(TAG, "Encoded " + inFile.getName() + " to " + storage.getDisplayName(targetUri));
-        encoding(inFile, targetUri, encoding, new Runnable() {
+        encoding(inFile, targetUri, encoding, new Success() {
             @Override
-            public void run() { // called on success
+            public void run(Uri t) { // called on success
                 mapTarget.remove(inFile);
-                MainApplication.setContact(RecordingService.this, targetUri, contactId);
-                MainApplication.setCall(RecordingService.this, targetUri, call);
+                MainApplication.setContact(RecordingService.this, t, contactId);
+                MainApplication.setCall(RecordingService.this, t, call);
                 MainActivity.last(RecordingService.this);
             }
         });
