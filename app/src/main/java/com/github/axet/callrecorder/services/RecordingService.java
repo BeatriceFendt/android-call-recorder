@@ -23,13 +23,11 @@ import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.telecom.Call;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -47,13 +45,7 @@ import com.github.axet.callrecorder.activities.SettingsActivity;
 import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -149,7 +141,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     public static class Done {
         public Uri targetUri;
-        public int count;
+        public int count; // seconds passed (AUTO_CLOSE max)
         public boolean stop; // do not count down
         public boolean stopDel; // user removed notify, we can clear list
 
@@ -204,7 +196,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     Uri uri = intent.getParcelableExtra("uri");
                     CallActivity.startActivity(context, uri, false);
                     Done d = find(uri);
-                    d.count = CallActivity.COUNT; // cancel notify
+                    d.count = CallActivity.AUTO_CLOSE; // cancel notify
                     d.stop = false; // continue counting and remove notify
                     Intent closeIntent = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     context.sendBroadcast(closeIntent); // close notification bar drawer
@@ -624,7 +616,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     // return true - keep updating
     boolean updateDone(int pos, Done d) {
-        int c = CallActivity.COUNT - d.count;
+        int c = CallActivity.AUTO_CLOSE - d.count;
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
