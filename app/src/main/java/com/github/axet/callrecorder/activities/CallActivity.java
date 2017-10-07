@@ -10,7 +10,6 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.telecom.Call;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -28,14 +27,13 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.github.axet.androidlibrary.animations.RemoveItemAnimation;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
 
 public class CallActivity extends AppCompatActivity {
 
-    public static int COUNT = 5;
+    public static int AUTO_CLOSE = 5; // secs
 
     Handler handler = new Handler();
     Runnable update = new Runnable() {
@@ -65,6 +63,12 @@ public class CallActivity extends AppCompatActivity {
         context.startActivity(intent);
     }
 
+    public static void showLocked(Window w) {
+        w.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                WindowManager.LayoutParams.FLAG_FULLSCREEN | // allow keyboard popup
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+    }
+
     public void setAppTheme(int id) {
         super.setTheme(id);
     }
@@ -76,6 +80,8 @@ public class CallActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        showLocked(getWindow());
 
         storage = new Storage(this);
 
@@ -127,6 +133,8 @@ public class CallActivity extends AppCompatActivity {
                 })
                 .setView(v).create();
 
+        alertDialog.setCancelable(false);
+
         alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface dialog) {
@@ -139,6 +147,9 @@ public class CallActivity extends AppCompatActivity {
                 });
 
                 Window w = alertDialog.getWindow();
+
+                showLocked(w);
+
                 final Window.Callback c = w.getCallback();
                 w.setCallback(new Window.Callback() {
                     @Override
@@ -282,13 +293,13 @@ public class CallActivity extends AppCompatActivity {
     void update() {
         int p = c / 100;
 
-        if (p >= COUNT) {
+        if (p >= AUTO_CLOSE) {
             close();
             return;
         }
 
-        count.setText(getString(R.string.callrecent_auto_save, COUNT - p));
-        progressBar.setProgress(c * 100 / COUNT / 100);
+        count.setText(getString(R.string.callrecent_auto_save, AUTO_CLOSE - p));
+        progressBar.setProgress(c * 100 / AUTO_CLOSE / 100);
         updateFav();
 
         c++;
