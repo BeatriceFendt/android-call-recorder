@@ -56,14 +56,6 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-<<<<<<< HEAD
-<<<<<<< HEAD
     compile 'com.github.axet:android-audio-library:1.0.48' // compile project(':android-audio-library')
-=======
-    compile 'com.github.axet:android-audio-library:1.0.47' // compile project(':android-audio-library')
->>>>>>> fix show recent dialog on lockscreen
-=======
-    compile 'com.github.axet:android-audio-library:1.0.47' // compile project(':android-audio-library')
->>>>>>> fix show recent dialog on lockscreen
     testCompile 'junit:junit:4.12'
 }
