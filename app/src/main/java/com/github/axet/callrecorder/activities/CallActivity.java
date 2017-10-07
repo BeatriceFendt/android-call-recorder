@@ -63,6 +63,12 @@ public class CallActivity extends AppCompatActivity {
         context.startActivity(intent);
     }
 
+    public static void showLocked(Window w) {
+        w.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                WindowManager.LayoutParams.FLAG_FULLSCREEN | // allow keyboard popup
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+    }
+
     public void setAppTheme(int id) {
         super.setTheme(id);
     }
@@ -74,6 +80,8 @@ public class CallActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        showLocked(getWindow());
 
         storage = new Storage(this);
 
@@ -125,6 +133,8 @@ public class CallActivity extends AppCompatActivity {
                 })
                 .setView(v).create();
 
+        alertDialog.setCancelable(false);
+
         alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface dialog) {
@@ -137,6 +147,9 @@ public class CallActivity extends AppCompatActivity {
                 });
 
                 Window w = alertDialog.getWindow();
+
+                showLocked(w);
+
                 final Window.Callback c = w.getCallback();
                 w.setCallback(new Window.Callback() {
                     @Override
