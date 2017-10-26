@@ -9,10 +9,10 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.ListPreference;
@@ -60,6 +60,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
     };
 
     GeneralPreferenceFragment f;
+    Handler handler = new Handler();
 
     public static <T> T[] removeElement(Class<T> c, T[] aa, int i) {
         List<T> ll = Arrays.asList(aa);
@@ -195,6 +196,9 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             startActivity(new Intent(this, SettingsActivity.class));
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         }
+        if (key.equals(MainApplication.PREFERENCE_STORAGE)) {
+            Storage.migrateLocalStorageDialog(this, handler, new Storage(this));
+        }
     }
 
     @Override
@@ -222,7 +226,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             final Context context = screen.getContext();
 
             ListPreference format = (ListPreference) manager.findPreference(MainApplication.PREFERENCE_FORMAT);
-            if(!Storage.permitted(context, CONTACTS)) {
+            if (!Storage.permitted(context, CONTACTS)) {
                 CharSequence[] ee = format.getEntries();
                 CharSequence[] vv = format.getEntryValues();
             }
