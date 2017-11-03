@@ -4,14 +4,14 @@ import com.android.build.OutputFile
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         applicationId "com.github.axet.callrecorder"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 106
-        versionName "1.4.3"
+        versionCode 107
+        versionName "1.4.4"
     }
     signingConfigs {
         release {
@@ -36,12 +36,10 @@ android {
     }
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
-            def file = output.packageApplication.outputFile
             def abi = output.getFilter(OutputFile.ABI)
             if (abi == null)
                 abi = "universal";
-            def fileName = org.apache.commons.io.FilenameUtils.getExtension(android.defaultConfig.applicationId) + "-" + abi + "-" + android.defaultConfig.versionName + "-" + variant.buildType.name + ".apk"
-            output.packageApplication.outputFile = new File(file.parent, fileName)
+            output.outputFileName = org.apache.commons.io.FilenameUtils.getExtension(android.defaultConfig.applicationId) + "-" + abi + "-" + android.defaultConfig.versionName + "-" + variant.buildType.name + ".apk"
         }
     }
     splits {
@@ -56,6 +54,6 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.github.axet:android-audio-library:1.0.48' // compile project(':android-audio-library')
+    compile 'com.github.axet:android-audio-library:1.0.49' // compile project(':android-audio-library')
     testCompile 'junit:junit:4.12'
 }
