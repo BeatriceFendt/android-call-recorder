@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -146,7 +147,7 @@ public class CallActivity extends AppCompatActivity {
                     }
                 });
 
-                Window w = alertDialog.getWindow();
+                final Window w = alertDialog.getWindow();
 
                 showLocked(w);
 
@@ -165,7 +166,12 @@ public class CallActivity extends AppCompatActivity {
 
                     @Override
                     public boolean dispatchTouchEvent(MotionEvent event) {
-                        onUserInteraction();
+                        int[] loc = new int[2];
+                        View v = w.getDecorView();
+                        v.getLocationOnScreen(loc);
+                        Rect rect = new Rect(loc[0], loc[1], loc[0] + v.getWidth(), loc[1] + v.getHeight());
+                        if (rect.contains((int) event.getRawX(), (int) event.getRawY()))
+                            onUserInteraction();
                         return c.dispatchTouchEvent(event);
                     }
 
