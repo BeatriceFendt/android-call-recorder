@@ -66,8 +66,17 @@ public class CallActivity extends AppCompatActivity {
 
     public static void showLocked(Window w) {
         w.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
-                WindowManager.LayoutParams.FLAG_FULLSCREEN | // allow keyboard popup
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+        // enable popup keyboard while locked
+        w.addFlags(android.view.WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        w.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+    }
+
+    public static Rect getOnScreenRect(Window w) {
+        int[] loc = new int[2];
+        View v = w.getDecorView();
+        v.getLocationOnScreen(loc);
+        return new Rect(loc[0], loc[1], loc[0] + v.getWidth(), loc[1] + v.getHeight());
     }
 
     public void setAppTheme(int id) {
@@ -166,10 +175,7 @@ public class CallActivity extends AppCompatActivity {
 
                     @Override
                     public boolean dispatchTouchEvent(MotionEvent event) {
-                        int[] loc = new int[2];
-                        View v = w.getDecorView();
-                        v.getLocationOnScreen(loc);
-                        Rect rect = new Rect(loc[0], loc[1], loc[0] + v.getWidth(), loc[1] + v.getHeight());
+                        Rect rect = getOnScreenRect(w);
                         if (rect.contains((int) event.getRawX(), (int) event.getRawY()))
                             onUserInteraction();
                         return c.dispatchTouchEvent(event);
