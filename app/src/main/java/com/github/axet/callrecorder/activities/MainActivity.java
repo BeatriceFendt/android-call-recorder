@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 import com.github.axet.androidlibrary.widgets.AboutPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
+import com.github.axet.audiolibrary.services.RecordingContentProvider;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
@@ -261,8 +262,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         i.setChecked(b);
 
         MenuItem m = menu.findItem(R.id.action_show_folder);
-        Intent ii = showFolderIntent();
-        if (ii.resolveActivityInfo(getPackageManager(), 0) == null)
+        Intent ii = Storage.openFolderIntent(this, storage.getStoragePath(), null);
+        m.setIntent(ii);
+        if (!Storage.isFolderCallable(this, ii, RecordingContentProvider.getAuthority()))
             m.setVisible(false);
         return true;
     }
@@ -296,23 +298,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
 
         if (id == R.id.action_show_folder) {
-            Intent intent = showFolderIntent();
-            if (intent.resolveActivityInfo(getPackageManager(), 0) != null) {
-                startActivity(intent);
-            } else {
-                Toast.makeText(this, R.string.no_folder_app, Toast.LENGTH_SHORT).show();
-            }
+            Intent intent = item.getIntent();
+            startActivity(intent);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    Intent showFolderIntent() {
-        Uri selectedUri = storage.getStoragePath();
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(selectedUri, "resource/folder");
-        return intent;
     }
 
     void call(boolean b) {
