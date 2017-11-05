@@ -262,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         i.setChecked(b);
 
         MenuItem m = menu.findItem(R.id.action_show_folder);
-        Intent ii = Storage.openFolderIntent(this, storage.getStoragePath(), null);
+        Intent ii = Storage.openFolderIntent(this, storage.getStoragePath());
         m.setIntent(ii);
         if (!Storage.isFolderCallable(this, ii, RecordingContentProvider.getAuthority()))
             m.setVisible(false);
@@ -330,6 +330,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             MainActivity.startActivity(this);
             return;
         }
+
+        invalidateOptionsMenu();
 
         try {
             storage.migrateLocalStorage();
