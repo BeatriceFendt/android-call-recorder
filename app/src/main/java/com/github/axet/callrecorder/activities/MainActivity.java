@@ -44,12 +44,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     public static String SET_PROGRESS = MainActivity.class.getCanonicalName() + ".SET_PROGRESS";
     public static String SHOW_LAST = MainActivity.class.getCanonicalName() + ".SHOW_LAST";
 
-    public static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE"; // Manifest.permission.READ_EXTERNAL_STORAGE
+    public static final int RESULT_CALL = 1;
 
     public static final String[] PERMISSIONS = new String[]{
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.PROCESS_OUTGOING_CALLS,
-            READ_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_CONTACTS,
             Manifest.permission.READ_PHONE_STATE,
@@ -289,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         if (id == R.id.action_call) {
             item.setChecked(!item.isChecked());
-            if (item.isChecked() && !Storage.permitted(MainActivity.this, PERMISSIONS, 1)) {
+            if (item.isChecked() && !Storage.permitted(MainActivity.this, PERMISSIONS, RESULT_CALL)) {
                 resumeCall = item;
                 return true;
             }
@@ -401,7 +401,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
-            case 1:
+            case RESULT_CALL:
                 if (Storage.permitted(this, MUST)) {
                     try {
                         storage.migrateLocalStorage();
