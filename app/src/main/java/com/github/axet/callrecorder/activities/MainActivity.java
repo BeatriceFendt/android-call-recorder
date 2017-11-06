@@ -29,9 +29,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.axet.androidlibrary.services.StorageProvider;
 import com.github.axet.androidlibrary.widgets.AboutPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
-import com.github.axet.audiolibrary.services.RecordingContentProvider;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
@@ -262,9 +262,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         i.setChecked(b);
 
         MenuItem m = menu.findItem(R.id.action_show_folder);
-        Intent ii = Storage.openFolderIntent(this, storage.getStoragePath(), null);
+        Intent ii = StorageProvider.openFolderIntent(this, storage.getStoragePath());
         m.setIntent(ii);
-        if (!Storage.isFolderCallable(this, ii, RecordingContentProvider.getAuthority()))
+        if (!StorageProvider.isFolderCallable(this, ii, StorageProvider.getAuthority()))
             m.setVisible(false);
         return true;
     }
@@ -330,6 +330,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             MainActivity.startActivity(this);
             return;
         }
+
+        invalidateOptionsMenu();
 
         try {
             storage.migrateLocalStorage();

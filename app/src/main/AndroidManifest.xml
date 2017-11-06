@@ -63,7 +63,7 @@
             android:theme="@style/NoDisplay"></activity>
 
         <provider
-            android:name="com.github.axet.audiolibrary.services.RecordingContentProvider"
+            android:name="com.github.axet.androidlibrary.services.StorageProvider"
             android:authorities="com.github.axet.callrecorder"
             android:exported="false"
             android:grantUriPermissions="true"></provider>
