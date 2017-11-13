@@ -31,6 +31,7 @@
 
     <string-array name="delete_text">
         <item>Не удалять записи</item>
+        <item>старше 1 дня</item>
         <item>старше 1 недели</item>
         <item>старше 1 месяца</item>
         <item>старше 3 месяцев</item>

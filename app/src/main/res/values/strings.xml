@@ -39,6 +39,7 @@
 
     <string-array name="delete_text">
         <item>Keep all recording</item>
+        <item>older than day</item>
         <item>older than week</item>
         <item>older than 1 month</item>
         <item>older than 3 months</item>
@@ -47,6 +48,7 @@
 
     <string-array name="delete_values" translatable="false">
         <item>off</item>
+        <item>1day</item>
         <item>1week</item>
         <item>1month</item>
         <item>3month</item>

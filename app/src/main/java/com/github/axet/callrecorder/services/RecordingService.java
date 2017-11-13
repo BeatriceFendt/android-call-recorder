@@ -417,6 +417,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     c.setTimeInMillis(storage.getLastModified(f));
                     Calendar cur = c;
 
+                    if (d.equals("1day")) {
+                        cur = Calendar.getInstance();
+                        c.add(Calendar.DAY_OF_YEAR, 1);
+                    }
                     if (d.equals("1week")) {
                         cur = Calendar.getInstance();
                         c.add(Calendar.WEEK_OF_YEAR, 1);

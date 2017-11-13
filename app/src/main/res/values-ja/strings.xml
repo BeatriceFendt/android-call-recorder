@@ -21,6 +21,7 @@
 
     <string-array name="delete_text">
         <item>すべての録音を残す</item>
+        <item>older than day</item>
         <item>1 週間以上前</item>
         <item>1 ヶ月以上前</item>
         <item>3 ヶ月以上前</item>
