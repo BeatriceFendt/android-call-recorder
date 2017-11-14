@@ -73,4 +73,24 @@
     <string name="recording_enabled">Запись включена</string>
     <string name="recording_disabled">Запись выключена</string>
     <string name="callrecent_auto_save">Auto save in (%1$d)</string>
+    <string name="save">Save</string>
+    <string name="calls_out">Вх.</string>
+    <string name="calls_in">Ис.</string>
+
+    <string name="pref_storage_title">Папка для хранения</string>
+    <string name="pref_source_title">Источник</string>
+    <string name="pref_source_summary">Источник записи</string>
+    <string name="pref_rate_title">Частота записи</string>
+    <string name="pref_encoding_title">Кодировка</string>
+    <string name="pref_encoding_summary">Формат выходного файла (.wav, .m4a, ...)</string>
+    <string name="pref_mode_title">Режим</string>
+    <string name="pref_mode_summary">Режим записи</string>
+    <string name="pref_delete_title">Удалять записи</string>
+    <string name="pref_nameformat_title">Формат имени</string>
+    <string name="pref_calldialog_title">Последний звонок</string>
+    <string name="pref_calldialog_summary">Показывать диалог для последнего совершенного звонка</string>
+    <string name="pref_optimization_title">Отключить оптимизацию батареи</string>
+    <string name="pref_optimization_summary">Предотвращать удаление программы из памяти телефона</string>
+    <string name="pref_theme_title">Тема приложения</string>
+    <string name="pref_theme_summary">Установить тему приложения (темная / светлая)</string>
 </resources>

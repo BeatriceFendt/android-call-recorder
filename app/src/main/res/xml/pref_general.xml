@@ -4,7 +4,7 @@
         android:defaultValue="Call Recorder"
         android:key="storage_path"
         android:summary="/sdcard/some/"
-        android:title="Storage Path" />
+        android:title="@string/pref_storage_title" />
 
     <ListPreference
         android:defaultValue="-1"
@@ -13,8 +13,8 @@
         android:key="source"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="Select source for better quality"
-        android:title="Recording Source" />
+        android:summary="@string/pref_source_summary"
+        android:title="@string/pref_source_title" />
 
     <ListPreference
         android:defaultValue="16000"
@@ -24,7 +24,7 @@
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:summary="44100"
-        android:title="Sample Rate" />
+        android:title="@string/pref_rate_title" />
 
     <ListPreference
         android:defaultValue="ogg"
@@ -33,8 +33,8 @@
         android:key="encoding"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="Output file formats (.wav, .m4a, ...)"
-        android:title="Encoding" />
+        android:summary="@string/pref_encoding_summary"
+        android:title="@string/pref_encoding_title" />
 
     <ListPreference
         android:defaultValue="1"
@@ -43,8 +43,8 @@
         android:key="channels"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="Recording channels"
-        android:title="Mode" />
+        android:summary="@string/pref_mode_summary"
+        android:title="@string/pref_mode_title" />
 
     <ListPreference
         android:defaultValue="off"
@@ -53,8 +53,8 @@
         android:key="delete"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="1 month"
-        android:title="Delete Recordings" />
+        android:summary=""
+        android:title="@string/pref_delete_title" />
 
     <ListPreference
         android:defaultValue="%s"
@@ -63,21 +63,21 @@
         android:key="format"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="2015-11"
-        android:title="Name Format" />
+        android:summary=""
+        android:title="@string/pref_nameformat_title" />
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="done_notification"
-        android:summary="Show rename / favorite dialog after call ended"
-        android:title="Recent Call Dialog" />
+        android:summary="@string/pref_calldialog_summary"
+        android:title="@string/pref_calldialog_title" />
 
     <com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat
         android:defaultValue="false"
         android:key="optimization"
         android:persistent="false"
-        android:summary="Prevent app to be removed from memory"
-        android:title="Disable Battery Optimization" />
+        android:summary="@string/pref_optimization_summary"
+        android:title="@string/pref_optimization_title" />
 
     <ListPreference
         android:defaultValue="Theme_White"
@@ -86,7 +86,6 @@
         android:key="theme"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:summary="Set application theme (dark / light)"
-        android:title="Application Theme" />
-
+        android:summary="@string/pref_theme_summary"
+        android:title="@string/pref_theme_title" />
 </PreferenceScreen>

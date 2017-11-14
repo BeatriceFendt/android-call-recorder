@@ -117,4 +117,24 @@
     <string name="recording_enabled">Recording enabled</string>
     <string name="recording_disabled">Recording disabled</string>
     <string name="callrecent_auto_save">Auto save in (%1$d)</string>
+    <string name="save">Save</string>
+    <string name="calls_out">Out</string>
+    <string name="calls_in">In</string>
+
+    <string name="pref_storage_title">Storage Path</string>
+    <string name="pref_source_title">Recording Source</string>
+    <string name="pref_source_summary">Select source for better quality</string>
+    <string name="pref_rate_title">Sample Rate</string>
+    <string name="pref_encoding_title">Encoding</string>
+    <string name="pref_encoding_summary">Output file formats (.wav, .m4a, ...)</string>
+    <string name="pref_mode_title">Mode</string>
+    <string name="pref_mode_summary">Recording channels</string>
+    <string name="pref_delete_title">Delete Recordings</string>
+    <string name="pref_nameformat_title">Name Format</string>
+    <string name="pref_calldialog_title">Recent Call Dialog</string>
+    <string name="pref_calldialog_summary">Show rename / favorite dialog after call ended</string>
+    <string name="pref_optimization_title">Disable Battery Optimization</string>
+    <string name="pref_optimization_summary">Prevent app to be removed from memory</string>
+    <string name="pref_theme_title">Application Theme</string>
+    <string name="pref_theme_summary">Set application theme (dark / light)</string>
 </resources>
