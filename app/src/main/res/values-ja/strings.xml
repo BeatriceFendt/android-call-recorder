@@ -21,6 +21,7 @@
 
     <string-array name="delete_text">
         <item>すべての録音を残す</item>
+        <item>older than day</item>
         <item>1 週間以上前</item>
         <item>1 ヶ月以上前</item>
         <item>3 ヶ月以上前</item>
@@ -72,4 +73,24 @@
     <string name="recording_enabled">録音が有効です</string>
     <string name="recording_disabled">録音が無効です</string>
     <string name="callrecent_auto_save">Auto save in (%1$d)</string>
+
+    <string name="pref_storage_title">ストレージのパス</string>
+    <string name="pref_source_title">音源</string>
+    <string name="pref_source_summary">最良の品質の音源を選択してください</string>
+    <string name="pref_rate_title">サンプルレート</string>
+    <string name="pref_encoding_title">エンコーディング</string>
+    <string name="pref_encoding_summary">出力ファイルフォーマット (.wav, .m4a, ...)</string>
+    <string name="pref_mode_title">モード</string>
+    <string name="pref_mode_summary">録音チャンネル</string>
+    <string name="pref_delete_title">録音の削除s</string>
+    <string name="pref_nameformat_title">名前の形式</string>
+    <string name="pref_calldialog_title">Recent Call Dialog</string>
+    <string name="pref_calldialog_summary">Show rename / favorite dialog after call ended</string>
+    <string name="pref_optimization_title">Disable Battery Optimization</string>
+    <string name="pref_optimization_summary">アプリがメモリーから削除されるのを防止します</string>
+    <string name="pref_theme_title">アプリケーションのテーマ</string>
+    <string name="pref_theme_summary">アプリケーションのテーマを設定します (ダーク / ライト)</string>
+    <string name="save">Save</string>
+    <string name="calls_out">Out</string>
+    <string name="calls_in">In</string>
 </resources>

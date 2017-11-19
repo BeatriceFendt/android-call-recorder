@@ -261,10 +261,9 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_STORAGE);
             s.setStorage(new Storage(getContext()));
+            s.setPermissionsDialog(this, PERMISSIONS, 1);
             if (Build.VERSION.SDK_INT >= 21)
                 s.setStorageAccessFramework(this, 2);
-            else
-                s.setPermissionsDialog(this, PERMISSIONS, 1);
         }
 
         @Override
