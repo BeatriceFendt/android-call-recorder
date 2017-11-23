@@ -46,7 +46,6 @@
     </string-array>
 
     <string name="action_settings">Настройки</string>
-    <string name="not_permitted">Доступ запрещен</string>
     <string name="no_folder_app">Программа для просмотра папок не установлена</string>
     <string name="hold_by_call">пауза (звонок)</string>
     <string name="encoding">кодировка</string>
