@@ -288,11 +288,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
             switch (requestCode) {
                 case 1:
-                    if (Storage.permitted(getContext(), permissions))
-                        ;
-                    else
-                        Toast.makeText(getContext(), R.string.not_permitted, Toast.LENGTH_SHORT).show();
-                    s.onRequestPermissionsResult();
+                    s.onRequestPermissionsResult(permissions, grantResults);
                     break;
             }
         }

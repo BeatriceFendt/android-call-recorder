@@ -10,8 +10,8 @@ android {
         applicationId "com.github.axet.callrecorder"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 114
-        versionName "1.4.11"
+        versionCode 115
+        versionName "1.4.12"
     }
     signingConfigs {
         release {
@@ -54,6 +54,6 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.github.axet:android-audio-library:1.0.62' // compile project(':android-audio-library')
+    compile 'com.github.axet:android-audio-library:1.0.65' // compile project(':android-audio-library')
     testCompile 'junit:junit:4.12'
 }

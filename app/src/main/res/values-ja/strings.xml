@@ -47,7 +47,6 @@
 
     <string name="action_settings">設定</string>
     <string name="call_recording">通話の録音</string>
-    <string name="not_permitted">許可されていません</string>
     <string name="no_folder_app">フォルダー表示アプリケーションがインストールされていません</string>
     <string name="hold_by_call">ポーズ (通話で保留)</string>
     <string name="encoding">エンコーディング</string>
