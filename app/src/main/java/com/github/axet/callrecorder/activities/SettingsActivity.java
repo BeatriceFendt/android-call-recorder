@@ -49,6 +49,8 @@ import java.util.List;
  */
 public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+    public static final int RESULT_FILE = 1;
+
     public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
     };
@@ -261,9 +263,9 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_STORAGE);
             s.setStorage(new Storage(getContext()));
-            s.setPermissionsDialog(this, PERMISSIONS, 1);
+            s.setPermissionsDialog(this, PERMISSIONS, RESULT_FILE);
             if (Build.VERSION.SDK_INT >= 21)
-                s.setStorageAccessFramework(this, 2);
+                s.setStorageAccessFramework(this, RESULT_FILE);
         }
 
         @Override
@@ -287,7 +289,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) findPreference(MainApplication.PREFERENCE_STORAGE);
 
             switch (requestCode) {
-                case 1:
+                case RESULT_FILE:
                     s.onRequestPermissionsResult(permissions, grantResults);
                     break;
             }
@@ -300,7 +302,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) findPreference(MainApplication.PREFERENCE_STORAGE);
 
             switch (requestCode) {
-                case 2:
+                case RESULT_FILE:
                     s.onActivityResult(resultCode, data);
                     break;
             }
