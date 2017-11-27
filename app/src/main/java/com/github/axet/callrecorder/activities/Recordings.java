@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.github.axet.androidlibrary.widgets.ThemeUtils;
+import com.github.axet.audiolibrary.app.Storage;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
 
@@ -42,8 +43,8 @@ public class Recordings extends com.github.axet.audiolibrary.app.Recordings {
         View v = super.getView(position, convertView, parent);
         LinearLayout s = (LinearLayout) v.findViewById(R.id.recording_status);
         ImageView i = (ImageView) v.findViewById(R.id.recording_call);
-        Uri u = getItem(position);
-        String call = MainApplication.getCall(getContext(), u);
+        Storage.RecordingUri u = getItem(position);
+        String call = MainApplication.getCall(getContext(), u.uri);
         if (call == null || call.isEmpty()) {
             i.setVisibility(View.GONE);
         } else {

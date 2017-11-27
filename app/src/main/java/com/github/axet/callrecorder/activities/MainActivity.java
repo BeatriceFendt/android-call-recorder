@@ -385,8 +385,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         String last = shared.getString(MainApplication.PREFERENCE_LAST, "");
         last = last.toLowerCase();
         for (int i = 0; i < recordings.getCount(); i++) {
-            Uri f = recordings.getItem(i);
-            String n = Storage.getDocumentName(f).toLowerCase();
+            Storage.RecordingUri f = recordings.getItem(i);
+            String n = Storage.getDocumentName(f.uri).toLowerCase();
             if (n.equals(last)) {
                 SharedPreferences.Editor edit = shared.edit();
                 edit.putString(MainApplication.PREFERENCE_LAST, "");
