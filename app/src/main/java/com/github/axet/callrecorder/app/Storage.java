@@ -26,6 +26,46 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         super(context);
     }
 
+    public static String getFormatted(String format, long now, String phone, String contact, String call) {
+        if (contact != null && !contact.isEmpty()) {
+            format = format.replaceAll("%c", contact);
+        } else {
+            if (phone != null && !phone.isEmpty())
+                format = format.replaceAll("%c", phone);
+            else
+                format = format.replaceAll("%c", "");
+        }
+
+        if (phone != null && !phone.isEmpty()) {
+            format = format.replaceAll("%p", phone);
+        } else {
+            format = format.replaceAll("%p", "");
+        }
+
+        format = format.replaceAll("%T", "" + now / 1000);
+        format = format.replaceAll("%s", SIMPLE.format(new Date()));
+        format = format.replaceAll("%I", ISO8601.format(new Date()));
+
+        if (call == null || call.isEmpty()) {
+            format = format.replaceAll("%i", "");
+        } else {
+            switch (call) {
+                case MainApplication.CALL_IN:
+                    format = format.replaceAll("%i", "↓");
+                    break;
+                case MainApplication.CALL_OUT:
+                    format = format.replaceAll("%i", "↑");
+                    break;
+            }
+        }
+
+        format = format.replaceAll("  ", " ");
+
+        format = format.trim();
+
+        return format;
+    }
+
     public boolean recordingNextPending() {
         File tmp = getTempRecording();
         if (tmp.exists())
@@ -65,41 +105,7 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         String format = "%s";
         format = shared.getString(MainApplication.PREFERENCE_FORMAT, format);
 
-        if (contact != null && !contact.isEmpty()) {
-            format = format.replaceAll("%c", contact);
-        } else {
-            if (phone != null && !phone.isEmpty())
-                format = format.replaceAll("%c", phone);
-            else
-                format = format.replaceAll("%c", "");
-        }
-
-        if (phone != null && !phone.isEmpty()) {
-            format = format.replaceAll("%p", phone);
-        } else {
-            format = format.replaceAll("%p", "");
-        }
-
-        format = format.replaceAll("%T", "" + now / 1000);
-        format = format.replaceAll("%s", SIMPLE.format(new Date()));
-        format = format.replaceAll("%I", ISO8601.format(new Date()));
-
-        if (call == null || call.isEmpty()) {
-            format = format.replaceAll("%i", "");
-        } else {
-            switch (call) {
-                case MainApplication.CALL_IN:
-                    format = format.replaceAll("%i", "↓");
-                    break;
-                case MainApplication.CALL_OUT:
-                    format = format.replaceAll("%i", "↑");
-                    break;
-            }
-        }
-
-        format = format.replaceAll("  ", " ");
-
-        format = format.trim();
+        format = getFormatted(format, now, phone, contact, call);
 
         Uri parent = getStoragePath();
         String s = parent.getScheme();

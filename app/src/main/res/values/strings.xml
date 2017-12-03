@@ -60,6 +60,7 @@
         <item>20170201T090801.wav</item>
         <item>2017-02-01 09.08.01 ↓↑ [Caller ID].wav</item>
         <item>20170201T090801 ↓↑ [Caller ID].wav</item>
+        <item>1512340435 [Phone].wav</item>
     </string-array>
 
     <string-array name="format_values" formatted="false" translatable="false">
@@ -67,6 +68,7 @@
         <item>%I</item>
         <item>%s %i %c</item>
         <item>%I %i %c</item>
+        <item>%T %p</item>
     </string-array>
 
     <string-array name="themes_text">
