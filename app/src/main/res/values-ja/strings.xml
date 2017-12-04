@@ -31,8 +31,8 @@
     <string-array name="format_text">
         <item>2017-02-01 09.08.01.wav</item>
         <item>20170201T090801.wav</item>
+        <item>1512340435 [Phone].wav</item>
         <item>2017-02-01 09.08.01 ↓↑ [通話者 ID].wav</item>
-        <item>20170201T090801 ↓↑ [通話者 ID].wav</item>
     </string-array>
 
     <string-array name="themes_text">
@@ -52,8 +52,6 @@
     <string name="encoding">エンコーディング</string>
     <string name="pause">ポーズ</string>
     <string name="edit">編集</string>
-    <string name="confirm_cancel">キャンセルの確認</string>
-    <string name="are_you_sure_cancel">キャンセルしてもよろしいですか?</string>
     <string name="recording">録音</string>
     <string name="encoding_title">エンコーディング...</string>
     <string name="recording_title">録音</string>
