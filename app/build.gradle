@@ -10,8 +10,8 @@ android {
         applicationId "com.github.axet.callrecorder"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 116
-        versionName "1.4.13"
+        versionCode 117
+        versionName "1.4.14"
     }
     signingConfigs {
         release {
