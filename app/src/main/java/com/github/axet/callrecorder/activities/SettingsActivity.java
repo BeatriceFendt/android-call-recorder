@@ -23,6 +23,7 @@ import android.support.v7.preference.PreferenceScreen;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.github.axet.androidlibrary.widgets.NameFormatPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.StoragePathPreferenceCompat;
 import com.github.axet.audiolibrary.encoders.Factory;
@@ -47,7 +48,9 @@ import java.util.List;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener, PreferenceFragmentCompat.OnPreferenceDisplayDialogCallback {
+
+    public static final int RESULT_FILE = 1;
 
     public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -77,7 +80,9 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             String stringValue = value.toString();
             String key = preference.getKey();
 
-            if (preference instanceof ListPreference) {
+            if (preference instanceof NameFormatPreferenceCompat) {
+                preference.setSummary(((NameFormatPreferenceCompat) preference).getFormatted(stringValue));
+            } else if (preference instanceof ListPreference) {
                 // For list preferences, look up the correct display value in
                 // the preference's 'entries' list.
                 ListPreference listPreference = (ListPreference) preference;
@@ -212,6 +217,15 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         super.onBackPressed();
     }
 
+    @Override
+    public boolean onPreferenceDisplayDialog(PreferenceFragmentCompat caller, Preference pref) {
+        if (pref instanceof NameFormatPreferenceCompat) {
+            NameFormatPreferenceCompat.show(caller, pref.getKey());
+            return true;
+        }
+        return false;
+    }
+
     /**
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.
@@ -261,9 +275,9 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_STORAGE);
             s.setStorage(new Storage(getContext()));
-            s.setPermissionsDialog(this, PERMISSIONS, 1);
+            s.setPermissionsDialog(this, PERMISSIONS, RESULT_FILE);
             if (Build.VERSION.SDK_INT >= 21)
-                s.setStorageAccessFramework(this, 2);
+                s.setStorageAccessFramework(this, RESULT_FILE);
         }
 
         @Override
@@ -287,7 +301,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) findPreference(MainApplication.PREFERENCE_STORAGE);
 
             switch (requestCode) {
-                case 1:
+                case RESULT_FILE:
                     s.onRequestPermissionsResult(permissions, grantResults);
                     break;
             }
@@ -300,7 +314,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) findPreference(MainApplication.PREFERENCE_STORAGE);
 
             switch (requestCode) {
-                case 2:
+                case RESULT_FILE:
                     s.onActivityResult(resultCode, data);
                     break;
             }

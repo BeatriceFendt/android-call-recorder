@@ -41,8 +41,8 @@
     <string-array name="format_text">
         <item>2017-02-01 09.08.01.wav</item>
         <item>20170201T090801.wav</item>
-        <item>2017-02-01 09.08.01 ↓↑ [Входящий номер].wav</item>
-        <item>20170201T090801 ↓↑ [Входящий номер].wav</item>
+        <item>1512340435 [Входящий номер].wav</item>
+        <item>2017-02-01 09.08.01 ↓↑ [Имя].wav</item>
     </string-array>
 
     <string name="action_settings">Настройки</string>
@@ -51,8 +51,6 @@
     <string name="encoding">кодировка</string>
     <string name="pause">пауза</string>
     <string name="edit">редактор</string>
-    <string name="confirm_cancel">Отменить запись</string>
-    <string name="are_you_sure_cancel">Вы уверены?</string>
     <string name="recording">запись</string>
     <string name="encoding_title">Кодирование...</string>
     <string name="recording_title">Запись</string>

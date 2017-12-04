@@ -58,15 +58,15 @@
     <string-array name="format_text">
         <item>2017-02-01 09.08.01.wav</item>
         <item>20170201T090801.wav</item>
+        <item>1512340435 [Phone].wav</item>
         <item>2017-02-01 09.08.01 ↓↑ [Caller ID].wav</item>
-        <item>20170201T090801 ↓↑ [Caller ID].wav</item>
     </string-array>
 
     <string-array name="format_values" formatted="false" translatable="false">
         <item>%s</item>
         <item>%I</item>
+        <item>%T %p</item>
         <item>%s %i %c</item>
-        <item>%I %i %c</item>
     </string-array>
 
     <string-array name="themes_text">
@@ -96,8 +96,6 @@
     <string name="encoding">encoding</string>
     <string name="pause">pause</string>
     <string name="edit">edit</string>
-    <string name="confirm_cancel">Confirm cancel</string>
-    <string name="are_you_sure_cancel">Are you sure you want to cancel?</string>
     <string name="recording">recording</string>
     <string name="encoding_title">Encoding...</string>
     <string name="recording_title">Recording</string>
