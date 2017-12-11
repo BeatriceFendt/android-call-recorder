@@ -64,6 +64,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     public static final String TAG = RecordingService.class.getSimpleName();
 
     public static final int NOTIFICATION_RECORDING_ICON = 1;
+    public static final int RETRY_DELAY = 60 * 1000; // 1 min
 
     public static String SHOW_ACTIVITY = RecordingService.class.getCanonicalName() + ".SHOW_ACTIVITY";
     public static String PAUSE_BUTTON = RecordingService.class.getCanonicalName() + ".PAUSE_BUTTON";
@@ -101,6 +102,12 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         @Override
         public void run() {
             updateDones();
+        }
+    };
+    Runnable encodingNext = new Runnable() {
+        @Override
+        public void run() {
+            encodingNext();
         }
     };
 
@@ -489,6 +496,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         showNotificationAlarm(false);
 
+        handle.removeCallbacks(encodingNext);
+
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         shared.unregisterOnSharedPreferenceChangeListener(this);
 
@@ -752,12 +761,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     }
                 }
 
-                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-                int p = android.os.Process.getThreadPriority(android.os.Process.myTid());
-
-                if (p != android.os.Process.THREAD_PRIORITY_URGENT_AUDIO) {
-                    Log.e(TAG, "Unable to set Thread Priority " + android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-                }
+                // android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 
                 try {
                     long start = System.currentTimeMillis();
@@ -840,7 +844,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
 
-        Encoder e = Factory.getEncoder(this, ext, info, out);
+        Encoder e = Factory.getEncoder(this, ext, info, out); // create out file
 
         encoder = new FileEncoder(this, in, e);
 
@@ -904,9 +908,12 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }, new Runnable() { // error
             @Override
             public void run() {
+                Storage.delete(out);
                 MainActivity.showProgress(RecordingService.this, false, phone, samplesTime / sampleRate, false);
                 Error(encoder.getException());
                 done.run();
+                handle.removeCallbacks(encodingNext);
+                handle.postDelayed(encodingNext, RETRY_DELAY);
             }
         });
     }
@@ -1001,6 +1008,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void encodingNext() {
+        handle.removeCallbacks(encodingNext); // clean next
         if (encoder != null) // can be called twice, exit if alreay encoding
             return;
         final File inFile = storage.getTempNextRecording();
