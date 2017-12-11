@@ -31,7 +31,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:padding="2dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
                         android:src="@drawable/ic_star_border_black_24dp"
                         android:tint="?attr/colorAccent" />
 
