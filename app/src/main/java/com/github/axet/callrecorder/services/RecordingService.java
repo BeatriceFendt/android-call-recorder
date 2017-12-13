@@ -32,6 +32,7 @@ import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
+import com.github.axet.audiolibrary.app.AudioRecorder;
 import com.github.axet.audiolibrary.app.RawSamples;
 import com.github.axet.audiolibrary.app.Sound;
 import com.github.axet.audiolibrary.encoders.Encoder;
@@ -366,10 +367,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 
-        sampleRate = Integer.parseInt(shared.getString(MainApplication.PREFERENCE_RATE, ""));
-        sampleRate = Sound.getValidRecordRate(MainApplication.getInMode(this), sampleRate);
-        if (sampleRate == -1)
-            sampleRate = Sound.DEFAULT_RATE;
+        sampleRate = AudioRecorder.getSampleRate(this);
 
         shared.registerOnSharedPreferenceChangeListener(this);
 
@@ -702,49 +700,26 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void startRecording() {
-        final RawSamples rs;
-        AudioRecord r = null;
-
-        rs = new RawSamples(storage.getTempRecording());
-
+        final RawSamples rs = new RawSamples(storage.getTempRecording());
         rs.open(samplesTime);
-
-        int c = MainApplication.getInMode(RecordingService.this);
-        final int min = AudioRecord.getMinBufferSize(sampleRate, c, Sound.DEFAULT_AUDIOFORMAT);
-        if (min <= 0)
-            throw new RuntimeException("Unable to initialize AudioRecord: Bad audio values");
 
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 
-        Integer[] ss = new Integer[]{
+        int[] ss = new int[]{
                 MediaRecorder.AudioSource.VOICE_CALL,
                 MediaRecorder.AudioSource.VOICE_COMMUNICATION, // mic source VOIP
                 MediaRecorder.AudioSource.MIC, // mic
                 MediaRecorder.AudioSource.DEFAULT, // mic
                 MediaRecorder.AudioSource.UNPROCESSED,
         };
-        List<Integer> list = Arrays.asList(ss);
         int i = Integer.valueOf(shared.getString(MainApplication.PREFERENCE_SOURCE, "-1"));
         if (i == -1)
             i = 0;
         else
-            i = list.indexOf(i);
-        for (; i < ss.length; i++) {
-            int s = ss[i];
-            try {
-                r = new AudioRecord(s, sampleRate, c, Sound.DEFAULT_AUDIOFORMAT, min * 2);
-                if (r.getState() == AudioRecord.STATE_INITIALIZED)
-                    break;
-            } catch (IllegalArgumentException e) {
-                Log.d(TAG, "Recorder Create Failed: " + s, e);
-            }
-        }
-        if (r == null || r.getState() != AudioRecord.STATE_INITIALIZED) {
-            throw new RuntimeException("Unable to initialize AudioRecord");
-        }
-        source = r.getAudioSource();
+            i = AudioRecorder.indexOf(ss, i);
 
-        final AudioRecord recorder = r;
+        final AudioRecord recorder = AudioRecorder.createAudioRecorder(this, sampleRate, ss, i);
+        source = recorder.getAudioSource();
 
         final Thread old = thread;
 
@@ -771,24 +746,15 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     // how many samples we need to update 'samples'. time clock. every 1000ms.
                     int samplesTimeUpdate = 1000 / 1000 * sampleRate;
 
-                    short[] buffer = new short[min];
+                    short[] buffer = new short[1000];
 
                     boolean stableRefresh = false;
 
                     while (!Thread.currentThread().isInterrupted()) {
                         final int readSize = recorder.read(buffer, 0, buffer.length);
                         if (readSize < 0) {
-                            switch (readSize) {
-                                case AudioRecord.ERROR:
-                                    throw new RuntimeException("AudioRecord.ERROR");
-                                case AudioRecord.ERROR_BAD_VALUE:
-                                    throw new RuntimeException("AudioRecord.ERROR_BAD_VALUE");
-                                case AudioRecord.ERROR_INVALID_OPERATION:
-                                    throw new RuntimeException("AudioRecord.ERROR_INVALID_OPERATION");
-                                case AudioRecord.ERROR_DEAD_OBJECT:
-                                    throw new RuntimeException("AudioRecord.ERROR_DEAD_OBJECT");
-                            }
-                            break;
+                            AudioRecorder.throwError(readSize);
+                            return;
                         }
                         long end = System.currentTimeMillis();
 
