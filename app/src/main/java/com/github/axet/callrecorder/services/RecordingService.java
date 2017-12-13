@@ -32,7 +32,6 @@ import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
-import com.github.axet.audiolibrary.app.AudioRecorder;
 import com.github.axet.audiolibrary.app.RawSamples;
 import com.github.axet.audiolibrary.app.Sound;
 import com.github.axet.audiolibrary.encoders.Encoder;
@@ -367,7 +366,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 
-        sampleRate = AudioRecorder.getSampleRate(this);
+        sampleRate = Sound.getSampleRate(this);
 
         shared.registerOnSharedPreferenceChangeListener(this);
 
@@ -716,9 +715,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         if (i == -1)
             i = 0;
         else
-            i = AudioRecorder.indexOf(ss, i);
+            i = Sound.indexOf(ss, i);
 
-        final AudioRecord recorder = AudioRecorder.createAudioRecorder(this, sampleRate, ss, i);
+        final AudioRecord recorder = Sound.createAudioRecorder(this, sampleRate, ss, i);
         source = recorder.getAudioSource();
 
         final Thread old = thread;
@@ -753,7 +752,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     while (!Thread.currentThread().isInterrupted()) {
                         final int readSize = recorder.read(buffer, 0, buffer.length);
                         if (readSize < 0) {
-                            AudioRecorder.throwError(readSize);
+                            Sound.throwError(readSize);
                             return;
                         }
                         long end = System.currentTimeMillis();
@@ -762,7 +761,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                         start = end;
 
-                        int samples = readSize / MainApplication.getChannels(RecordingService.this);
+                        int samples = readSize / Sound.getChannels(RecordingService.this);
 
                         if (stableRefresh || diff >= samples) {
                             stableRefresh = true;
@@ -793,7 +792,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     EncoderInfo getInfo() {
-        final int channels = MainApplication.getChannels(this);
+        final int channels = Sound.getChannels(this);
         final int bps = Sound.DEFAULT_AUDIOFORMAT == AudioFormat.ENCODING_PCM_16BIT ? 16 : 8;
         return new EncoderInfo(channels, sampleRate, bps);
     }
