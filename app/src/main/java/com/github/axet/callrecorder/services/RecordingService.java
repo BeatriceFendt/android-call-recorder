@@ -777,7 +777,17 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                     while (!Thread.currentThread().isInterrupted()) {
                         final int readSize = recorder.read(buffer, 0, buffer.length);
-                        if (readSize <= 0) {
+                        if (readSize < 0) {
+                            switch (readSize) {
+                                case AudioRecord.ERROR:
+                                    throw new RuntimeException("AudioRecord.ERROR");
+                                case AudioRecord.ERROR_BAD_VALUE:
+                                    throw new RuntimeException("AudioRecord.ERROR_BAD_VALUE");
+                                case AudioRecord.ERROR_INVALID_OPERATION:
+                                    throw new RuntimeException("AudioRecord.ERROR_INVALID_OPERATION");
+                                case AudioRecord.ERROR_DEAD_OBJECT:
+                                    throw new RuntimeException("AudioRecord.ERROR_DEAD_OBJECT");
+                            }
                             break;
                         }
                         long end = System.currentTimeMillis();
