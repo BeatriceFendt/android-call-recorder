@@ -69,10 +69,10 @@
     <string name="task_managers_text">Если ваш телефон оптимизирует батарею или испольует другие менеджеры памяти включите программу в белый список, чтобы она продолжара работать в фоновом режиме и все звонки были записаны.</string>
     <string name="recording_enabled">Запись включена</string>
     <string name="recording_disabled">Запись выключена</string>
-    <string name="callrecent_auto_save">Auto save in (%1$d)</string>
-    <string name="save">Save</string>
+    <string name="callrecent_auto_save">Авто сохранение через (%1$d)</string>
     <string name="calls_out">Вх.</string>
     <string name="calls_in">Ис.</string>
+    <string name="save_button">Сохранить</string>
 
     <string name="pref_storage_title">Папка для хранения</string>
     <string name="pref_source_title">Источник</string>

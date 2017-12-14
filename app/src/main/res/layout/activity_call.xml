@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="5dp"
-    tools:context="com.github.axet.callrecorder.activities.CallActivity">
+    tools:context="com.github.axet.callrecorder.activities.RecentCallActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -46,7 +46,7 @@
             android:id="@+id/callrecent_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/save" />
+            android:text="@string/save_button" />
     </LinearLayout>
 
     <FrameLayout

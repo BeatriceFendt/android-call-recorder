@@ -40,7 +40,7 @@ import com.github.axet.audiolibrary.encoders.EncoderInfo;
 import com.github.axet.audiolibrary.encoders.Factory;
 import com.github.axet.audiolibrary.encoders.FileEncoder;
 import com.github.axet.callrecorder.R;
-import com.github.axet.callrecorder.activities.CallActivity;
+import com.github.axet.callrecorder.activities.RecentCallActivity;
 import com.github.axet.callrecorder.activities.MainActivity;
 import com.github.axet.callrecorder.activities.SettingsActivity;
 import com.github.axet.callrecorder.app.MainApplication;
@@ -204,9 +204,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 }
                 if (a.equals(RENAME_BUTTON)) {
                     Uri uri = intent.getParcelableExtra("uri");
-                    CallActivity.startActivity(context, uri, false);
+                    RecentCallActivity.startActivity(context, uri, false);
                     Done d = find(uri);
-                    d.count = CallActivity.AUTO_CLOSE; // cancel notify
+                    d.count = RecentCallActivity.AUTO_CLOSE; // cancel notify
                     d.stop = false; // continue counting and remove notify
                     Intent closeIntent = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     context.sendBroadcast(closeIntent); // close notification bar drawer
@@ -523,7 +523,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }
     }
 
-    public String getSource() {
+    public String getSourceText() {
         switch (source) {
             case MediaRecorder.AudioSource.VOICE_UPLINK:
                 return "(VOICE_UPLINK)";
@@ -573,7 +573,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     R.layout.notifictaion_recording_light,
                     R.layout.notifictaion_recording_dark));
 
-            String title = encoding != null ? getString(R.string.encoding_title) : (getString(R.string.recording_title) + " " + getSource());
+            String title = encoding != null ? getString(R.string.encoding_title) : (getString(R.string.recording_title) + " " + getSourceText());
             String text = ".../" + Storage.getDocumentName(targetUri);
 
             title = title.trim();
@@ -582,7 +582,12 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             view.setTextViewText(R.id.notification_title, title);
             view.setTextViewText(R.id.notification_text, text);
             view.setOnClickPendingIntent(R.id.notification_pause, pe);
-            view.setImageViewResource(R.id.notification_pause, thread == null ? R.drawable.ic_play_arrow_black_24dp : R.drawable.ic_pause_black_24dp);
+            if (play == null) {
+                view.setViewVisibility(R.id.notification_pause, View.GONE);
+            } else {
+                view.setViewVisibility(R.id.notification_pause, View.VISIBLE);
+                view.setImageViewResource(R.id.notification_pause, play ? R.drawable.ic_play_arrow_black_24dp : R.drawable.ic_pause_black_24dp);
+            }
             view.setViewVisibility(R.id.notification_record, View.GONE);
 
             if (encoding != null)
@@ -614,7 +619,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         dones.add(new Done(targetUri));
 
-        CallActivity.startActivity(this, targetUri, true);
+        RecentCallActivity.startActivity(this, targetUri, true);
 
         updateDones();
     }
@@ -638,7 +643,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
     // return true - keep updating
     boolean updateDone(int pos, Done d) {
-        int c = CallActivity.AUTO_CLOSE - d.count;
+        int c = RecentCallActivity.AUTO_CLOSE - d.count;
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
@@ -836,6 +841,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             final MediaRecorder recorder = new MediaRecorder();
             recorder.setAudioChannels(Sound.getChannels(this));
             recorder.setAudioSource(ss[i]);
+            recorder.setAudioEncodingBitRate(Factory.getBitrate(sampleRate));
 
             source = ss[i];
 
