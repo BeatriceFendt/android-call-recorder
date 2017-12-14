@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 
+import com.github.axet.audiolibrary.encoders.Factory;
 import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
 
@@ -25,6 +26,8 @@ public class NameFormatPreferenceCompat extends com.github.axet.androidlibrary.w
     public String getFormatted(String str) {
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(getContext());
         String ext = shared.getString(com.github.axet.audiolibrary.app.MainApplication.PREFERENCE_ENCODING, "");
+        if (ext.startsWith(Factory.EXT_3GP))
+            ext = Factory.EXT_3GP; // replace "3gp16" -> "3gp"
         return Storage.getFormatted(str, 1512340435083l, "+1 (334) 333-33-33", "Contact Name", MainApplication.CALL_IN) + "." + ext;
     }
 }

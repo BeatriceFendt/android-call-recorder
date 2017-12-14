@@ -2,20 +2,17 @@ package com.github.axet.callrecorder.activities;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.Uri;
 import android.preference.PreferenceManager;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
-import com.github.axet.androidlibrary.widgets.ThemeUtils;
-import com.github.axet.audiolibrary.app.Storage;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
+import com.github.axet.callrecorder.app.Storage;
 
 import java.util.TreeSet;
 
@@ -28,6 +25,11 @@ public class Recordings extends com.github.axet.audiolibrary.app.Recordings {
 
     public Recordings(Context context, ListView list) {
         super(context, list);
+    }
+
+    @Override
+    public String[] getEncodingValues() {
+        return Storage.getEncodingValues(getContext());
     }
 
     @Override
