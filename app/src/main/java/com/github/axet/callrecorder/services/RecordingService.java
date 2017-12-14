@@ -719,7 +719,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             i = Sound.indexOf(ss, i);
 
         String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
-        if (ext.startsWith(Factory.EXT_3GP) || ext.equals(Factory.EXT_AAC)) {
+        if (Storage.isMediaRecorder(ext)) {
             startMediaRecorder(ext, ss, i);
         } else {
             startAudioRecorder(ss, i);
@@ -822,20 +822,35 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             final MediaRecorder recorder = new MediaRecorder();
             recorder.setAudioSource(ss[i]);
             switch (ext) {
-                case Factory.EXT_3GP:
+                case Storage.EXT_3GP:
                     recorder.setAudioSamplingRate(8192);
                     recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
                     recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
                     break;
-                case Factory.EXT_3GP16:
+                case Storage.EXT_3GP16:
                     recorder.setAudioSamplingRate(16384);
                     recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
                     recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB);
                     break;
-                case Factory.EXT_AAC:
+                case Storage.EXT_AAC:
                     recorder.setAudioSamplingRate(sampleRate);
                     recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
                     recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                    break;
+                case Storage.EXT_AACHE:
+                    recorder.setAudioSamplingRate(sampleRate);
+                    recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.HE_AAC);
+                    break;
+                case Storage.EXT_AACELD:
+                    recorder.setAudioSamplingRate(sampleRate);
+                    recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC_ELD);
+                    break;
+                case Storage.EXT_WEBM:
+                    recorder.setAudioSamplingRate(sampleRate);
+                    recorder.setOutputFormat(MediaRecorder.OutputFormat.WEBM);
+                    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.VORBIS);
                     break;
                 default:
                     recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
@@ -1011,9 +1026,14 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         });
     }
 
-    void Post(final Throwable e) {
+    void Post(Throwable e) {
         Log.e(TAG, Log.getStackTraceString(e));
-        Post("AudioRecord error: " + e.getMessage());
+        while (e.getCause() != null)
+            e = e.getCause();
+        String msg = e.getMessage();
+        if (msg == null || msg.isEmpty())
+            msg = e.getClass().getSimpleName();
+        Post("AudioRecord error: " + msg);
     }
 
     void Post(final String msg) {
