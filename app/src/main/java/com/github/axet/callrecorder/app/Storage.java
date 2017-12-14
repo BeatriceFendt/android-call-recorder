@@ -28,11 +28,11 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
     public static CharSequence[] getEncodingTexts(Context context) {
         CharSequence[] ee = Factory.getEncodingTexts(context);
         ArrayList<CharSequence> ll = new ArrayList<>(Arrays.asList(ee));
-        ll.add(".3gp (MediaRecorder AMRNB 8kHz)");
+        ll.add(".3gp (MediaRecorder)"); // AMRNB 8kHz
 //        if (Build.VERSION.SDK_INT >= 10)
 //            ll.add(".3gp (MediaRecorder AMRWB 16kHz)");
         if (Build.VERSION.SDK_INT >= 10)
-            ll.add(".aac (MediaRecorder AAC)");
+            ll.add(".aac (MediaRecorder)");
 //        if (Build.VERSION.SDK_INT >= 16)
 //            ll.add(".aac (MediaRecorder AACHE)");
 //        if (Build.VERSION.SDK_INT >= 16)
