@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     View fab_panel;
     TextView status;
     boolean show;
-    boolean play;
+    Boolean play;
     int encoding;
     String phone;
     long sec;
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             if (a.equals(SHOW_PROGRESS)) {
                 encoding = -1;
                 show = intent.getBooleanExtra("show", false);
-                play = intent.getBooleanExtra("play", false);
+                play = (Boolean) intent.getExtras().get("play");
                 sec = intent.getLongExtra("sec", 0);
                 phone = intent.getStringExtra("phone");
                 updatePanel();
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     };
 
-    public static void showProgress(Context context, boolean show, String phone, long sec, boolean play) {
+    public static void showProgress(Context context, boolean show, String phone, long sec, Boolean play) {
         Intent intent = new Intent(SHOW_PROGRESS);
         intent.putExtra("show", show);
         intent.putExtra("play", play);
@@ -484,7 +484,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             fab.setVisibility(show ? View.VISIBLE : View.GONE);
             fab_stop.setVisibility(View.VISIBLE);
         }
-        if (play) {
+        if (play == null) {
+            fab.setVisibility(View.GONE);
+        } else if (play) {
             fab.setImageResource(R.drawable.ic_pause_black_24dp);
         } else {
             fab.setImageResource(R.drawable.ic_play_arrow_black_24dp);

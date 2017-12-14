@@ -29,16 +29,16 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         CharSequence[] ee = Factory.getEncodingTexts(context);
         ArrayList<CharSequence> ll = new ArrayList<>(Arrays.asList(ee));
         ll.add(".3gp (MediaRecorder AMRNB 8kHz)");
-        if (Build.VERSION.SDK_INT >= 10)
-            ll.add(".3gp (MediaRecorder AMRWB 16kHz)");
+//        if (Build.VERSION.SDK_INT >= 10)
+//            ll.add(".3gp (MediaRecorder AMRWB 16kHz)");
         if (Build.VERSION.SDK_INT >= 10)
             ll.add(".aac (MediaRecorder AAC)");
-        if (Build.VERSION.SDK_INT >= 16)
-            ll.add(".aac (MediaRecorder AACHE)");
-        if (Build.VERSION.SDK_INT >= 16)
-            ll.add(".aac (MediaRecorder AACELD)");
-        if (Build.VERSION.SDK_INT >= 21)
-            ll.add(".webm (MediaRecorder WEBM)");
+//        if (Build.VERSION.SDK_INT >= 16)
+//            ll.add(".aac (MediaRecorder AACHE)");
+//        if (Build.VERSION.SDK_INT >= 16)
+//            ll.add(".aac (MediaRecorder AACELD)");
+//        if (Build.VERSION.SDK_INT >= 21)
+//            ll.add(".webm (MediaRecorder WEBM)");
         return ll.toArray(new CharSequence[]{});
     }
 
@@ -46,16 +46,16 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         String[] ee = Factory.getEncodingValues(context);
         ArrayList<String> ll = new ArrayList<>(Arrays.asList(ee));
         ll.add(EXT_3GP);
-        if (Build.VERSION.SDK_INT >= 10)
-            ll.add(EXT_3GP16);
+//        if (Build.VERSION.SDK_INT >= 10)
+//            ll.add(EXT_3GP16);
         if (Build.VERSION.SDK_INT >= 10)
             ll.add(EXT_AAC);
-        if (Build.VERSION.SDK_INT >= 16)
-            ll.add(EXT_AACHE);
-        if (Build.VERSION.SDK_INT >= 16)
-            ll.add(EXT_AACELD);
-        if (Build.VERSION.SDK_INT >= 21)
-            ll.add(EXT_WEBM);
+//        if (Build.VERSION.SDK_INT >= 16)
+//            ll.add(EXT_AACHE);
+//        if (Build.VERSION.SDK_INT >= 16)
+//            ll.add(EXT_AACELD);
+//        if (Build.VERSION.SDK_INT >= 21)
+//            ll.add(EXT_WEBM);
         return ll.toArray(new String[]{});
     }
 
