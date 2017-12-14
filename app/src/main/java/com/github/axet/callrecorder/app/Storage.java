@@ -18,6 +18,13 @@ import java.util.Date;
 public class Storage extends com.github.axet.audiolibrary.app.Storage {
     public static String TAG = Storage.class.getSimpleName();
 
+    public static final String EXT_3GP = "3gp";
+    public static final String EXT_3GP16 = "3gp16";
+    public static final String EXT_AAC = "aac";
+    public static final String EXT_AACHE = "aache";
+    public static final String EXT_AACELD = "aaceld";
+    public static final String EXT_WEBM = "webm";
+
     public static CharSequence[] getEncodingTexts(Context context) {
         CharSequence[] ee = Factory.getEncodingTexts(context);
         ArrayList<CharSequence> ll = new ArrayList<>(Arrays.asList(ee));
@@ -26,18 +33,51 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
             ll.add(".3gp (MediaRecorder AMRWB 16kHz)");
         if (Build.VERSION.SDK_INT >= 10)
             ll.add(".aac (MediaRecorder AAC)");
+        if (Build.VERSION.SDK_INT >= 16)
+            ll.add(".aac (MediaRecorder AACHE)");
+        if (Build.VERSION.SDK_INT >= 16)
+            ll.add(".aac (MediaRecorder AACELD)");
+        if (Build.VERSION.SDK_INT >= 21)
+            ll.add(".webm (MediaRecorder WEBM)");
         return ll.toArray(new CharSequence[]{});
     }
 
     public static String[] getEncodingValues(Context context) {
         String[] ee = Factory.getEncodingValues(context);
         ArrayList<String> ll = new ArrayList<>(Arrays.asList(ee));
-        ll.add("3gp");
+        ll.add(EXT_3GP);
         if (Build.VERSION.SDK_INT >= 10)
-            ll.add("3gp16");
+            ll.add(EXT_3GP16);
         if (Build.VERSION.SDK_INT >= 10)
-            ll.add("aac");
+            ll.add(EXT_AAC);
+        if (Build.VERSION.SDK_INT >= 16)
+            ll.add(EXT_AACHE);
+        if (Build.VERSION.SDK_INT >= 16)
+            ll.add(EXT_AACELD);
+        if (Build.VERSION.SDK_INT >= 21)
+            ll.add(EXT_WEBM);
         return ll.toArray(new String[]{});
+    }
+
+    public static boolean isMediaRecorder(String ext) {
+        switch (ext) {
+            case EXT_3GP:
+            case EXT_3GP16:
+            case EXT_AAC:
+            case EXT_AACHE:
+            case EXT_AACELD:
+            case EXT_WEBM:
+                return true;
+        }
+        return false;
+    }
+
+    public static String filterMediaRecorder(String ext) {
+        if (ext.startsWith(EXT_3GP))
+            ext = EXT_3GP; // replace "3gp16" -> "3gp"
+        if (ext.startsWith(EXT_AAC))
+            ext = EXT_AAC; // replace "aache" / "aaceld" -> "aac"
+        return ext;
     }
 
     public static String getFormatted(String format, long now, String phone, String contact, String call) {
@@ -119,9 +159,7 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
     public Uri getNewFile(long now, String phone, String contact, String call) {
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
         String ext = shared.getString(com.github.axet.audiolibrary.app.MainApplication.PREFERENCE_ENCODING, "");
-
-        if (ext.startsWith(Factory.EXT_3GP))
-            ext = Factory.EXT_3GP; // replace 3gp16 -> 3gp
+        ext = filterMediaRecorder(ext);
 
         String format = "%s";
         format = shared.getString(MainApplication.PREFERENCE_FORMAT, format);
