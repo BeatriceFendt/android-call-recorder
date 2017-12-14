@@ -29,7 +29,6 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -52,7 +51,6 @@ import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -547,7 +545,16 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     public void showNotificationAlarm(boolean show) {
-        MainActivity.showProgress(RecordingService.this, show, phone, samplesTime / sampleRate, thread != null);
+        Boolean play;
+        if (thread != null) {
+            if (thread.getName().equals("MediaRecorder"))
+                play = null;
+            else
+                play = true;
+        } else {
+            play = false;
+        }
+        MainActivity.showProgress(RecordingService.this, show, phone, samplesTime / sampleRate, play);
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
@@ -827,7 +834,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             }
 
             final MediaRecorder recorder = new MediaRecorder();
+            recorder.setAudioChannels(Sound.getChannels(this));
             recorder.setAudioSource(ss[i]);
+
+            source = ss[i];
+
             switch (ext) {
                 case Storage.EXT_3GP:
                     recorder.setAudioSamplingRate(8192);
@@ -860,6 +871,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     recorder.setAudioEncoder(MediaRecorder.AudioEncoder.VORBIS);
                     break;
                 default:
+                    recorder.setAudioSamplingRate(sampleRate);
                     recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
                     recorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
             }
@@ -911,8 +923,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         recorder.start();
                         start = true;
                         while (!Thread.currentThread().isInterrupted()) {
-                            samplesTime += 1000;
                             Thread.sleep(1000);
+                            samplesTime += sampleRate * 1000 / 1000; // per 1 second
+                            MainActivity.showProgress(RecordingService.this, true, phone, samplesTime / sampleRate, null);
                         }
                     } catch (RuntimeException e) {
                         Post(e);
@@ -930,7 +943,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                     handle.post(save);
                 }
-            });
+            }, "MediaRecorder");
             thread.start();
         } catch (IOException e) {
             throw new RuntimeException(e);
