@@ -1026,9 +1026,14 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         });
     }
 
-    void Post(final Throwable e) {
+    void Post(Throwable e) {
         Log.e(TAG, Log.getStackTraceString(e));
-        Post("AudioRecord error: " + e.getMessage());
+        while (e.getCause() != null)
+            e = e.getCause();
+        String msg = e.getMessage();
+        if (msg == null || msg.isEmpty())
+            msg = e.getClass().getSimpleName();
+        Post("AudioRecord error: " + msg);
     }
 
     void Post(final String msg) {
