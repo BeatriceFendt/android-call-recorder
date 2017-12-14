@@ -104,7 +104,7 @@
     <string name="recording_list_is_empty">Recording List is Empty\n\nCheck \'Calls Recording\' to Start Recording Calls</string>
     <string name="source_default">(Default)</string>
     <string name="source_mic">(Mic)</string>
-    <string name="source_line">(Source Line)</string>
+    <string name="source_line">(Voice Line)</string>
     <string name="call_recordings_support">Call Recordings support</string>
     <string name="call_recordings_support_text">Most phones does not support call recording, to enable Call Recording install open-source firmware.</string>
     <string name="recordings_quality">Recordings Quality</string>
@@ -114,7 +114,6 @@
     <string name="recording_enabled">Recording enabled</string>
     <string name="recording_disabled">Recording disabled</string>
     <string name="callrecent_auto_save">Auto save in (%1$d)</string>
-    <string name="save">Save</string>
     <string name="calls_out">Out</string>
     <string name="calls_in">In</string>
 
@@ -134,4 +133,5 @@
     <string name="pref_optimization_summary">Prevent app to be removed from memory</string>
     <string name="pref_theme_title">Application Theme</string>
     <string name="pref_theme_summary">Set application theme (dark / light)</string>
+    <string name="save_button">Save</string>
 </resources>

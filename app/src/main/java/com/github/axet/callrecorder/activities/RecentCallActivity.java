@@ -32,7 +32,7 @@ import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
 
-public class CallActivity extends AppCompatActivity {
+public class RecentCallActivity extends AppCompatActivity {
 
     public static int AUTO_CLOSE = 5; // secs
 
@@ -57,8 +57,9 @@ public class CallActivity extends AppCompatActivity {
     AlertDialog alertDialog;
 
     public static void startActivity(Context context, Uri targetUri, boolean count) {
-        Intent intent = new Intent(context, CallActivity.class);
+        Intent intent = new Intent(context, RecentCallActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS); // prevent user to return to this activity from recents
         intent.putExtra("uri", targetUri);
         intent.putExtra("count", count);
         context.startActivity(intent);
@@ -115,8 +116,8 @@ public class CallActivity extends AppCompatActivity {
         fav.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean b = MainApplication.getStar(CallActivity.this, uri);
-                MainApplication.setStar(CallActivity.this, uri, !b);
+                boolean b = MainApplication.getStar(RecentCallActivity.this, uri);
+                MainApplication.setStar(RecentCallActivity.this, uri, !b);
                 updateFav();
             }
         });
@@ -124,7 +125,7 @@ public class CallActivity extends AppCompatActivity {
         alertDialog = new AlertDialog.Builder(this, getAppTheme())
                 .setTitle(R.string.app_name)
                 .setIcon(R.drawable.ic_mic_24dp)
-                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.save_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         save();
@@ -373,7 +374,7 @@ public class CallActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 storage.delete(uri);
-                MainActivity.last(CallActivity.this);
+                MainActivity.last(RecentCallActivity.this);
                 alertDialog.dismiss();
             }
         });

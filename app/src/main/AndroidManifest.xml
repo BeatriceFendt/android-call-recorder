@@ -58,7 +58,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.CallActivity"
+            android:name=".activities.RecentCallActivity"
             android:label="@string/app_name"
             android:theme="@style/NoDisplay"></activity>
 

@@ -87,7 +87,7 @@
     <string name="pref_optimization_summary">アプリがメモリーから削除されるのを防止します</string>
     <string name="pref_theme_title">アプリケーションのテーマ</string>
     <string name="pref_theme_summary">アプリケーションのテーマを設定します (ダーク / ライト)</string>
-    <string name="save">Save</string>
     <string name="calls_out">Out</string>
     <string name="calls_in">In</string>
+    <string name="save_button">Save</string>
 </resources>
