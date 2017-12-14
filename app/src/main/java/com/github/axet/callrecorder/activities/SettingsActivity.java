@@ -246,8 +246,8 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
             ListPreference enc = (ListPreference) manager.findPreference(MainApplication.PREFERENCE_ENCODING);
             String v = enc.getValue();
-            CharSequence[] ee = Factory.getEncodingTexts(context);
-            CharSequence[] vv = Factory.getEncodingValues(context);
+            CharSequence[] ee = Storage.getEncodingTexts(context);
+            CharSequence[] vv = Storage.getEncodingValues(context);
             if (ee.length > 1) {
                 enc.setEntries(ee);
                 enc.setEntryValues(vv);

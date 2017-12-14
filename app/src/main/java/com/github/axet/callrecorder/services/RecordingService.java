@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
@@ -46,6 +47,9 @@ import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -699,9 +703,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     void startRecording() {
-        final RawSamples rs = new RawSamples(storage.getTempRecording());
-        rs.open(samplesTime);
-
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 
         int[] ss = new int[]{
@@ -716,6 +717,20 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             i = 0;
         else
             i = Sound.indexOf(ss, i);
+
+        String ext = shared.getString(MainApplication.PREFERENCE_ENCODING, "");
+        if (ext.startsWith(Factory.EXT_3GP) || ext.equals(Factory.EXT_AAC)) {
+            startMediaRecorder(ext, ss, i);
+        } else {
+            startAudioRecorder(ss, i);
+        }
+
+        showNotificationAlarm(true);
+    }
+
+    void startAudioRecorder(int[] ss, int i) {
+        final RawSamples rs = new RawSamples(storage.getTempRecording());
+        rs.open(samplesTime);
 
         final AudioRecord recorder = Sound.createAudioRecorder(this, sampleRate, ss, i);
         source = recorder.getAudioSource();
@@ -745,7 +760,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     // how many samples we need to update 'samples'. time clock. every 1000ms.
                     int samplesTimeUpdate = 1000 / 1000 * sampleRate;
 
-                    short[] buffer = new short[1000];
+                    short[] buffer = new short[100 * sampleRate / 1000 * Sound.getChannels(RecordingService.this)];
 
                     boolean stableRefresh = false;
 
@@ -787,8 +802,111 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             }
         }, "RecordingThread");
         thread.start();
+    }
 
-        showNotificationAlarm(true);
+    void startMediaRecorder(String ext, int[] ss, int i) {
+        try {
+            final CallInfo info = new CallInfo(targetUri, phone, contact, contactId, call, now);
+            FileDescriptor fd;
+            String s = info.targetUri.getScheme();
+            if (s.equals(ContentResolver.SCHEME_CONTENT)) {
+                ContentResolver resolver = getContentResolver();
+                ParcelFileDescriptor pfd = resolver.openFileDescriptor(info.targetUri, "rw");
+                fd = pfd.getFileDescriptor();
+            } else {
+                File f = new File(info.targetUri.getPath());
+                FileOutputStream os = new FileOutputStream(f);
+                fd = os.getFD();
+            }
+
+            final MediaRecorder recorder = new MediaRecorder();
+            recorder.setAudioSource(ss[i]);
+            switch (ext) {
+                case Factory.EXT_3GP:
+                    recorder.setAudioSamplingRate(8192);
+                    recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+                    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+                    break;
+                case Factory.EXT_3GP16:
+                    recorder.setAudioSamplingRate(16384);
+                    recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+                    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB);
+                    break;
+                case Factory.EXT_AAC:
+                    recorder.setAudioSamplingRate(sampleRate);
+                    recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                    break;
+                default:
+                    recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
+                    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+            }
+            recorder.setOutputFile(fd);
+            recorder.setOnErrorListener(new MediaRecorder.OnErrorListener() {
+                @Override
+                public void onError(MediaRecorder mr, int what, int extra) {
+                    Log.d(TAG, "MediaRecorder error" + what + " " + extra);
+                    stopRecording();
+                }
+            });
+            recorder.prepare();
+            final Thread old = thread;
+
+            thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (old != null) {
+                        old.interrupt();
+                        try {
+                            old.join();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            return;
+                        }
+                    }
+
+                    Runnable done = new Runnable() {
+                        @Override
+                        public void run() {
+                            deleteOld();
+                            showNotificationAlarm(false);
+                        }
+                    };
+
+                    Runnable save = new Runnable() {
+                        @Override
+                        public void run() {
+                            MainApplication.setContact(RecordingService.this, info.targetUri, info.contactId);
+                            MainApplication.setCall(RecordingService.this, info.targetUri, info.call);
+                            MainActivity.last(RecordingService.this);
+                            showDone(info.targetUri);
+                        }
+                    };
+
+                    try {
+                        Thread.sleep(2000);
+                        recorder.start();
+                        while (!Thread.currentThread().isInterrupted()) {
+                            samplesTime += 1000;
+                            Thread.sleep(1000);
+                        }
+                    } catch (RuntimeException e) {
+                        Post(e);
+                        return; // no save
+                    } catch (InterruptedException e) {
+                        ;
+                    } finally {
+                        handle.post(done);
+                        recorder.release();
+                    }
+
+                    handle.post(save);
+                }
+            });
+            thread.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     EncoderInfo getInfo() {
@@ -979,6 +1097,9 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             } else {
                 encoder.resume();
             }
+        } else { // if encoding failed, we will get no output file, hide notifications
+            deleteOld();
+            showNotificationAlarm(false);
         }
     }
 

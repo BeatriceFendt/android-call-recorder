@@ -1,29 +1,43 @@
 package com.github.axet.callrecorder.app;
 
-import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import android.provider.BaseColumns;
-import android.provider.ContactsContract;
-import android.provider.DocumentsContract;
-import android.util.Log;
+
+import com.github.axet.audiolibrary.encoders.Factory;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 public class Storage extends com.github.axet.audiolibrary.app.Storage {
     public static String TAG = Storage.class.getSimpleName();
 
-    public Storage(Context context) {
-        super(context);
+    public static CharSequence[] getEncodingTexts(Context context) {
+        CharSequence[] ee = Factory.getEncodingTexts(context);
+        ArrayList<CharSequence> ll = new ArrayList<>(Arrays.asList(ee));
+        ll.add(".3gp (MediaRecorder AMRNB 8kHz)");
+        if (Build.VERSION.SDK_INT >= 10)
+            ll.add(".3gp (MediaRecorder AMRWB 16kHz)");
+        if (Build.VERSION.SDK_INT >= 10)
+            ll.add(".aac (MediaRecorder AAC)");
+        return ll.toArray(new CharSequence[]{});
+    }
+
+    public static String[] getEncodingValues(Context context) {
+        String[] ee = Factory.getEncodingValues(context);
+        ArrayList<String> ll = new ArrayList<>(Arrays.asList(ee));
+        ll.add("3gp");
+        if (Build.VERSION.SDK_INT >= 10)
+            ll.add("3gp16");
+        if (Build.VERSION.SDK_INT >= 10)
+            ll.add("aac");
+        return ll.toArray(new String[]{});
     }
 
     public static String getFormatted(String format, long now, String phone, String contact, String call) {
@@ -66,6 +80,10 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
         return format;
     }
 
+    public Storage(Context context) {
+        super(context);
+    }
+
     public boolean recordingNextPending() {
         File tmp = getTempRecording();
         if (tmp.exists())
@@ -101,6 +119,9 @@ public class Storage extends com.github.axet.audiolibrary.app.Storage {
     public Uri getNewFile(long now, String phone, String contact, String call) {
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(context);
         String ext = shared.getString(com.github.axet.audiolibrary.app.MainApplication.PREFERENCE_ENCODING, "");
+
+        if (ext.startsWith(Factory.EXT_3GP))
+            ext = Factory.EXT_3GP; // replace 3gp16 -> 3gp
 
         String format = "%s";
         format = shared.getString(MainApplication.PREFERENCE_FORMAT, format);
