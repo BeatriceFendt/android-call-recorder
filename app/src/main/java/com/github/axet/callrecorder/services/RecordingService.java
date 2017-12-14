@@ -29,6 +29,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -809,9 +810,15 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             final CallInfo info = new CallInfo(targetUri, phone, contact, contactId, call, now);
             FileDescriptor fd;
             String s = info.targetUri.getScheme();
-            if (s.equals(ContentResolver.SCHEME_CONTENT)) {
+            if (Build.VERSION.SDK_INT >= 21 && s.equals(ContentResolver.SCHEME_CONTENT)) {
                 ContentResolver resolver = getContentResolver();
-                ParcelFileDescriptor pfd = resolver.openFileDescriptor(info.targetUri, "rw");
+                Uri root = Storage.getDocumentTreeUri(info.targetUri);
+                resolver.takePersistableUriPermission(root, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                String path = Storage.getDocumentChildPath(info.targetUri);
+                Uri out = storage.createFile(root, path);
+                if (out == null)
+                    throw new RuntimeException("Unable to create file, permissions?");
+                ParcelFileDescriptor pfd = resolver.openFileDescriptor(out, "rw");
                 fd = pfd.getFileDescriptor();
             } else {
                 File f = new File(info.targetUri.getPath());
@@ -898,9 +905,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         }
                     };
 
+                    boolean start = false;
                     try {
                         Thread.sleep(2000);
                         recorder.start();
+                        start = true;
                         while (!Thread.currentThread().isInterrupted()) {
                             samplesTime += 1000;
                             Thread.sleep(1000);
@@ -912,8 +921,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         ;
                     } finally {
                         handle.post(done);
-                        recorder.stop();
-                        recorder.reset();
+                        if (start) {
+                            recorder.stop();
+                            recorder.reset();
+                        }
                         recorder.release();
                     }
 
