@@ -912,6 +912,8 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         ;
                     } finally {
                         handle.post(done);
+                        recorder.stop();
+                        recorder.reset();
                         recorder.release();
                     }
 
