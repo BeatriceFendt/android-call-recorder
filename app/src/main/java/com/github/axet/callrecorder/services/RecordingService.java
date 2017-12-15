@@ -556,16 +556,16 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     }
 
     public void showNotificationAlarm(boolean show) {
-        Boolean play;
+        Boolean recording; // recording active == true (play (true) == pause button)
         if (thread != null) {
             if (thread instanceof MediaRecorderThread)
-                play = null; // MediaRecorder has no support for pause, hide pause button
+                recording = null; // MediaRecorder has no support for pause, hide pause button
             else
-                play = true; // AudioRecord support for pause
+                recording = true; // AudioRecord support for pause
         } else {
-            play = false;
+            recording = false;
         }
-        MainActivity.showProgress(RecordingService.this, show, phone, samplesTime / sampleRate, play);
+        MainActivity.showProgress(RecordingService.this, show, phone, samplesTime / sampleRate, recording);
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
@@ -593,11 +593,11 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             view.setTextViewText(R.id.notification_title, title);
             view.setTextViewText(R.id.notification_text, text);
             view.setOnClickPendingIntent(R.id.notification_pause, pe);
-            if (play == null) {
+            if (recording == null) {
                 view.setViewVisibility(R.id.notification_pause, View.GONE);
             } else {
                 view.setViewVisibility(R.id.notification_pause, View.VISIBLE);
-                view.setImageViewResource(R.id.notification_pause, play ? R.drawable.ic_pause_black_24dp : R.drawable.ic_play_arrow_black_24dp);
+                view.setImageViewResource(R.id.notification_pause, recording ? R.drawable.ic_pause_black_24dp : R.drawable.ic_play_arrow_black_24dp);
             }
             view.setViewVisibility(R.id.notification_record, View.GONE);
 
@@ -761,7 +761,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
         final Thread old = thread;
 
-        thread = new Thread(new Runnable() {
+        thread = new Thread("RecordingThread") {
             @Override
             public void run() {
                 if (old != null) {
@@ -823,7 +823,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         recorder.release();
                 }
             }
-        }, "RecordingThread");
+        };
         thread.start();
     }
 
