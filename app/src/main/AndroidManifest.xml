@@ -59,7 +59,11 @@
         </activity>
         <activity
             android:name=".activities.RecentCallActivity"
+            android:excludeFromRecents="true"
             android:label="@string/app_name"
+            android:launchMode="singleInstance"
+            android:noHistory="true"
+            android:taskAffinity="com.github.axet.callrecorder.hide"
             android:theme="@style/NoDisplay"></activity>
 
         <provider
