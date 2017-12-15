@@ -114,6 +114,17 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         }
     };
 
+    public static class MediaRecorderThread extends Thread {
+        public MediaRecorderThread() {
+            super("RecordingThread");
+        }
+
+        @Override
+        public void run() {
+            super.run();
+        }
+    }
+
     public static void startService(Context context) {
         context.startService(new Intent(context, RecordingService.class));
     }
@@ -547,10 +558,10 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     public void showNotificationAlarm(boolean show) {
         Boolean play;
         if (thread != null) {
-            if (thread.getName().equals("MediaRecorder"))
-                play = null;
+            if (thread instanceof MediaRecorderThread)
+                play = null; // MediaRecorder has no support for pause, hide pause button
             else
-                play = true;
+                play = true; // AudioRecord support for pause
         } else {
             play = false;
         }
@@ -586,7 +597,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 view.setViewVisibility(R.id.notification_pause, View.GONE);
             } else {
                 view.setViewVisibility(R.id.notification_pause, View.VISIBLE);
-                view.setImageViewResource(R.id.notification_pause, play ? R.drawable.ic_play_arrow_black_24dp : R.drawable.ic_pause_black_24dp);
+                view.setImageViewResource(R.id.notification_pause, play ? R.drawable.ic_pause_black_24dp : R.drawable.ic_play_arrow_black_24dp);
             }
             view.setViewVisibility(R.id.notification_record, View.GONE);
 
@@ -780,7 +791,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                     while (!Thread.currentThread().isInterrupted()) {
                         final int readSize = recorder.read(buffer, 0, buffer.length);
                         if (readSize < 0) {
-                            Sound.throwError(readSize);
                             return;
                         }
                         long end = System.currentTimeMillis();
@@ -892,7 +902,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
             recorder.prepare();
             final Thread old = thread;
 
-            thread = new Thread(new Runnable() {
+            thread = new MediaRecorderThread() {
                 @Override
                 public void run() {
                     if (old != null) {
@@ -949,7 +959,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                     handle.post(save);
                 }
-            }, "MediaRecorder");
+            };
             thread.start();
         } catch (IOException e) {
             throw new RuntimeException(e);

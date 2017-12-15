@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -59,7 +60,6 @@ public class RecentCallActivity extends AppCompatActivity {
     public static void startActivity(Context context, Uri targetUri, boolean count) {
         Intent intent = new Intent(context, RecentCallActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS); // prevent user to return to this activity from recents
         intent.putExtra("uri", targetUri);
         intent.putExtra("count", count);
         context.startActivity(intent);
@@ -97,7 +97,7 @@ public class RecentCallActivity extends AppCompatActivity {
         storage = new Storage(this);
 
         LayoutInflater inflater = LayoutInflater.from(this);
-        final View v = inflater.inflate(R.layout.activity_call, null);
+        final View v = inflater.inflate(R.layout.activity_recentcall, null);
 
         close = v.findViewById(R.id.callrecent_close);
         progressBar = (ProgressBar) v.findViewById(R.id.callrecent_progress);
