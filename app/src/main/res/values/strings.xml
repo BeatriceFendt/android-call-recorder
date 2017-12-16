@@ -110,7 +110,7 @@
     <string name="recordings_quality">Recordings Quality</string>
     <string name="recordings_quality_text">If you phone fails to support high quality call recording, application will ty MIC call recording (you may hear only your or your opponent).</string>
     <string name="task_managers">Task Managers</string>
-    <string name="task_managers_text">If you phone has Battery Optimization or Task Managers consider disabling them, to keep application running in background.</string>
+    <string name="task_managers_text">If you phone has Battery Optimization or Task Managers consider disabling them, to keep application running in background (optional)</string>
     <string name="recording_enabled">Recording enabled</string>
     <string name="recording_disabled">Recording disabled</string>
     <string name="callrecent_auto_save">Auto save in (%1$d)</string>
@@ -137,5 +137,5 @@
     <string name="pref_theme_title">Application Theme</string>
     <string name="pref_theme_summary">Set application theme (dark / light)</string>
     <string name="pref_mixerpaths_title">Patch mixer_paths.xml</string>
-    <string name="pref_mixerpaths_summary">Patch system mixer_paths.xml to enable booth side recordings, requires ROOT</string>
+    <string name="pref_mixerpaths_summary">Patch system mixer_paths.xml to enable booth side recordings, requires ROOT (optional)</string>
 </resources>

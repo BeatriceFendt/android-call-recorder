@@ -42,11 +42,12 @@ public class MixerPaths {
             FileWriter out = new FileWriter(f);
             IOUtils.write(xml, out);
             out.close();
-            File t = new File(PATH);
-            SuperUser.su("mount -o remount,rw /system");
-            SuperUser.mv(f, t);
-            SuperUser.su("chmod ao+r " + PATH);
-            SuperUser.su("chown root:root " + PATH);
+            String args = "";
+            args += "mount -o remount,rw /system;" + "\n";
+            args += "cp " + f.getAbsolutePath() + " " + PATH + "; rm " + f.getAbsolutePath() + "\n"; // cp && rm; mv does not work on different storages
+            args += "chmod ao+r " + PATH + ";\n";
+            args += "chown root:root " + PATH + ";\n";
+            SuperUser.su(args);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
