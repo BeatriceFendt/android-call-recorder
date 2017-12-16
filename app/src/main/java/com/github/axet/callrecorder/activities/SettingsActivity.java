@@ -24,13 +24,16 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.github.axet.androidlibrary.widgets.NameFormatPreferenceCompat;
+import com.github.axet.androidlibrary.widgets.OpenFileDialog;
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.StoragePathPreferenceCompat;
 import com.github.axet.audiolibrary.encoders.Factory;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
+import com.github.axet.callrecorder.app.MixerPaths;
 import com.github.axet.callrecorder.app.Storage;
 import com.github.axet.callrecorder.services.RecordingService;
+import com.github.axet.callrecorder.widgets.MixerPathsPreferenceCompat;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -51,10 +54,6 @@ import java.util.List;
 public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener, PreferenceFragmentCompat.OnPreferenceDisplayDialogCallback {
 
     public static final int RESULT_FILE = 1;
-
-    public static final String[] PERMISSIONS = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-    };
 
     public static final String[] CONTACTS = new String[]{
             Manifest.permission.READ_CONTACTS,
@@ -150,7 +149,6 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         getSupportFragmentManager().beginTransaction().replace(android.R.id.content, f).commit();
     }
 
-
     @Override
     public void onResume() {
         super.onResume();
@@ -214,7 +212,8 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+        MainActivity.startActivity(this);
+        finish();
     }
 
     @Override
@@ -275,7 +274,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
             StoragePathPreferenceCompat s = (StoragePathPreferenceCompat) manager.findPreference(MainApplication.PREFERENCE_STORAGE);
             s.setStorage(new Storage(getContext()));
-            s.setPermissionsDialog(this, PERMISSIONS, RESULT_FILE);
+            s.setPermissionsDialog(this, Storage.PERMISSIONS_RW, RESULT_FILE);
             if (Build.VERSION.SDK_INT >= 21)
                 s.setStorageAccessFramework(this, RESULT_FILE);
         }
@@ -292,6 +291,8 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             super.onResume();
             OptimizationPreferenceCompat optimization = (OptimizationPreferenceCompat) findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
             optimization.onResume();
+            MixerPathsPreferenceCompat mix = (MixerPathsPreferenceCompat) findPreference(MainApplication.PREFERENCE_MIXERPATHS);
+            mix.onResume();
         }
 
         @Override

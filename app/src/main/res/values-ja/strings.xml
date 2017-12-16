@@ -90,4 +90,8 @@
     <string name="calls_out">Out</string>
     <string name="calls_in">In</string>
     <string name="save_button">Save</string>
+    <string name="mixer_paths_done">Patched mixer_paths.xml, please reboot!</string>
+    <string name="mixer_paths_failed">Unable to patch mixer_paths.xml</string>
+    <string name="pref_mixerpaths_title">Path mixer_paths.xml</string>
+    <string name="pref_mixerpaths_summary">Path system mixer_paths.xml to enable booth side recordings, requires ROOT</string>
 </resources>
