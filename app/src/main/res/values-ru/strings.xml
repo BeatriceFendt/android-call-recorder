@@ -90,8 +90,8 @@
     <string name="pref_optimization_summary">Предотвращать удаление программы из памяти телефона</string>
     <string name="pref_theme_title">Тема приложения</string>
     <string name="pref_theme_summary">Установить тему приложения (темная / светлая)</string>
-    <string name="mixer_paths_done">Patched mixer_paths.xml, please reboot!</string>
-    <string name="mixer_paths_failed">Unable to patch mixer_paths.xml</string>
-    <string name="pref_mixerpaths_title">Path mixer_paths.xml</string>
-    <string name="pref_mixerpaths_summary">Path system mixer_paths.xml to enable booth side recordings, requires ROOT</string>
+    <string name="mixer_paths_done">Пропачен mixer_paths.xml, пожалуйста перегрузите телефон!</string>
+    <string name="mixer_paths_failed">Не получается пропачить mixer_paths.xml</string>
+    <string name="pref_mixerpaths_title">Правка mixer_paths.xml</string>
+    <string name="pref_mixerpaths_summary">Пропачить mixer_paths.xml чтобы включить записть обоих собеседников, требуется ROOT</string>
 </resources>
