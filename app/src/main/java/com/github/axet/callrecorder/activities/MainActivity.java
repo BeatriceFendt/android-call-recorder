@@ -34,8 +34,10 @@ import com.github.axet.androidlibrary.widgets.AboutPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
+import com.github.axet.callrecorder.app.MixerPaths;
 import com.github.axet.callrecorder.app.Storage;
 import com.github.axet.callrecorder.services.RecordingService;
+import com.github.axet.callrecorder.widgets.MixerPathsPreferenceCompat;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     public final static String TAG = MainActivity.class.getSimpleName();
@@ -210,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             final AlertDialog d = builder.create();
             d.setOnShowListener(new DialogInterface.OnShowListener() {
                 Button b;
-                SwitchCompat sw1, sw2, sw3;
+                SwitchCompat sw1, sw2, sw3, sw4;
 
                 @Override
                 public void onShow(DialogInterface dialog) {
@@ -242,10 +244,28 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                             update();
                         }
                     });
+                    sw4 = (SwitchCompat) w.findViewById(R.id.mixedpaths_switch);
+                    final MixerPaths m = new MixerPaths();
+                    if (!m.isCompatible() || m.isEnabled()) {
+                        View v = w.findViewById(R.id.mixedpaths);
+                        v.setVisibility(View.GONE);
+                        sw4.setChecked(true);
+                    } else {
+                        sw4.setChecked(m.isEnabled());
+                        sw4.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                            @Override
+                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                m.load();
+                                if (isChecked && !m.isEnabled())
+                                    MixerPathsPreferenceCompat.show(MainActivity.this);
+                                update();
+                            }
+                        });
+                    }
                 }
 
                 void update() {
-                    b.setEnabled(sw1.isChecked() && sw2.isChecked() && sw3.isChecked());
+                    b.setEnabled(sw1.isChecked() && sw2.isChecked() && sw3.isChecked() && sw4.isChecked());
                 }
             });
             d.show();

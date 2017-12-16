@@ -106,5 +106,38 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center" />
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/mixedpaths"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:padding="5dp">
+
+                <TextView
+                    style="@style/Base.TextAppearance.AppCompat.Title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pref_mixerpaths_title" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pref_mixerpaths_summary" />
+            </LinearLayout>
+
+            <android.support.v7.widget.SwitchCompat
+                android:id="@+id/mixedpaths_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>
