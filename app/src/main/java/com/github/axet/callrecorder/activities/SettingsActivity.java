@@ -30,8 +30,10 @@ import com.github.axet.androidlibrary.widgets.StoragePathPreferenceCompat;
 import com.github.axet.audiolibrary.encoders.Factory;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
+import com.github.axet.callrecorder.app.MixerPaths;
 import com.github.axet.callrecorder.app.Storage;
 import com.github.axet.callrecorder.services.RecordingService;
+import com.github.axet.callrecorder.widgets.MixerPathsPreferenceCompat;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -289,6 +291,8 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             super.onResume();
             OptimizationPreferenceCompat optimization = (OptimizationPreferenceCompat) findPreference(MainApplication.PREFERENCE_OPTIMIZATION);
             optimization.onResume();
+            MixerPathsPreferenceCompat mix = (MixerPathsPreferenceCompat) findPreference(MainApplication.PREFERENCE_MIXERPATHS);
+            mix.onResume();
         }
 
         @Override
