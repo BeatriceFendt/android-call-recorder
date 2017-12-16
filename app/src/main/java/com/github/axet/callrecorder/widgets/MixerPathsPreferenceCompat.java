@@ -40,6 +40,7 @@ public class MixerPathsPreferenceCompat extends SwitchPreferenceCompat {
             public void onClick(DialogInterface dialog, int which) {
             }
         });
+        builder.show();
     }
 
     public MixerPathsPreferenceCompat(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {

@@ -244,12 +244,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                             update();
                         }
                     });
+                    sw4 = (SwitchCompat) w.findViewById(R.id.mixedpaths_switch);
                     final MixerPaths m = new MixerPaths();
                     if (!m.isCompatible() || m.isEnabled()) {
                         View v = w.findViewById(R.id.mixedpaths);
                         v.setVisibility(View.GONE);
+                        sw4.setChecked(true);
                     } else {
-                        sw4 = (SwitchCompat) w.findViewById(R.id.mixedpaths_switch);
                         sw4.setChecked(m.isEnabled());
                         sw4.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                             @Override
@@ -264,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 }
 
                 void update() {
-                    b.setEnabled(sw1.isChecked() && sw2.isChecked() && sw3.isChecked()); // sw4 optional
+                    b.setEnabled(sw1.isChecked() && sw2.isChecked() && sw3.isChecked() && sw4.isChecked());
                 }
             });
             d.show();
