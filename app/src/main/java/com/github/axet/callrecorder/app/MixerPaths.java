@@ -52,6 +52,15 @@ public class MixerPaths {
         }
     }
 
+    public void save(boolean b) {
+        setEnabled(b);
+        save();
+        load();
+        if (b != isEnabled()) {
+            throw new RuntimeException("Unable to write changes");
+        }
+    }
+
     public boolean isCompatible() {
         if (!SuperUser.isRooted())
             return false;

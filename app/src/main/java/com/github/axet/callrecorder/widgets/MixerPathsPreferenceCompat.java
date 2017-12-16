@@ -48,14 +48,8 @@ public class MixerPathsPreferenceCompat extends SwitchPreferenceCompat {
         boolean b = isChecked();
         try {
             MixerPaths m = new MixerPaths();
-            m.setEnabled(b);
-            m.save();
-            m.load();
-            if (b != m.isEnabled()) {
-                throw new RuntimeException("Unable to write changes");
-            } else {
-                Toast.makeText(getContext(), R.string.mixer_paths_done, Toast.LENGTH_SHORT).show();
-            }
+            m.save(b);
+            Toast.makeText(getContext(), R.string.mixer_paths_done, Toast.LENGTH_SHORT).show();
         } catch (RuntimeException e) {
             Log.d(TAG, "uanble to patch", e);
             Toast.makeText(getContext(), getContext().getString(R.string.mixer_paths_failed) + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
