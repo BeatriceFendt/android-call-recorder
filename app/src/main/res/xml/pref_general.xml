@@ -1,96 +1,103 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <com.github.axet.androidlibrary.widgets.StoragePathPreferenceCompat
-        android:defaultValue="Call Recorder"
-        android:key="storage_path"
-        android:summary="/sdcard/some/"
-        android:title="@string/pref_storage_title" />
 
-    <ListPreference
-        android:defaultValue="-1"
-        android:entries="@array/source_text"
-        android:entryValues="@array/source_values"
-        android:key="source"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:summary="@string/pref_source_summary"
-        android:title="@string/pref_source_title" />
+    <PreferenceCategory android:title="@string/pref_recordings">
+        <com.github.axet.androidlibrary.widgets.StoragePathPreferenceCompat
+            android:defaultValue="Call Recorder"
+            android:key="storage_path"
+            android:summary="/sdcard/some/"
+            android:title="@string/pref_storage_title" />
 
-    <ListPreference
-        android:defaultValue="16000"
-        android:entries="@array/sample_rate_text"
-        android:entryValues="@array/sample_rate_values"
-        android:key="sample_rate"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:summary="44100"
-        android:title="@string/pref_rate_title" />
+        <ListPreference
+            android:defaultValue="-1"
+            android:entries="@array/source_text"
+            android:entryValues="@array/source_values"
+            android:key="source"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="@string/pref_source_summary"
+            android:title="@string/pref_source_title" />
 
-    <ListPreference
-        android:defaultValue="ogg"
-        android:entries="@array/encodings_text"
-        android:entryValues="@array/encodings_values"
-        android:key="encoding"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:summary="@string/pref_encoding_summary"
-        android:title="@string/pref_encoding_title" />
+        <ListPreference
+            android:defaultValue="16000"
+            android:entries="@array/sample_rate_text"
+            android:entryValues="@array/sample_rate_values"
+            android:key="sample_rate"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="44100"
+            android:title="@string/pref_rate_title" />
 
-    <ListPreference
-        android:defaultValue="1"
-        android:entries="@array/channels_text"
-        android:entryValues="@array/channels_values"
-        android:key="channels"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:summary="@string/pref_mode_summary"
-        android:title="@string/pref_mode_title" />
+        <ListPreference
+            android:defaultValue="ogg"
+            android:entries="@array/encodings_text"
+            android:entryValues="@array/encodings_values"
+            android:key="encoding"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="@string/pref_encoding_summary"
+            android:title="@string/pref_encoding_title" />
 
-    <ListPreference
-        android:defaultValue="off"
-        android:entries="@array/delete_text"
-        android:entryValues="@array/delete_values"
-        android:key="delete"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:summary=""
-        android:title="@string/pref_delete_title" />
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/channels_text"
+            android:entryValues="@array/channels_values"
+            android:key="channels"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="@string/pref_mode_summary"
+            android:title="@string/pref_mode_title" />
 
-    <com.github.axet.callrecorder.widgets.NameFormatPreferenceCompat
-        android:defaultValue="%s"
-        android:entries="@array/format_text"
-        android:entryValues="@array/format_values"
-        android:key="format"
-        android:summary=""
-        android:title="@string/pref_nameformat_title" />
+        <com.github.axet.callrecorder.widgets.NameFormatPreferenceCompat
+            android:defaultValue="%s"
+            android:entries="@array/format_text"
+            android:entryValues="@array/format_values"
+            android:key="format"
+            android:summary=""
+            android:title="@string/pref_nameformat_title" />
 
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="done_notification"
-        android:summary="@string/pref_calldialog_summary"
-        android:title="@string/pref_calldialog_title" />
+        <ListPreference
+            android:defaultValue="off"
+            android:entries="@array/delete_text"
+            android:entryValues="@array/delete_values"
+            android:key="delete"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary=""
+            android:title="@string/pref_delete_title" />
+    </PreferenceCategory>
 
-    <com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat
-        android:defaultValue="false"
-        android:key="optimization"
-        android:persistent="false"
-        android:summary="@string/pref_optimization_summary"
-        android:title="@string/pref_optimization_title" />
+    <PreferenceCategory android:title="@string/pref_advanced">
+        <com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat
+            android:defaultValue="false"
+            android:key="optimization"
+            android:persistent="false"
+            android:summary="@string/pref_optimization_summary"
+            android:title="@string/pref_optimization_title" />
 
-    <com.github.axet.callrecorder.widgets.MixerPathsPreferenceCompat
-        android:defaultValue="false"
-        android:key="mixer_paths"
-        android:persistent="false"
-        android:summary="@string/pref_mixerpaths_summary"
-        android:title="@string/pref_mixerpaths_title" />
+        <com.github.axet.callrecorder.widgets.MixerPathsPreferenceCompat
+            android:defaultValue="false"
+            android:key="mixer_paths"
+            android:persistent="false"
+            android:summary="@string/pref_mixerpaths_summary"
+            android:title="@string/pref_mixerpaths_title" />
+    </PreferenceCategory>
 
-    <ListPreference
-        android:defaultValue="Theme_White"
-        android:entries="@array/themes_text"
-        android:entryValues="@array/themes_values"
-        android:key="theme"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:summary="@string/pref_theme_summary"
-        android:title="@string/pref_theme_title" />
+    <PreferenceCategory android:title="@string/pref_application">
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="done_notification"
+            android:summary="@string/pref_calldialog_summary"
+            android:title="@string/pref_calldialog_title" />
+
+        <ListPreference
+            android:defaultValue="Theme_White"
+            android:entries="@array/themes_text"
+            android:entryValues="@array/themes_values"
+            android:key="theme"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="@string/pref_theme_summary"
+            android:title="@string/pref_theme_title" />
+    </PreferenceCategory>
 </PreferenceScreen>

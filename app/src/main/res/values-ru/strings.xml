@@ -94,4 +94,7 @@
     <string name="mixer_paths_failed">Не получается пропачить mixer_paths.xml</string>
     <string name="pref_mixerpaths_title">Правка mixer_paths.xml</string>
     <string name="pref_mixerpaths_summary">Пропачить mixer_paths.xml чтобы включить записть обоих собеседников, требуется ROOT</string>
+    <string name="pref_recordings">Записи</string>
+    <string name="pref_advanced">Дополнительно</string>
+    <string name="pref_application">Приложение</string>
 </resources>
