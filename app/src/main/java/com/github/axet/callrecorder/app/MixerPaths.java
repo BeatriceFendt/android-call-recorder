@@ -20,6 +20,9 @@ public class MixerPaths {
     public static final String TAG = MixerPaths.class.getSimpleName();
     public static final String PATH = SuperUser.SYSTEM + "/etc/mixer_paths.xml";
 
+    public static final String TRUE = "1";
+    public static final String FALSE = "0";
+
     public static Pattern P = Pattern.compile("VOC_REC.*value=\"(\\d+)\"");
 
     String xml;
@@ -71,7 +74,7 @@ public class MixerPaths {
         Matcher m = P.matcher(xml);
         while (m.find()) {
             String v = m.group(1);
-            if (!v.equals("1"))
+            if (!v.equals(TRUE))
                 return false;
         }
         return true;
@@ -81,7 +84,7 @@ public class MixerPaths {
         Matcher m = P.matcher(xml);
         StringBuffer sb = new StringBuffer(xml.length());
         while (m.find()) {
-            m.appendReplacement(sb, m.group().replaceFirst(Pattern.quote(m.group(1)), b ? "1" : "0"));
+            m.appendReplacement(sb, m.group().replaceFirst(Pattern.quote(m.group(1)), b ? TRUE : FALSE));
         }
         m.appendTail(sb);
         xml = sb.toString();
