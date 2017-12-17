@@ -42,8 +42,6 @@ public class MixerPaths {
         String args = "";
         args += SuperUser.REMOUNT_SYSTEM + "\n";
         args += MessageFormat.format(SuperUser.SUCAT, PATH, xml.trim()) + "\n";
-        args += MessageFormat.format(SuperUser.CHMOD, "ao+r", PATH) + "\n";
-        args += MessageFormat.format(SuperUser.CHOWN, "root:root", PATH) + "\n";
         SuperUser.su(args);
     }
 
