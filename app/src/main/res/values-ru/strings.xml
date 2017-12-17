@@ -90,10 +90,10 @@
     <string name="pref_optimization_summary">Предотвращать удаление программы из памяти телефона</string>
     <string name="pref_theme_title">Тема приложения</string>
     <string name="pref_theme_summary">Установить тему приложения (темная / светлая)</string>
-    <string name="mixer_paths_done">Пропачен mixer_paths.xml, пожалуйста перегрузите телефон!</string>
-    <string name="mixer_paths_failed">Не получается пропачить mixer_paths.xml</string>
-    <string name="pref_mixerpaths_title">Правка mixer_paths.xml</string>
-    <string name="pref_mixerpaths_summary">Пропачить mixer_paths.xml чтобы включить записть обоих собеседников, требуется ROOT</string>
+    <string name="mixer_paths_done">Сисетмный микшер настроен, пожалуйста перегрузите телефон!</string>
+    <string name="mixer_paths_failed">Не получается включить запись звонков</string>
+    <string name="pref_mixerpaths_title">Системный микшер</string>
+    <string name="pref_mixerpaths_summary">Разрешить системному микшеру запись звонков для приложений</string>
     <string name="pref_recordings">Записи</string>
     <string name="pref_advanced">Дополнительно</string>
     <string name="pref_application">Приложение</string>

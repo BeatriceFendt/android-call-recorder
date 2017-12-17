@@ -10,15 +10,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 // https://gitlab.com/axet/android-call-recorder/merge_requests/4
 //
 public class MixerPaths {
-    public static String TAG = MixerPaths.class.getSimpleName();
-    public static String NAME = "mixer_paths.xml";
-    public static String PATH = "/system/etc/" + NAME;
+    public static final String TAG = MixerPaths.class.getSimpleName();
+    public static final String PATH = SuperUser.SYSTEM + "/etc/mixer_paths.xml";
 
     public static Pattern P = Pattern.compile("VOC_REC.*value=\"(\\d+)\"");
 
@@ -30,6 +30,7 @@ public class MixerPaths {
 
     public void load() {
         try {
+            xml = null;
             xml = IOUtils.toString(new FileReader(PATH));
         } catch (IOException e) {
             Log.d(TAG, "Unable to read mixers", e);
@@ -37,20 +38,12 @@ public class MixerPaths {
     }
 
     public void save() {
-        try {
-            File f = File.createTempFile(NAME, "tmp");
-            FileWriter out = new FileWriter(f);
-            IOUtils.write(xml, out);
-            out.close();
-            String args = "";
-            args += "mount -o remount,rw /system;" + "\n";
-            args += "cp " + f.getAbsolutePath() + " " + PATH + "; rm " + f.getAbsolutePath() + "\n"; // cp && rm; mv does not work on different storages
-            args += "chmod ao+r " + PATH + ";\n";
-            args += "chown root:root " + PATH + ";\n";
-            SuperUser.su(args);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        String args = "";
+        args += SuperUser.REMOUNT_SYSTEM + "\n";
+        args += MessageFormat.format(SuperUser.SUCAT, PATH, xml.trim()) + "\n";
+        args += MessageFormat.format(SuperUser.CHMOD, "ao+r", PATH) + "\n";
+        args += MessageFormat.format(SuperUser.CHOWN, "root:root", PATH) + "\n";
+        SuperUser.su(args);
     }
 
     public void save(boolean b) {

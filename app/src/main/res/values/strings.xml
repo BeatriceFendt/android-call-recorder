@@ -117,8 +117,8 @@
     <string name="calls_out">Out</string>
     <string name="calls_in">In</string>
     <string name="save_button">Save</string>
-    <string name="mixer_paths_done">Patched mixer_paths.xml, please reboot!</string>
-    <string name="mixer_paths_failed">Unable to patch mixer_paths.xml</string>
+    <string name="mixer_paths_done">System mixer configured, please reboot!</string>
+    <string name="mixer_paths_failed">Unable to configure system mixer</string>
 
     <string name="pref_storage_title">Storage Path</string>
     <string name="pref_source_title">Recording Source</string>
@@ -136,8 +136,8 @@
     <string name="pref_optimization_summary">Prevent app to be removed from memory</string>
     <string name="pref_theme_title">Application Theme</string>
     <string name="pref_theme_summary">Set application theme (dark / light)</string>
-    <string name="pref_mixerpaths_title">Patch mixer_paths.xml</string>
-    <string name="pref_mixerpaths_summary">Patch system mixer_paths.xml to enable booth side recordings, requires ROOT (optional)</string>
+    <string name="pref_mixerpaths_title">System Mixer</string>
+    <string name="pref_mixerpaths_summary">Allow system mixer to record calls for apps</string>
     <string name="pref_recordings">Recordings</string>
     <string name="pref_advanced">Advanced</string>
     <string name="pref_application">Application</string>
