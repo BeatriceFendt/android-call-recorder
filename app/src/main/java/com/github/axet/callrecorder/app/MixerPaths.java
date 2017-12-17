@@ -6,9 +6,7 @@ import com.github.axet.androidlibrary.app.SuperUser;
 
 import org.apache.commons.io.IOUtils;
 
-import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.regex.Matcher;
@@ -19,6 +17,9 @@ import java.util.regex.Pattern;
 public class MixerPaths {
     public static final String TAG = MixerPaths.class.getSimpleName();
     public static final String PATH = SuperUser.SYSTEM + "/etc/mixer_paths.xml";
+
+    public static final String TRUE = "1";
+    public static final String FALSE = "0";
 
     public static Pattern P = Pattern.compile("VOC_REC.*value=\"(\\d+)\"");
 
@@ -41,8 +42,6 @@ public class MixerPaths {
         String args = "";
         args += SuperUser.REMOUNT_SYSTEM + "\n";
         args += MessageFormat.format(SuperUser.SUCAT, PATH, xml.trim()) + "\n";
-        args += MessageFormat.format(SuperUser.CHMOD, "ao+r", PATH) + "\n";
-        args += MessageFormat.format(SuperUser.CHOWN, "root:root", PATH) + "\n";
         SuperUser.su(args);
     }
 
@@ -71,7 +70,7 @@ public class MixerPaths {
         Matcher m = P.matcher(xml);
         while (m.find()) {
             String v = m.group(1);
-            if (!v.equals("1"))
+            if (!v.equals(TRUE))
                 return false;
         }
         return true;
@@ -81,7 +80,7 @@ public class MixerPaths {
         Matcher m = P.matcher(xml);
         StringBuffer sb = new StringBuffer(xml.length());
         while (m.find()) {
-            m.appendReplacement(sb, m.group().replaceFirst(Pattern.quote(m.group(1)), b ? "1" : "0"));
+            m.appendReplacement(sb, m.group().replaceFirst(Pattern.quote(m.group(1)), b ? TRUE : FALSE));
         }
         m.appendTail(sb);
         xml = sb.toString();
