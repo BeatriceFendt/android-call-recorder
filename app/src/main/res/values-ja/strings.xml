@@ -92,8 +92,8 @@
     <string name="pref_optimization_summary">アプリがメモリーから削除されるのを防止します</string>
     <string name="pref_theme_title">アプリケーションのテーマ</string>
     <string name="pref_theme_summary">アプリケーションのテーマを設定します (ダーク / ライト)</string>
-    <string name="pref_mixerpaths_title">System Mixer</string>
-    <string name="pref_mixerpaths_summary">Allow system mixer to record calls for apps</string>
+    <string name="pref_mixerpaths_title">System Mixer Incall Recording</string>
+    <string name="pref_mixerpaths_summary">Allow system mixer to records calls for regular apps</string>
     <string name="pref_recordings">Recordings</string>
     <string name="pref_advanced">Advanced</string>
     <string name="pref_application">Application</string>
