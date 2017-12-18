@@ -102,15 +102,18 @@
     <string name="title_header">%1$s free ~ %2$s left</string>
     <string name="open_recording_folder">Open Recording Folder</string>
     <string name="recording_list_is_empty">Recording List is Empty\n\nCheck \'Calls Recording\' to Start Recording Calls</string>
+
     <string name="source_default">(Default)</string>
     <string name="source_mic">(Mic)</string>
     <string name="source_line">(Voice Line)</string>
+
     <string name="call_recordings_support">Call Recordings support</string>
-    <string name="call_recordings_support_text">Most phones does not support call recording, to enable Call Recording install open-source firmware.</string>
+    <string name="call_recordings_support_text">Most phones does not support call recording, to enable Call Recording install open-source firmware. Different encoding options (ogg, MediaRecorder), different sources (phone line, mic, VoIP). Or ROOT your phone.</string>
     <string name="recordings_quality">Recordings Quality</string>
-    <string name="recordings_quality_text">If you phone fails to support high quality call recording, application will ty MIC call recording (you may hear only your or your opponent).</string>
+    <string name="recordings_quality_text">If you phone fails to support high quality call recording, application will ty MIC call recording (you may hear only one side: your or your opponent).</string>
     <string name="task_managers">Task Managers</string>
     <string name="task_managers_text">If you phone has Battery Optimization or Task Managers consider disabling them, to keep application running in background (optional)</string>
+
     <string name="recording_enabled">Recording enabled</string>
     <string name="recording_disabled">Recording disabled</string>
     <string name="callrecent_auto_save">Auto save in (%1$d)</string>
@@ -136,8 +139,8 @@
     <string name="pref_optimization_summary">Prevent app to be removed from memory</string>
     <string name="pref_theme_title">Application Theme</string>
     <string name="pref_theme_summary">Set application theme (dark / light)</string>
-    <string name="pref_mixerpaths_title">System Mixer</string>
-    <string name="pref_mixerpaths_summary">Allow system mixer to record calls for regular apps</string>
+    <string name="pref_mixerpaths_title">System Mixer Incall Recording</string>
+    <string name="pref_mixerpaths_summary">Allow system mixer to records calls for regular apps</string>
     <string name="pref_recordings">Recordings</string>
     <string name="pref_advanced">Advanced</string>
     <string name="pref_application">Application</string>
