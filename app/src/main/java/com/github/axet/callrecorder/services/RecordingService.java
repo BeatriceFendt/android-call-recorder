@@ -149,17 +149,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         void run(Uri u);
     }
 
-    public static class Done {
-        public Uri targetUri;
-        public int count; // seconds passed (AUTO_CLOSE max)
-        public boolean stop; // do not count down
-        public boolean stopDel; // user removed notify, we can clear list
-
-        public Done(Uri u) {
-            targetUri = u;
-        }
-    }
-
     public static class CallInfo {
         public Uri targetUri;
         public String phone;

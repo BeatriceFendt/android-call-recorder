@@ -37,11 +37,6 @@ public class RecentCallActivity extends AppCompatActivity {
 
     public static int AUTO_CLOSE = 5; // secs
 
-    public static String RENAME_BUTTON = RecordingService.class.getCanonicalName() + ".RENAME_BUTTON";
-    public static String COUNT_STOP = RecordingService.class.getCanonicalName() + ".COUNT_STOP";
-    public static String FAV_BUTTON = RecordingService.class.getCanonicalName() + ".FAV_BUTTON";
-    public static String DEL = RecordingService.class.getCanonicalName() + ".DEL";
-
     Handler handler = new Handler();
     Runnable update = new Runnable() {
         @Override
