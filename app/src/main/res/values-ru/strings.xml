@@ -3,7 +3,7 @@
 
     <string-array name="source_text">
         <item>Автоматически (по умолчанию)</item>
-        <item>Голосовая линия</item>
+        <item>Телефонная линия</item>
         <item>Микрофон</item>
         <item>Системный выбор</item>
         <item>Системный необработанный</item>
@@ -61,12 +61,14 @@
     <string name="source_default">(По-умолчанию)</string>
     <string name="source_mic">(Микрофон)</string>
     <string name="source_line">(Линия)</string>
+
     <string name="call_recordings_support">Запись звонков</string>
-    <string name="call_recordings_support_text">Большинство телефонов не поддерживают запись звонков, используйте прошивки с открытым исходным кодом.</string>
+    <string name="call_recordings_support_text">Большинство телефонов не поддерживают запись звонков, используйте прошивки с открытым исходным кодом. Пробуйте различные настройки кодирования (ogg, mp3, MediaRecorder), разные источники записи (телефонная линия, микрофон)</string>
     <string name="recordings_quality">Качество записи</string>
-    <string name="recordings_quality_text">Если программе не удасться записывать в высоком качестве (голосовая линия), программа будет использовать микрофон (в случае ошибки вы можете слышать только свой голос или голос собеседника).</string>
+    <string name="recordings_quality_text">Если программе не удасться записывать в высоком качестве (телефонная линия), программа будет использовать микрофон (в случае ошибки вы можете слышать только свой голос или голос собеседника).</string>
     <string name="task_managers">Менеджеры памяти</string>
     <string name="task_managers_text">Если ваш телефон оптимизирует батарею или испольует другие менеджеры памяти включите программу в белый список, чтобы она продолжара работать в фоновом режиме и все звонки были записаны.</string>
+
     <string name="recording_enabled">Запись включена</string>
     <string name="recording_disabled">Запись выключена</string>
     <string name="callrecent_auto_save">Авто сохранение через (%1$d)</string>
