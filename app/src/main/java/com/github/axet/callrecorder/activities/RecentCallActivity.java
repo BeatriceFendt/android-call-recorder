@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -32,10 +31,16 @@ import android.widget.TextView;
 import com.github.axet.callrecorder.R;
 import com.github.axet.callrecorder.app.MainApplication;
 import com.github.axet.callrecorder.app.Storage;
+import com.github.axet.callrecorder.services.RecordingService;
 
 public class RecentCallActivity extends AppCompatActivity {
 
     public static int AUTO_CLOSE = 5; // secs
+
+    public static String RENAME_BUTTON = RecordingService.class.getCanonicalName() + ".RENAME_BUTTON";
+    public static String COUNT_STOP = RecordingService.class.getCanonicalName() + ".COUNT_STOP";
+    public static String FAV_BUTTON = RecordingService.class.getCanonicalName() + ".FAV_BUTTON";
+    public static String DEL = RecordingService.class.getCanonicalName() + ".DEL";
 
     Handler handler = new Handler();
     Runnable update = new Runnable() {
@@ -303,6 +308,11 @@ public class RecentCallActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+    }
+
     void update() {
         int p = c / 100;
 
@@ -386,4 +396,5 @@ public class RecentCallActivity extends AppCompatActivity {
         });
         builder.show();
     }
+
 }

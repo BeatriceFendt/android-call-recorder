@@ -72,10 +72,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     public static String SHOW_ACTIVITY = RecordingService.class.getCanonicalName() + ".SHOW_ACTIVITY";
     public static String PAUSE_BUTTON = RecordingService.class.getCanonicalName() + ".PAUSE_BUTTON";
     public static String STOP_BUTTON = RecordingService.class.getCanonicalName() + ".STOP_BUTTON";
-    public static String FAV_BUTTON = RecordingService.class.getCanonicalName() + ".FAV_BUTTON";
-    public static String RENAME_BUTTON = RecordingService.class.getCanonicalName() + ".RENAME_BUTTON";
-    public static String COUNT_STOP = RecordingService.class.getCanonicalName() + ".COUNT_STOP";
-    public static String DEL = RecordingService.class.getCanonicalName() + ".DEL";
 
     Sound sound;
     Thread thread;
@@ -100,13 +96,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
     String call;
     long now;
     int source = -1; // audiotrecorder source
-    ArrayList<Done> dones = new ArrayList<>();
-    Runnable updateDones = new Runnable() {
-        @Override
-        public void run() {
-            updateDones();
-        }
-    };
     Runnable encodingNext = new Runnable() {
         @Override
         public void run() {
@@ -202,33 +191,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                 }
                 if (a.equals(STOP_BUTTON)) {
                     finish();
-                }
-                if (a.equals(COUNT_STOP)) {
-                    Uri uri = intent.getParcelableExtra("uri");
-                    Done d = find(uri);
-                    d.stop = true;
-                }
-                if (a.equals(DEL)) {
-                    Uri uri = intent.getParcelableExtra("uri");
-                    Done d = find(uri);
-                    d.stopDel = true;
-                }
-                if (a.equals(RENAME_BUTTON)) {
-                    Uri uri = intent.getParcelableExtra("uri");
-                    RecentCallActivity.startActivity(context, uri, false);
-                    Done d = find(uri);
-                    d.count = RecentCallActivity.AUTO_CLOSE; // cancel notify
-                    d.stop = false; // continue counting and remove notify
-                    Intent closeIntent = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-                    context.sendBroadcast(closeIntent); // close notification bar drawer
-                }
-                if (a.equals(FAV_BUTTON)) {
-                    Uri uri = intent.getParcelableExtra("uri");
-                    boolean b = MainApplication.getStar(context, uri);
-                    MainApplication.setStar(context, uri, !b);
-                    Done d = find(uri);
-                    d.stop = true;
-                    updateDones();
                 }
             } catch (RuntimeException e) {
                 Error(e);
@@ -357,10 +319,6 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(PAUSE_BUTTON);
         filter.addAction(STOP_BUTTON);
-        filter.addAction(FAV_BUTTON);
-        filter.addAction(RENAME_BUTTON);
-        filter.addAction(COUNT_STOP);
-        filter.addAction(DEL);
         registerReceiver(receiver, filter);
 
         storage = new Storage(this);
@@ -627,103 +585,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         if (!shared.getBoolean(MainApplication.PREFERENCE_DONE_NOTIFICATION, false))
             return;
-
-        dones.add(new Done(targetUri));
-
         RecentCallActivity.startActivity(this, targetUri, true);
-
-        updateDones();
-    }
-
-    void updateDones() {
-        boolean done = true;
-        for (int i = 0; i < dones.size(); i++) {
-            Done d = dones.get(i);
-            if (updateDone(i, d)) {
-                done = false;
-            }
-            if (!d.stop)
-                d.count++;
-        }
-        if (done) {
-            dones.clear();
-            return;
-        }
-        handle.postDelayed(updateDones, 1000);
-    }
-
-    // return true - keep updating
-    boolean updateDone(int pos, Done d) {
-        int c = RecentCallActivity.AUTO_CLOSE - d.count;
-
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-        int id = NOTIFICATION_RECORDING_ICON + 1 + pos;
-
-        if (!d.stop) {
-            if (c < 0) {
-                notificationManager.cancel(id);
-                return false;
-            }
-        }
-
-        PendingIntent main = PendingIntent.getBroadcast(this, id,
-                new Intent(COUNT_STOP).putExtra("uri", d.targetUri),
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
-
-        PendingIntent del = PendingIntent.getBroadcast(this, id,
-                new Intent(DEL).putExtra("uri", d.targetUri),
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
-
-        PendingIntent ren = PendingIntent.getBroadcast(this, id,
-                new Intent(RENAME_BUTTON).putExtra("uri", d.targetUri),
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
-
-        PendingIntent fav = PendingIntent.getBroadcast(this, id,
-                new Intent(FAV_BUTTON).putExtra("uri", d.targetUri),
-                PendingIntent.FLAG_UPDATE_CURRENT);
-
-        RemoteViews view = new RemoteViews(getPackageName(), MainApplication.getTheme(getBaseContext(),
-                R.layout.notifictaion_recording_light,
-                R.layout.notifictaion_recording_dark));
-
-        String title = getString(R.string.call_recording) + (d.stop ? "" : " (" + c + ")");
-        String text = ".../" + Storage.getDocumentName(d.targetUri);
-
-        title = title.trim();
-
-        view.setOnClickPendingIntent(R.id.status_bar_latest_event_content, main);
-        view.setTextViewText(R.id.notification_title, title);
-        view.setTextViewText(R.id.notification_text, text);
-        view.setViewVisibility(R.id.notification_record, View.GONE);
-        view.setViewVisibility(R.id.notification_pause, View.GONE);
-        view.setViewVisibility(R.id.notification_fav, View.VISIBLE);
-        view.setViewVisibility(R.id.notification_rename, View.VISIBLE);
-        view.setOnClickPendingIntent(R.id.notification_rename, ren);
-        view.setOnClickPendingIntent(R.id.notification_fav, fav);
-        view.setImageViewResource(R.id.notification_fav, MainApplication.getStar(this, d.targetUri) ? R.drawable.ic_star_black_24dp : R.drawable.ic_star_border_black_24dp);
-
-        if (encoding != null)
-            view.setViewVisibility(R.id.notification_pause, View.GONE);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                .setOngoing(!d.stop)
-                .setContentTitle(title)
-                .setContentText(text)
-                .setTicker(title) // tooltip status bar message
-                .setSmallIcon(R.drawable.ic_mic_24dp)
-                .setDeleteIntent(del)
-                .setContent(view);
-
-        if (Build.VERSION.SDK_INT < 11) {
-            builder.setContentIntent(main);
-        }
-
-        if (Build.VERSION.SDK_INT >= 21)
-            builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-
-        notificationManager.notify(id, builder.build());
-        return !d.stopDel; // removed by user
     }
 
     void startRecording() {
@@ -1232,13 +1094,4 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
         optimization.onTaskRemoved(rootIntent);
     }
 
-    Done find(Uri uri) {
-        for (int i = 0; i < dones.size(); i++) {
-            Done d = dones.get(i);
-            if (d.targetUri.equals(uri)) {
-                return d;
-            }
-        }
-        return null;
-    }
 }
