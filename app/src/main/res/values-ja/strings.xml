@@ -6,6 +6,7 @@
         <item>音声回線</item>
         <item>マイク</item>
         <item>システムデフォルト</item>
+        <item>VoIP</item>
         <item>システム RAW</item>
     </string-array>
 

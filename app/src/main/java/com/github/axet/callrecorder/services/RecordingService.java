@@ -633,7 +633,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
 
                     int samplesTimeCount = 0;
                     // how many samples we need to update 'samples'. time clock. every 1000ms.
-                    int samplesTimeUpdate = 1000 / 1000 * sampleRate;
+                    int samplesTimeUpdate = 1000 * sampleRate / 1000;
 
                     short[] buffer = new short[100 * sampleRate / 1000 * Sound.getChannels(RecordingService.this)];
 
@@ -791,7 +791,7 @@ public class RecordingService extends Service implements SharedPreferences.OnSha
                         start = true;
                         while (!Thread.currentThread().isInterrupted()) {
                             Thread.sleep(1000);
-                            samplesTime += sampleRate * 1000 / 1000; // per 1 second
+                            samplesTime += 1000 * sampleRate / 1000; // per 1 second
                             MainActivity.showProgress(RecordingService.this, true, phone, samplesTime / sampleRate, null);
                         }
                     } catch (RuntimeException e) {

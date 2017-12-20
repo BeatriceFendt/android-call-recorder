@@ -26,7 +26,16 @@ public class MainApplication extends com.github.axet.audiolibrary.app.MainApplic
     @Override
     public void onCreate() {
         super.onCreate();
-        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+        final SharedPreferences defaultValueSp = getSharedPreferences(PreferenceManager.KEY_HAS_SET_DEFAULT_VALUES, Context.MODE_PRIVATE);
+        if (!defaultValueSp.getBoolean(PreferenceManager.KEY_HAS_SET_DEFAULT_VALUES, false)) {
+            PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+            MixerPaths m = new MixerPaths();
+            if (m.isSupported() && !m.isEnabled()) {
+                SharedPreferences.Editor e = defaultValueSp.edit();
+                e.putString(MainApplication.PREFERENCE_ENCODING, Storage.EXT_3GP);
+                e.commit();
+            }
+        }
     }
 
     @Override

@@ -57,6 +57,10 @@ public class MixerPaths {
     public boolean isCompatible() {
         if (!SuperUser.isRooted())
             return false;
+        return isSupported();
+    }
+
+    public boolean isSupported() {
         if (xml == null || xml.isEmpty())
             return false;
         Matcher m = P.matcher(xml);

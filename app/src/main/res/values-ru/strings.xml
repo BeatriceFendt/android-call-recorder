@@ -6,6 +6,7 @@
         <item>Телефонная линия</item>
         <item>Микрофон</item>
         <item>Системный выбор</item>
+        <item>VoIP</item>
         <item>Системный необработанный</item>
     </string-array>
 
